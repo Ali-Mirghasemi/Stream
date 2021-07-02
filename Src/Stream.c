@@ -7,16 +7,16 @@ typedef Stream_Result (*Stream_writeBytesFn)(Stream* stream, uint8_t* val, Strea
 typedef Stream_Result (*Stream_readBytesFn)(Stream* stream, uint8_t* val, Stream_LenType len);
 /* private variables */
 static const Stream_writeBytesFn writeBytes[2] = {
-    (Stream_writeBytesFn) Stream_writeBytes,
-    (Stream_writeBytesFn) Stream_writeBytesReverse,
+    Stream_writeBytes,
+    Stream_writeBytesReverse,
 };
 static const Stream_readBytesFn readBytes[2] = {
-    (Stream_writeBytesFn) Stream_readBytes,
-    (Stream_writeBytesFn) Stream_readBytesReverse,
+    Stream_readBytes,
+    Stream_readBytesReverse,
 };
 
-    #define __writeBytes(STREAM, VAL, LEN)      writeBytes[stream->Order]((STREAM), (VAL), (LEN))
-    #define __readBytes(STREAM, VAL, LEN)       readBytes[stream->Order]((STREAM), (VAL), (LEN))
+    #define __writeBytes(STREAM, VAL, LEN)      writeBytes[stream->OrderFn]((STREAM), (VAL), (LEN))
+    #define __readBytes(STREAM, VAL, LEN)       readBytes[stream->OrderFn]((STREAM), (VAL), (LEN))
 #else
     #define __writeBytes(STREAM, VAL, LEN)      Stream_writeBytes((STREAM), (VAL), (LEN))
     #define __readBytes(STREAM, VAL, LEN)       Stream_readBytes((STREAM), (VAL), (LEN))
@@ -30,6 +30,7 @@ void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
     stream->Size = size;
 #if STREAM_BYTE_ORDER
     stream->Order = Stream_getSystemByteOrder();
+    stream->OrderFn = 0;
 #endif // STREAM_BYTE_ORDER
     stream->RPos = 0;
     stream->WPos = 0;
@@ -80,7 +81,9 @@ ByteOrder  Stream_getSystemByteOrder(void) {
     return (ByteOrder) (memcmp(arr, (uint8_t*) &val, sizeof(val)) == 0);
 }
 void       Stream_setByteOrder(Stream* stream, ByteOrder order) {
+    ByteOrder osOrder = Stream_getSystemByteOrder();
     stream->Order = order;
+    stream->OrderFn = osOrder != order;
 }
 ByteOrder  Stream_getByteOrder(Stream* stream) {
     return stream->Order;
@@ -174,7 +177,7 @@ Stream_Result Stream_writeDouble(Stream* stream, double val) {
 
 
 /**************** Read APIs **************/
-Stream_LenType Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
     if (Stream_available(stream) < len) {
         return Stream_NoAvailable;
     }
@@ -197,7 +200,7 @@ Stream_LenType Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len
 
     return Stream_Ok;
 }
-Stream_LenType Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
     if (Stream_available(stream) < len) {
         return Stream_NoAvailable;
     }
@@ -211,6 +214,7 @@ Stream_LenType Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenT
         val += tmpLen;
         // move RPos
         stream->RPos = (stream->RPos + tmpLen) % stream->Size;
+        stream->Overflow = 0;
     }
 
     memrcpy(val, &stream->Data[stream->RPos], len);

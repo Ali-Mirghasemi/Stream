@@ -47,7 +47,8 @@ typedef struct {
     ByteOrder               Order;
 #endif
     uint8_t                 Overflow    : 1;
-    uint8_t                 Reserved    : 7;
+    uint8_t                 OrderFn     : 1;
+    uint8_t                 Reserved    : 6;
 } Stream;
 
 
@@ -95,8 +96,8 @@ Stream_Result Stream_writeFloat(Stream* stream, float val);
 
 
 /**************** Read APIs **************/
-Stream_LenType Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len);
-Stream_LenType Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
+Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len);
+Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
 char     Stream_readChar(Stream* stream);
 uint8_t  Stream_readUInt8(Stream* stream);
 int8_t   Stream_readInt8(Stream* stream);
