@@ -14,9 +14,12 @@ void OStream_deinit(OStream* stream) {
 /* Output Bytes of OStream */
 Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
     Stream_Result res;
+	if (!stream->Buffer.InTransmit) {
+		return Stream_NoTransmit;
+	}
 
     stream->Buffer.InTransmit = 0;
-    if (res = Stream_moveReadPos(&stream->Buffer, len) != Stream_Ok) {
+    if ((res = Stream_moveReadPos(&stream->Buffer, len)) != Stream_Ok) {
         return res;
     }
 
@@ -27,7 +30,7 @@ Stream_Result OStream_flush(OStream* stream) {
     if (len > 0) {
         if (stream->transmit) {
             stream->Buffer.InTransmit = 1;
-            stream->transmit(stream, IStream_getDataPtr(stream), len);
+            stream->transmit(stream, OStream_getDataPtr(stream), len);
             return Stream_Ok;
         }
         else {

@@ -15,8 +15,12 @@ void IStream_deinit(IStream* stream) {
 Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
     Stream_Result res;
 
+	if (!stream->Buffer.InReceive) {
+		return Stream_NoReceive;
+	}
+
     stream->Buffer.InReceive = 0;
-    if (res = Stream_moveWritePos(&stream->Buffer, len) != Stream_Ok) {
+    if ((res = Stream_moveWritePos(&stream->Buffer, len)) != Stream_Ok) {
         return res;
     }
 

@@ -1,7 +1,7 @@
 #ifndef _STREAM_H_
 #define _STREAM_H_
 
-#if __cplusplus 
+#if __cplusplus
 extern "C" {
 #endif
 
@@ -40,6 +40,8 @@ typedef enum {
     Stream_BufferFull       = 3,
     Stream_NoReceiveFn      = 4,
     Stream_NoTransmitFn     = 5,
+    Stream_NoReceive		= 6,
+    Stream_NoTransmit		= 7,
 } Stream_Result;
 
 typedef struct {
@@ -57,7 +59,7 @@ typedef struct {
 #else
     uint8_t                 Reserved    : 5;
 #endif
-    
+
 } Stream;
 
 
@@ -167,7 +169,7 @@ float    Stream_getFloatAt(Stream* stream, Stream_LenType index);
     double   Stream_getDoubleAt(Stream* stream, Stream_LenType index);
 #endif // STREAM_DOUBLE
 
-#if __cplusplus 
+#if __cplusplus
 };
 #endif
 

@@ -35,6 +35,9 @@ void memrcpy(void* dest, const void* src, int len);
 void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
     stream->Data = buffer;
     stream->Size = size;
+    stream->Overflow = 0;
+    stream->InReceive = 0;
+    stream->InTransmit = 0;
 #if STREAM_BYTE_ORDER
     stream->Order = Stream_getSystemByteOrder();
     stream->OrderFn = 0;
@@ -72,6 +75,8 @@ void Stream_clear(Stream* stream) {
     stream->RPos = 0;
     stream->WPos = 0;
     stream->Overflow = 0;
+    stream->InReceive = 0;
+    stream->InTransmit = 0;
 }
 Stream_LenType Stream_getWritePos(Stream* stream) {
     return stream->WPos;
@@ -83,16 +88,22 @@ Stream_LenType Stream_directAvailable(Stream* stream) {
     if (stream->RPos < stream->WPos) {
         return stream->WPos - stream->RPos;
     }
-    else if (stream->RPos >= stream->WPos) {
-        return stream->Overflow ? stream->Size - stream->RPos : 0;
+    else if (stream->RPos > stream->WPos) {
+		return stream->Size - stream->RPos;
+    }
+    else {
+		return stream->Overflow ? stream->Size - stream->RPos : 0;
     }
 }
 Stream_LenType Stream_directSpace(Stream* stream) {
     if (stream->WPos < stream->RPos) {
         return stream->RPos - stream->WPos;
     }
-    else if (stream->WPos >= stream->RPos) {
-        return stream->Overflow ? stream->Size - stream->WPos : 0;
+    else if (stream->WPos > stream->RPos) {
+		return stream->Size - stream->WPos;
+    }
+    else {
+		return stream->Overflow ? 0 : stream->Size - stream->WPos;
     }
 }
 
@@ -108,7 +119,7 @@ Stream_Result Stream_moveWritePos(Stream* stream, Stream_LenType steps) {
     if (Stream_space(stream) < steps) {
         return Stream_NoSpace;
     }
-    
+
     stream->WPos += steps;
     if (stream->WPos >= stream->Size) {
         stream->WPos %= stream->Size;
@@ -122,7 +133,7 @@ Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps) {
     if (Stream_available(stream) < steps) {
         return Stream_NoAvailable;
     }
-    
+
     stream->RPos += steps;
     if (stream->RPos >= stream->Size) {
         stream->RPos %= stream->Size;
@@ -370,40 +381,40 @@ Stream_Result Stream_getBytesReverse(Stream* stream, uint8_t* val, Stream_LenTyp
     return Stream_getBytesAt(stream, stream->RPos, val, len);
 }
 char     Stream_getChar(Stream* stream) {
-    return Stream_getCharAt(stream, stream->RPos, stream->RPos);
+    return Stream_getCharAt(stream, stream->RPos);
 }
 uint8_t  Stream_getUInt8(Stream* stream) {
-    return Stream_getUInt8At(stream, stream->RPos, stream->RPos);
+    return Stream_getUInt8At(stream, stream->RPos);
 }
 int8_t   Stream_getInt8(Stream* stream) {
-    return Stream_getInt8At(stream, stream->RPos, stream->RPos);
+    return Stream_getInt8At(stream, stream->RPos);
 }
 uint16_t Stream_getUInt16(Stream* stream) {
-    return Stream_getUInt16At(stream, stream->RPos, stream->RPos);
+    return Stream_getUInt16At(stream, stream->RPos);
 }
 int16_t  Stream_getInt16(Stream* stream) {
-    return Stream_getInt16At(stream, stream->RPos, stream->RPos);
+    return Stream_getInt16At(stream, stream->RPos);
 }
 uint32_t Stream_getUInt32(Stream* stream) {
-    return Stream_getUInt32At(stream, stream->RPos, stream->RPos);
+    return Stream_getUInt32At(stream, stream->RPos);
 }
 int32_t  Stream_getInt32(Stream* stream) {
-    return Stream_getInt32At(stream, stream->RPos, stream->RPos);
+    return Stream_getInt32At(stream, stream->RPos);
 }
 float    Stream_getFloat(Stream* stream) {
-    return Stream_getFloatAt(stream, stream->RPos, stream->RPos);
+    return Stream_getFloatAt(stream, stream->RPos);
 }
 #if STREAM_UINT64
 uint64_t Stream_getUInt64(Stream* stream) {
-    return Stream_getUInt64At(stream, stream->RPos, stream->RPos);
+    return Stream_getUInt64At(stream, stream->RPos);
 }
 int64_t  Stream_getInt64(Stream* stream) {
-    return Stream_getInt64At(stream, stream->RPos, stream->RPos);
+    return Stream_getInt64At(stream, stream->RPos);
 }
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
 double   Stream_getDouble(Stream* stream) {
-    return Stream_getDoubleAt(stream, stream->RPos, stream->RPos);
+    return Stream_getDoubleAt(stream, stream->RPos);
 }
 #endif // STREAM_DOUBLE
 
