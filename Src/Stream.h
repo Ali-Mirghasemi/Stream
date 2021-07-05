@@ -13,8 +13,6 @@
 
 #define STREAM_DOUBLE                   1
 
-#define STREAM_RESIZABLE_BUFFER         1
-
 typedef uint16_t Stream_LenType;
 
 
@@ -36,6 +34,8 @@ typedef enum {
     Stream_NoSpace          = 1,
     Stream_NoAvailable      = 2,
     Stream_BufferFull       = 3,
+    Stream_NoReceiveFn      = 4,
+    Stream_NoTransmitFn     = 5,
 } Stream_Result;
 
 typedef struct {
@@ -43,12 +43,17 @@ typedef struct {
     Stream_LenType          Size;
     Stream_LenType          WPos;
     Stream_LenType          RPos;
-#if STREAM_BYTE_ORDER
-    ByteOrder               Order;
-#endif
     uint8_t                 Overflow    : 1;
+    uint8_t                 InReceive   : 1;
+    uint8_t                 InTransmit  : 1;
+#if STREAM_BYTE_ORDER
+    uint8_t                 Order       : 1;
     uint8_t                 OrderFn     : 1;
-    uint8_t                 Reserved    : 6;
+    uint8_t                 Reserved    : 3;
+#else
+    uint8_t                 Reserved    : 5;
+#endif
+    
 } Stream;
 
 
@@ -61,13 +66,20 @@ Stream_LenType Stream_space(Stream* stream);
 uint8_t Stream_isEmpty(Stream* stream);
 uint8_t Stream_isFull(Stream* stream);
 
+Stream_LenType Stream_directAvailable(Stream* stream);
+Stream_LenType Stream_directSpace(Stream* stream);
+
 void Stream_clear(Stream* stream);
 
 uint8_t* Stream_getBuffer(Stream* stream);
 
 Stream_LenType Stream_getBufferSize(Stream* stream);
-//Stream_LenType Stream_getWritePos(Stream* stream);
-//Stream_LenType Stream_getReadPos(Stream* stream);
+
+Stream_LenType Stream_getWritePos(Stream* stream);
+Stream_LenType Stream_getReadPos(Stream* stream);
+
+Stream_Result Stream_moveWritePos(Stream* stream, Stream_LenType steps);
+Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps);
 
 #if STREAM_BYTE_ORDER
     ByteOrder  Stream_getSystemByteOrder(void);
@@ -114,5 +126,41 @@ float    Stream_readFloat(Stream* stream);
     double   Stream_readDouble(Stream* stream);
 #endif // STREAM_DOUBLE
 
+
+Stream_Result Stream_getBytes(Stream* stream, uint8_t* val, Stream_LenType len);
+Stream_Result Stream_getBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
+char     Stream_getChar(Stream* stream);
+uint8_t  Stream_getUInt8(Stream* stream);
+int8_t   Stream_getInt8(Stream* stream);
+uint16_t Stream_getUInt16(Stream* stream);
+int16_t  Stream_getInt16(Stream* stream);
+uint32_t Stream_getUInt32(Stream* stream);
+int32_t  Stream_getInt32(Stream* stream);
+float    Stream_getFloat(Stream* stream);
+#if STREAM_UINT64
+    uint64_t Stream_getUInt64(Stream* stream);
+    int64_t  Stream_getInt64(Stream* stream);
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    double   Stream_getDouble(Stream* stream);
+#endif // STREAM_DOUBLE
+
+Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+char     Stream_getCharAt(Stream* stream, Stream_LenType index);
+uint8_t  Stream_getUInt8At(Stream* stream, Stream_LenType index);
+int8_t   Stream_getInt8At(Stream* stream, Stream_LenType index);
+uint16_t Stream_getUInt16At(Stream* stream, Stream_LenType index);
+int16_t  Stream_getInt16At(Stream* stream, Stream_LenType index);
+uint32_t Stream_getUInt32At(Stream* stream, Stream_LenType index);
+int32_t  Stream_getInt32At(Stream* stream, Stream_LenType index);
+float    Stream_getFloatAt(Stream* stream, Stream_LenType index);
+#if STREAM_UINT64
+    uint64_t Stream_getUInt64At(Stream* stream, Stream_LenType index);
+    int64_t  Stream_getInt64At(Stream* stream, Stream_LenType index);
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    double   Stream_getDoubleAt(Stream* stream, Stream_LenType index);
+#endif // STREAM_DOUBLE
 
 #endif /* _STREAM_H_ */
