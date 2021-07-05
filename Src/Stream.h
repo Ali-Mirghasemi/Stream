@@ -1,6 +1,10 @@
 #ifndef _STREAM_H_
 #define _STREAM_H_
 
+#if __cplusplus 
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 /************************************************************************/
@@ -162,5 +166,9 @@ float    Stream_getFloatAt(Stream* stream, Stream_LenType index);
 #if STREAM_DOUBLE
     double   Stream_getDoubleAt(Stream* stream, Stream_LenType index);
 #endif // STREAM_DOUBLE
+
+#if __cplusplus 
+};
+#endif
 
 #endif /* _STREAM_H_ */
