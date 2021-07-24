@@ -1,0 +1,19 @@
+# depslib dependency file v1.0
+1625513230 source:d:\works\myprojects\libs\stream\src\inputstream.c
+	"InputStream.h"
+
+1626205170 d:\works\myprojects\libs\stream\src\inputstream.h
+	"Stream.h"
+
+1626988082 d:\works\myprojects\libs\stream\src\stream.h
+	<stdint.h>
+
+1627138173 source:d:\works\myprojects\libs\stream\src\stream.c
+	"Stream.h"
+	<string.h>
+
+1627138313 source:d:\works\myprojects\libs\stream\examples\stream-readline\main.c
+	<stdio.h>
+	<stdlib.h>
+	"../../Src/Stream.h"
+

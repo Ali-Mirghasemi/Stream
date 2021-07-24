@@ -11,39 +11,54 @@ extern "C" {
 /*                            Configuration                             */
 /************************************************************************/
 
+/**
+ * @brief you can enable ByteOrder option to have r/w operation
+ * on what endian you need
+ */
 #define STREAM_BYTE_ORDER               1
-
+/**
+ * @brief if your platform support 64bit variables and you need it 
+ * you can enable this option
+ */
 #define STREAM_UINT64                   1
-
+/**
+ * @brief if you need r/w double variables and your platform support
+ * you can enable this option
+ */
 #define STREAM_DOUBLE                   1
-
-typedef uint16_t Stream_LenType;
-
-
-
-
-
-
+/**
+ * @brief based on maximum size of buffer that you use for stream
+ * you can change type of len variables
+ */
+typedef int16_t Stream_LenType;
 
 /************************************************************************/
 
+/**
+ * @brief you can choose what ByteOrder can use for r/w operations
+ */
 typedef enum {
     ByteOrder_LittleEndian  = 0,
     ByteOrder_BigEndian     = 1,
     ByteOrder_Reserved      = 0xFF,
 } ByteOrder;
-
+/**
+ * @brief result of Stream functions
+ */
 typedef enum {
-    Stream_Ok               = 0,
-    Stream_NoSpace          = 1,
-    Stream_NoAvailable      = 2,
-    Stream_BufferFull       = 3,
-    Stream_NoReceiveFn      = 4,
-    Stream_NoTransmitFn     = 5,
-    Stream_NoReceive		= 6,
-    Stream_NoTransmit		= 7,
+    Stream_Ok               = 0,    /**< everythings is OK */
+    Stream_NoSpace          = 1,    /**< there is no space for write operation */
+    Stream_NoAvailable      = 2,    /**< there no available bytes for read operation */
+    Stream_BufferFull       = 3,    /**< buffer full*/
+    Stream_NoReceiveFn      = 4,    /**< no receive function set for IStream */
+    Stream_NoTransmitFn     = 5,    /**< no transmit function set for OStream */
+    Stream_NoReceive		= 6,    /**< stream is not in receive mode */
+    Stream_NoTransmit		= 7,    /**< stream is not in transmit mode */
 } Stream_Result;
-
+/**
+ * @brief Stream struct
+ * contains everything need for handle stream
+ */
 typedef struct {
     uint8_t*                Data;
     Stream_LenType          Size;
@@ -59,7 +74,6 @@ typedef struct {
 #else
     uint8_t                 Reserved    : 5;
 #endif
-
 } Stream;
 
 
@@ -74,6 +88,14 @@ uint8_t Stream_isFull(Stream* stream);
 
 Stream_LenType Stream_directAvailable(Stream* stream);
 Stream_LenType Stream_directSpace(Stream* stream);
+
+Stream_LenType Stream_directAvailableAt(Stream* stream, Stream_LenType index);
+Stream_LenType Stream_directSpaceAt(Stream* stream, Stream_LenType index);
+
+uint8_t* Stream_getWritePtr(Stream* stream);
+uint8_t* Stream_getReadPtr(Stream* stream);
+uint8_t* Stream_getWritePtrAt(Stream* stream, Stream_LenType index);
+uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index);
 
 void Stream_clear(Stream* stream);
 
@@ -114,6 +136,7 @@ Stream_Result Stream_writeFloat(Stream* stream, float val);
 
 
 /**************** Read APIs **************/
+int16_t  Stream_read(Stream* stream);
 Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
 char     Stream_readChar(Stream* stream);
@@ -168,6 +191,14 @@ float    Stream_getFloatAt(Stream* stream, Stream_LenType index);
 #if STREAM_DOUBLE
     double   Stream_getDoubleAt(Stream* stream, Stream_LenType index);
 #endif // STREAM_DOUBLE
+
+int8_t Stream_compareAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+Stream_LenType Stream_findByte(Stream* stream, uint8_t val);
+Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t val);
+Stream_LenType Stream_findPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen);
+Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, uint8_t* pat, Stream_LenType patLen);
+Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len);
+Stream_LenType Stream_readBytesUntilPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
 
 #if __cplusplus
 };

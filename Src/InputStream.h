@@ -27,20 +27,24 @@ void IStream_deinit(IStream* stream);
 /* Input Bytes of IStream */
 Stream_Result IStream_handle(IStream* stream, Stream_LenType len);
 Stream_Result IStream_receive(IStream* stream);
-uint8_t*      IStream_getDataPtr(IStream* stream);
 
 void  IStream_setArgs(IStream* stream, void* args);
 void* IStream_getArgs(IStream* stream);
 
 #define IStream_available(STREAM)                   Stream_available(&((STREAM)->Buffer))
 
+#define IStream_getDataPtr(STREAM)                  Stream_getReadPtr(&((STREAM)->Buffer))
+
+#define IStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
+
 #if STREAM_BYTE_ORDER
-    #define OStream_getSystemByteOrder()            Stream_getSystemByteOrder()
-    #define OStream_setByteOrder(STREAM, ORDER)     Stream_setByteOrder(&((STREAM)->Buffer), ORDER)
-    #define OStream_getByteOrder(STREAM)            Stream_getByteOrder(&((STREAM)->Buffer))
+    #define IStream_getSystemByteOrder()            Stream_getSystemByteOrder()
+    #define IStream_setByteOrder(STREAM, ORDER)     Stream_setByteOrder(&((STREAM)->Buffer), ORDER)
+    #define IStream_getByteOrder(STREAM)            Stream_getByteOrder(&((STREAM)->Buffer))
 #endif
 
 /* Read function same as Stream read functions */
+#define IStream_read(STREAM)                        Stream_read(&((STREAM)->Buffer))
 #define IStream_readBytes(STREAM, VAL, LEN)         Stream_readBytes(&((STREAM)->Buffer), (VAL), (LEN))
 #define IStream_readBytesReverse(STREAM, VAL, LEN)  Stream_readBytesReverse(&((STREAM)->Buffer), (VAL), (LEN));
 #define IStream_readChar(STREAM)                    Stream_readChar(&((STREAM)->Buffer))
@@ -97,6 +101,17 @@ void* IStream_getArgs(IStream* stream);
 #if STREAM_DOUBLE
     #define IStream_getDoubleAt(STREAM)                     Stream_getDoubleAt(&((STREAM)->Buffer), (IDX))
 #endif // STREAM_DOUBLE
+
+
+#define IStream_compareAt(STREAM, IDX, VAL, LEN)                                Stream_compareAt(&((STREAM)->Buffer)), (IDX), (VAL), (LEN))
+#define IStream_findByte(STREAM, VAL)                                           Stream_findByte(&((STREAM)->Buffer)), (VAL))
+#define IStream_findByteAt(STREAM, IDX, VAL)                                    Stream_findByteAt(&((STREAM)->Buffer))
+#define IStream_findPattern(STREAM, PAT, PAT_LEN)                               Stream_findPattern(&((STREAM)->Buffer), (PAT), (PAT_LEN))
+#define IStream_findPatternAt(STREAM, IDX, PAT, PAT_LEN)                        Stream_findPatternAt(&((STREAM)->Buffer), (IDX), (PAT), (PAT_LEN))
+#define IStream_readBytesUntil(STREAM, END, VAL, LEN)                           Stream_readBytesUntil(&((STREAM)->Buffer), (END), (VAL), (LEN))
+#define IStream_readBytesUntil(STREAM, IDX, END, VAL, LEN)                      Stream_readBytesUntil(&((STREAM)->Buffer), (IDX), (END), (VAL), (LEN))
+#define IStream_readBytesUntilPattern(STREAM, PAT, PAT_LEN, VAL, LEN)           Stream_readBytesUntilPattern(&((STREAM)->Buffer), (PAT), (PAT_LEN), (VAL), (LEN))
+#define IStream_readBytesUntilPatternAt(STREAM, IDX, PAT, PAT_LEN, VAL, LEN)    Stream_readBytesUntilPatternAt(&((STREAM)->Buffer), (IDX), (PAT), (PAT_LEN), (VAL), (LEN))
 
 #if __cplusplus
 };

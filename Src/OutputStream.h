@@ -27,12 +27,16 @@ void OStream_deinit(OStream* stream);
 /* Output Bytes of OStream */
 Stream_Result OStream_handle(OStream* stream, Stream_LenType len);
 Stream_Result OStream_flush(OStream* stream);
-uint8_t*      OStream_getDataPtr(OStream* stream);
 
 void  OStream_setArgs(OStream* stream, void* args);
 void* OStream_getArgs(OStream* stream);
 
+#define OStream_pendingBytes(STREAM)                Stream_available(&((STREAM)->Buffer))
 #define OStream_space(STREAM)                       Stream_space(&((STREAM)->Buffer))
+
+#define OStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
+
+#define OStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
 
 #if STREAM_BYTE_ORDER
     #define OStream_getSystemByteOrder()            Stream_getSystemByteOrder()
