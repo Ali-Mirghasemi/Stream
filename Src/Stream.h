@@ -101,6 +101,7 @@ void Stream_clear(Stream* stream);
 
 uint8_t* Stream_getBuffer(Stream* stream);
 
+void Stream_setBuffer(Stream* stream, uint8_t* data, Stream_LenType size);
 Stream_LenType Stream_getBufferSize(Stream* stream);
 
 Stream_LenType Stream_getWritePos(Stream* stream);

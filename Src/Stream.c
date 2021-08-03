@@ -226,6 +226,14 @@ uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index) {
     return &stream->Data[index];
 }
 /**
+ * @brief set buffer for stream and reset stream
+ * 
+ * @param stream 
+ */
+void Stream_setBuffer(Stream* stream, uint8_t* data, Stream_LenType size) {
+    Stream_init(stream, data, size);
+}
+/**
  * @brief return byte buffer
  *
  * @param stream
