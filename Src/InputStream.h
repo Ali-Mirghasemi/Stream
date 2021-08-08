@@ -27,13 +27,14 @@ void IStream_deinit(IStream* stream);
 /* Input Bytes of IStream */
 Stream_Result IStream_handle(IStream* stream, Stream_LenType len);
 Stream_Result IStream_receive(IStream* stream);
+Stream_Result IStream_receiveByte(IStream* stream, uint8_t val);
 
 void  IStream_setArgs(IStream* stream, void* args);
 void* IStream_getArgs(IStream* stream);
 
 #define IStream_available(STREAM)                   Stream_available(&((STREAM)->Buffer))
 
-#define IStream_getDataPtr(STREAM)                  Stream_getReadPtr(&((STREAM)->Buffer))
+#define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
 
 #define IStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
 
@@ -109,7 +110,7 @@ void* IStream_getArgs(IStream* stream);
 #define IStream_findPattern(STREAM, PAT, PAT_LEN)                               Stream_findPattern(&((STREAM)->Buffer), (PAT), (PAT_LEN))
 #define IStream_findPatternAt(STREAM, IDX, PAT, PAT_LEN)                        Stream_findPatternAt(&((STREAM)->Buffer), (IDX), (PAT), (PAT_LEN))
 #define IStream_readBytesUntil(STREAM, END, VAL, LEN)                           Stream_readBytesUntil(&((STREAM)->Buffer), (END), (VAL), (LEN))
-#define IStream_readBytesUntil(STREAM, IDX, END, VAL, LEN)                      Stream_readBytesUntil(&((STREAM)->Buffer), (IDX), (END), (VAL), (LEN))
+#define IStream_readBytesUntilAt(STREAM, IDX, END, VAL, LEN)                    Stream_readBytesUntil(&((STREAM)->Buffer), (IDX), (END), (VAL), (LEN))
 #define IStream_readBytesUntilPattern(STREAM, PAT, PAT_LEN, VAL, LEN)           Stream_readBytesUntilPattern(&((STREAM)->Buffer), (PAT), (PAT_LEN), (VAL), (LEN))
 #define IStream_readBytesUntilPatternAt(STREAM, IDX, PAT, PAT_LEN, VAL, LEN)    Stream_readBytesUntilPatternAt(&((STREAM)->Buffer), (IDX), (PAT), (PAT_LEN), (VAL), (LEN))
 

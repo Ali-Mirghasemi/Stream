@@ -13,6 +13,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add directory="../../Src" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -34,11 +35,9 @@
 		<Unit filename="../../Src/InputStream.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../Src/InputStream.h" />
 		<Unit filename="../../Src/Stream.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../Src/Stream.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

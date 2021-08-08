@@ -42,10 +42,18 @@ Stream_Result IStream_receive(IStream* stream) {
         return Stream_NoSpace;
     }
 }
-uint8_t*      IStream_getDataPtr(IStream* stream) {
-    return &stream->Buffer.Data[stream->Buffer.WPos];
-}
+/**
+ * @brief blocking receive for 1 byte
+ * 
+ * @param stream 
+ * @param val 
+ * @return Stream_Result 
+ */
+Stream_Result IStream_receiveByte(IStream* stream, uint8_t val) {
+    *IStream_getDataPtr(stream) = val;
+    return Stream_moveWritePos(&stream->Buffer, 1);
 
+}
 void  IStream_setArgs(IStream* stream, void* args) {
     stream->Args = args;
 }

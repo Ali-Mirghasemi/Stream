@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../Src/InputStream.h"
-#include "../../Src/OutputStream.h"
-#include "../../Src/Stream.h"
+#include "InputStream.h"
+#include "OutputStream.h"
+#include "Stream.h"
 
 uint8_t mediaBuff[200] = {0};
 Stream mediaStream;

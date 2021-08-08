@@ -1,1 +1,4 @@
 .vscode/
+*.o
+*.layout
+*.depend

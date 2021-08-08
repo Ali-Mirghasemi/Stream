@@ -41,9 +41,6 @@ Stream_Result OStream_flush(OStream* stream) {
         return Stream_NoAvailable;
     }
 }
-uint8_t*      OStream_getDataPtr(OStream* stream) {
-    return &stream->Buffer.Data[stream->Buffer.RPos];
-}
 
 void  OStream_setArgs(OStream* stream, void* args) {
     stream->Args = args;

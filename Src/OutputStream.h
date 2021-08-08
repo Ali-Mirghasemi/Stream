@@ -34,7 +34,7 @@ void* OStream_getArgs(OStream* stream);
 #define OStream_pendingBytes(STREAM)                Stream_available(&((STREAM)->Buffer))
 #define OStream_space(STREAM)                       Stream_space(&((STREAM)->Buffer))
 
-#define OStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
+#define OStream_getDataPtr(STREAM)                  Stream_getReadPtr(&((STREAM)->Buffer))
 
 #define OStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
 
