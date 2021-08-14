@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "Stream.h"
+#include "StreamBuffer.h"
 
 struct __OStream;
 typedef struct __OStream OStream;
@@ -27,6 +27,8 @@ void OStream_deinit(OStream* stream);
 /* Output Bytes of OStream */
 Stream_Result OStream_handle(OStream* stream, Stream_LenType len);
 Stream_Result OStream_flush(OStream* stream);
+Stream_Result OStream_transmitByte(OStream* stream);
+Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len);
 
 void  OStream_setArgs(OStream* stream, void* args);
 void* OStream_getArgs(OStream* stream);

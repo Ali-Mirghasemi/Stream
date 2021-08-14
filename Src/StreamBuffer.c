@@ -1,4 +1,4 @@
-#include "Stream.h"
+#include "StreamBuffer.h"
 #include <string.h>
 
 #if STREAM_BYTE_ORDER
@@ -163,11 +163,11 @@ Stream_LenType Stream_directAvailableAt(Stream* stream, Stream_LenType index) {
     Stream_LenType len = Stream_available(stream);
     Stream_LenType dirLen = Stream_directAvailable(stream);
     if (len == dirLen) {
-        return stream->WPos - stream->RPos - index;
+        return len - index;
     }
     else {
-        return dirLen < index ? stream->Size - stream->RPos - index :
-                                    stream->WPos - index - dirLen;
+        return dirLen > index ? dirLen - index :
+                                stream->WPos - (index - dirLen);
     }
 }
 /**
@@ -182,11 +182,11 @@ Stream_LenType Stream_directSpaceAt(Stream* stream, Stream_LenType index) {
     Stream_LenType len = Stream_space(stream);
     Stream_LenType dirLen = Stream_directSpace(stream);
     if (len == dirLen) {
-        return stream->RPos - stream->WPos - index;
+        return len - index;
     }
     else {
-        return dirLen < index ? stream->Size - stream->WPos - index :
-                                    stream->RPos - index - dirLen;
+        return dirLen > index ? dirLen - index :
+                                stream->RPos - (index - dirLen);
     }
 }
 /**
@@ -227,8 +227,8 @@ uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index) {
 }
 /**
  * @brief set buffer for stream and reset stream
- * 
- * @param stream 
+ *
+ * @param stream
  */
 void Stream_setBuffer(Stream* stream, uint8_t* data, Stream_LenType size) {
     Stream_init(stream, data, size);
@@ -781,14 +781,14 @@ Stream_LenType Stream_findByte(Stream* stream, uint8_t val) {
         pEnd = memchr(pStart, val, stream->WPos);
     }
 
-    return pEnd ? (Stream_LenType)(pEnd - pStart) + tmpLen : -1;
+    return pEnd != NULL ? (Stream_LenType)(pEnd - pStart) + tmpLen : -1;
 }
 Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t val) {
     Stream_LenType tmpLen = 0;
     uint8_t* pStart = Stream_getReadPtrAt(stream, offset);
     uint8_t* pEnd;
 
-    if (Stream_isEmpty(stream)) {
+    if (Stream_available(stream) < offset) {
         return -1;
     }
 
@@ -799,7 +799,7 @@ Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t 
         pEnd = memchr(pStart, val, stream->WPos);
     }
 
-    return pEnd ? (Stream_LenType)(pEnd - pStart) + offset : -1;
+    return pEnd != NULL ? (Stream_LenType)(pEnd - pStart) + offset : -1;
 }
 Stream_LenType Stream_findPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen) {
     Stream_LenType index = 0;
@@ -834,7 +834,7 @@ Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, uint8
 Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len) {
     Stream_LenType tmpLen;
     // find end byte
-    if ((tmpLen = Stream_findByte(stream, end)) != -1) {
+    if ((tmpLen = Stream_findByte(stream, end)) >= 0) {
         tmpLen++;
 
         if (len < tmpLen) {
@@ -851,7 +851,7 @@ Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, 
 Stream_LenType Stream_readBytesUntilPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len) {
     Stream_LenType tmpLen;
     // find end byte
-    if ((tmpLen = Stream_findPattern(stream, pat, patLen)) != -1) {
+    if ((tmpLen = Stream_findPattern(stream, pat, patLen)) >= 0) {
         tmpLen += patLen;
 
         if (len < tmpLen) {

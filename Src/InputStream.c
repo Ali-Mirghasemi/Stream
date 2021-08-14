@@ -10,8 +10,13 @@ void IStream_deinit(IStream* stream) {
     memset(stream, 0, sizeof(IStream));
 }
 
-
-/* Input Bytes of IStream */
+/**
+ * @brief call in interrupt or RxCplt callback for Async Receive
+ * 
+ * @param stream 
+ * @param len 
+ * @return Stream_Result 
+ */
 Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
     Stream_Result res;
 
@@ -26,6 +31,12 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
 
     return IStream_receive(stream);
 }
+/**
+ * @brief call receive function for Async read
+ * 
+ * @param stream 
+ * @return Stream_Result 
+ */
 Stream_Result IStream_receive(IStream* stream) {
     Stream_LenType len = Stream_directSpace(&stream->Buffer);
     if (len > 0) {
@@ -54,9 +65,32 @@ Stream_Result IStream_receiveByte(IStream* stream, uint8_t val) {
     return Stream_moveWritePos(&stream->Buffer, 1);
 
 }
+/**
+ * @brief blocking receive for n bytes
+ * 
+ * @param stream 
+ * @param val 
+ * @param len 
+ * @return Stream_Result 
+ */
+Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len) {
+    return Stream_writeBytes(&stream->Buffer, val, len);
+}
+/**
+ * @brief set args for IStream
+ * 
+ * @param stream 
+ * @param args 
+ */
 void  IStream_setArgs(IStream* stream, void* args) {
     stream->Args = args;
 }
+/**
+ * @brief get args form IStream
+ * 
+ * @param stream 
+ * @return void* 
+ */
 void* IStream_getArgs(IStream* stream) {
     return stream->Args;
 }

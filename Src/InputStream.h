@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "Stream.h"
+#include "StreamBuffer.h"
 
 struct __IStream;
 typedef struct __IStream IStream;
@@ -28,6 +28,7 @@ void IStream_deinit(IStream* stream);
 Stream_Result IStream_handle(IStream* stream, Stream_LenType len);
 Stream_Result IStream_receive(IStream* stream);
 Stream_Result IStream_receiveByte(IStream* stream, uint8_t val);
+Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len);
 
 void  IStream_setArgs(IStream* stream, void* args);
 void* IStream_getArgs(IStream* stream);
