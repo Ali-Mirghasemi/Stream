@@ -744,7 +744,7 @@ double   Stream_getDoubleAt(Stream* stream, Stream_LenType index) {
  * @param len
  * @return int8_t
  */
-int8_t Stream_compareAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len) {
     int8_t result;
     Stream_LenType tmpLen;
 
@@ -801,7 +801,7 @@ Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t 
 
     return pEnd != NULL ? (Stream_LenType)(pEnd - pStart) + offset : -1;
 }
-Stream_LenType Stream_findPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen) {
+Stream_LenType Stream_findPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen) {
     Stream_LenType index = 0;
 
     if (Stream_available(stream) < patLen) {
@@ -817,7 +817,7 @@ Stream_LenType Stream_findPattern(Stream* stream, uint8_t* pat, Stream_LenType p
 
     return index;
 }
-Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, uint8_t* pat, Stream_LenType patLen)  {
+Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen)  {
     if (Stream_available(stream) < patLen) {
         return -1;
     }
@@ -848,7 +848,7 @@ Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, 
 
     return 0;
 }
-Stream_LenType Stream_readBytesUntilPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len) {
+Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len) {
     Stream_LenType tmpLen;
     // find end byte
     if ((tmpLen = Stream_findPattern(stream, pat, patLen)) >= 0) {

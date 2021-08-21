@@ -17,7 +17,7 @@ extern "C" {
  */
 #define STREAM_BYTE_ORDER               1
 /**
- * @brief if your platform support 64bit variables and you need it 
+ * @brief if your platform support 64bit variables and you need it
  * you can enable this option
  */
 #define STREAM_UINT64                   1
@@ -193,13 +193,13 @@ float    Stream_getFloatAt(Stream* stream, Stream_LenType index);
     double   Stream_getDoubleAt(Stream* stream, Stream_LenType index);
 #endif // STREAM_DOUBLE
 
-int8_t Stream_compareAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len);
 Stream_LenType Stream_findByte(Stream* stream, uint8_t val);
 Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t val);
-Stream_LenType Stream_findPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen);
-Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, uint8_t* pat, Stream_LenType patLen);
+Stream_LenType Stream_findPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen);
+Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen);
 Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len);
-Stream_LenType Stream_readBytesUntilPattern(Stream* stream, uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
+Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
 
 #if __cplusplus
 };
