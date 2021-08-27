@@ -1,5 +1,5 @@
 #include "InputStream.h"
-
+#include <string.h>
 
 void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
@@ -24,6 +24,10 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
 		return Stream_NoReceive;
 	}
 
+    if (stream->IncomingBytes < len) {
+        len = stream->IncomingBytes;
+    }
+
     stream->Buffer.InReceive = 0;
     if ((res = Stream_moveWritePos(&stream->Buffer, len)) != Stream_Ok) {
         return res;
@@ -39,6 +43,7 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
  */
 Stream_Result IStream_receive(IStream* stream) {
     Stream_LenType len = Stream_directSpace(&stream->Buffer);
+    stream->IncomingBytes = len;
     if (len > 0) {
         if (stream->receive) {
             stream->Buffer.InReceive = 1;
@@ -93,4 +98,29 @@ void  IStream_setArgs(IStream* stream, void* args) {
  */
 void* IStream_getArgs(IStream* stream) {
     return stream->Args;
+}
+
+Stream_LenType IStream_available(IStream* stream) {
+    // check
+    if (stream->checkReceive) {
+        Stream_LenType len = stream->checkReceive(stream);
+        if (len > 0) {
+            if (stream->IncomingBytes < len) {
+                len = stream->IncomingBytes;
+            }
+            Stream_moveWritePos(&stream->Buffer, len);
+            if (stream->Buffer.WPos == 0) {
+                IStream_receive(stream);
+            }
+        }
+    }
+    // now get available bytes len
+    return Stream_available(&stream->Buffer);
+}
+
+void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
+    stream->checkReceive = fn;
+}
+Stream_LenType IStream_incomingBytes(IStream* stream) {
+    return stream->IncomingBytes;
 }

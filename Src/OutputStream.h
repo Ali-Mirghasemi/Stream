@@ -11,12 +11,15 @@ struct __OStream;
 typedef struct __OStream OStream;
 
 typedef void (*OStream_TransmitFn)(OStream* stream, uint8_t* buff, Stream_LenType len);
+typedef Stream_LenType (*OStream_CheckTransmitFn)(OStream* stream);
 
 
 struct __OStream {
     Stream                  Buffer;
     void*                   Args;
     OStream_TransmitFn      transmit;
+    OStream_CheckTransmitFn checkTransmit;
+    Stream_LenType          OutgoingBytes;
 };
 
 
@@ -33,14 +36,15 @@ Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len);
 void  OStream_setArgs(OStream* stream, void* args);
 void* OStream_getArgs(OStream* stream);
 
+void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn);
+
+Stream_LenType OStream_space(OStream* stream);
+Stream_LenType OStream_outgoingBytes(OStream* stream);
+
 /**
  * @brief return number of bytes waiting for transmit 
  */
 #define OStream_pendingBytes(STREAM)                Stream_available(&((STREAM)->Buffer))
-/**
- * @brief return available space for push into stream
- */
-#define OStream_space(STREAM)                       Stream_space(&((STREAM)->Buffer))
 
 #define OStream_getDataPtr(STREAM)                  Stream_getReadPtr(&((STREAM)->Buffer))
 
@@ -54,6 +58,7 @@ void* OStream_getArgs(OStream* stream);
 
 #define OStream_writeBytes(STREAM, VAL, LEN)        Stream_writeBytes(&((STREAM)->Buffer), (VAL), (LEN))
 #define OStream_writeBytesReverse(STREAM, VAL, LEN) Stream_writeBytesReverse(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeStream(OUT, IN, LEN)           Stream_writeStream(&((OUT)->Buffer), &((IN)->Buffer), (LEN))
 #define OStream_writeChar(STREAM, VAL)              Stream_writeChar(&((STREAM)->Buffer), (VAL))
 #define OStream_writeUInt8(STREAM, VAL)             Stream_writeUInt8(&((STREAM)->Buffer), (VAL))
 #define OStream_writeInt8(STREAM, VAL)              Stream_writeInt8(&((STREAM)->Buffer), (VAL))

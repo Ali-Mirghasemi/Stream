@@ -136,6 +136,7 @@ Stream_Result Stream_writeFloat(Stream* stream, float val);
     Stream_Result Stream_writeDouble(Stream* stream, double val);
 #endif // STREAM_DOUBLE
 
+Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len);
 
 /**************** Read APIs **************/
 int16_t  Stream_read(Stream* stream);
@@ -157,6 +158,7 @@ float    Stream_readFloat(Stream* stream);
     double   Stream_readDouble(Stream* stream);
 #endif // STREAM_DOUBLE
 
+Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len);
 
 Stream_Result Stream_getBytes(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_getBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);

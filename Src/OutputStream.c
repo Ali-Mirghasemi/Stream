@@ -1,5 +1,5 @@
 #include "OutputStream.h"
-
+#include <string.h>
 
 void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
@@ -24,6 +24,10 @@ Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
 		return Stream_NoTransmit;
 	}
 
+    if (stream->OutgoingBytes < len) {
+        len = stream->OutgoingBytes;
+    }
+
     stream->Buffer.InTransmit = 0;
     if ((res = Stream_moveReadPos(&stream->Buffer, len)) != Stream_Ok) {
         return res;
@@ -39,6 +43,7 @@ Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
  */
 Stream_Result OStream_flush(OStream* stream) {
     Stream_LenType len = Stream_directAvailable(&stream->Buffer);
+    stream->OutgoingBytes = len;
     if (len > 0) {
         if (stream->transmit) {
             stream->Buffer.InTransmit = 1;
@@ -126,5 +131,29 @@ void  OStream_setArgs(OStream* stream, void* args) {
  */
 void* OStream_getArgs(OStream* stream) {
     return stream->Args;
+}
+
+void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn) {
+    stream->checkTransmit = fn;
+}
+
+Stream_LenType OStream_space(OStream* stream) {
+    if (stream->checkTransmit) {
+        Stream_LenType len = stream->checkTransmit(stream);
+        if (len > 0) {
+            if (stream->OutgoingBytes < len) {
+                len = stream->OutgoingBytes;
+            }
+            Stream_moveReadPos(&stream->Buffer, len);
+            if (stream->Buffer.RPos == 0) {
+                OStream_flush(stream);
+            }
+        }
+    }
+    return Stream_space(&stream->Buffer);
+}
+
+Stream_LenType OStream_outgoingBytes(OStream* stream) {
+    return stream->OutgoingBytes;
 }
 

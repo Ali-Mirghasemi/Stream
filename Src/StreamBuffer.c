@@ -339,7 +339,7 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
         return Stream_NoSpace;
     }
 
-    if (stream->WPos + len > stream->Size) {
+    if (stream->WPos + len >= stream->Size) {
         Stream_LenType tmpLen;
 
         tmpLen = stream->Size - stream->WPos;
@@ -350,19 +350,28 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
         stream->WPos = (stream->WPos + tmpLen) % stream->Size;
         stream->Overflow = 1;
     }
-
-    memcpy(&stream->Data[stream->WPos], val, len);
-    // move WPos
-    stream->WPos = (stream->WPos + len) % stream->Size;
+    if (len > 0) {
+        memcpy(&stream->Data[stream->WPos], val, len);
+        // move WPos
+        stream->WPos = (stream->WPos + len) % stream->Size;
+    }
 
     return Stream_Ok;
 }
+/**
+ * @brief write array into stream in reverse order
+ * 
+ * @param stream 
+ * @param val 
+ * @param len 
+ * @return Stream_Result 
+ */
 Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
     if (Stream_space(stream) < len) {
         return Stream_NoSpace;
     }
 
-    if (stream->WPos + len > stream->Size) {
+    if (stream->WPos + len >= stream->Size) {
         Stream_LenType tmpLen;
 
         tmpLen = stream->Size - stream->WPos;
@@ -373,12 +382,49 @@ Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenT
         stream->WPos = (stream->WPos + tmpLen) % stream->Size;
         stream->Overflow = 1;
     }
-
-    memrcpy(&stream->Data[stream->WPos], val, len);
-    // move WPos
-    stream->WPos = (stream->WPos + len) % stream->Size;
+    if (len > 0) {
+        memrcpy(&stream->Data[stream->WPos], val, len);
+        // move WPos
+        stream->WPos = (stream->WPos + len) % stream->Size;
+    }
 
     return Stream_Ok;
+}
+/**
+ * @brief directly read from a stream and write to another
+ * 
+ * @param stream 
+ * @param in 
+ * @param len 
+ * @return Stream_Result 
+ */
+Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
+    // check available space for write
+    if (Stream_space(out) < len) {
+        return Stream_NoSpace;
+    }
+    // check available bytes for read
+    if (Stream_available(in) < len) {
+        return Stream_NoAvailable;
+    }
+
+    if (out->WPos + len >= out->Size) {
+        Stream_LenType tmpLen;
+        tmpLen = out->Size - out->WPos;
+        len -= tmpLen;
+        Stream_readBytes(in, &out->Data[out->WPos], tmpLen);
+        // move WPos
+        out->WPos = (out->WPos + tmpLen) % out->Size;
+        out->Overflow = 1;
+    }
+    if (len > 0) {
+        Stream_readBytes(in, &out->Data[out->WPos], len);
+        // move WPos
+        out->WPos = (out->WPos + len) % out->Size;
+    }
+
+    return Stream_Ok;
+
 }
 Stream_Result Stream_writeChar(Stream* stream, char val) {
     return Stream_writeBytes(stream, (uint8_t*) &val, sizeof(val));
@@ -445,7 +491,7 @@ Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len)
         return Stream_NoAvailable;
     }
 
-    if (stream->RPos + len > stream->Size) {
+    if (stream->RPos + len >= stream->Size) {
         Stream_LenType tmpLen;
 
         tmpLen = stream->Size - stream->RPos;
@@ -456,10 +502,11 @@ Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len)
         stream->RPos = (stream->RPos + tmpLen) % stream->Size;
         stream->Overflow = 0;
     }
-
-    memcpy(val, &stream->Data[stream->RPos], len);
-    // move RPos
-    stream->RPos = (stream->RPos + len) % stream->Size;
+    if (len > 0) {
+        memcpy(val, &stream->Data[stream->RPos], len);
+        // move RPos
+        stream->RPos = (stream->RPos + len) % stream->Size;
+    }
 
     return Stream_Ok;
 }
@@ -468,7 +515,7 @@ Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenTy
         return Stream_NoAvailable;
     }
 
-    if (stream->RPos + len > stream->Size) {
+    if (stream->RPos + len >= stream->Size) {
         Stream_LenType tmpLen;
 
         tmpLen = stream->Size - stream->RPos;
@@ -479,10 +526,37 @@ Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenTy
         stream->RPos = (stream->RPos + tmpLen) % stream->Size;
         stream->Overflow = 0;
     }
+    if (len > 0) {
+        memrcpy(val, &stream->Data[stream->RPos], len);
+        // move RPos
+        stream->RPos = (stream->RPos + len) % stream->Size;
+    }
 
-    memrcpy(val, &stream->Data[stream->RPos], len);
-    // move RPos
-    stream->RPos = (stream->RPos + len) % stream->Size;
+    return Stream_Ok;
+}
+Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len) {
+    if (Stream_available(in) < len) {
+        return Stream_NoAvailable;
+    }
+    if (Stream_space(out) < len) {
+        return Stream_NoSpace;
+    }
+
+    if (in->RPos + len >= in->Size) {
+        Stream_LenType tmpLen;
+
+        tmpLen = in->Size - in->RPos;
+        len -= tmpLen;
+        Stream_writeBytes(out, &in->Data[in->RPos], tmpLen);
+        // move RPos
+        in->RPos = (in->RPos + tmpLen) % in->Size;
+        in->Overflow = 0;
+    }
+    if (len > 0) {
+        Stream_writeBytes(out, &in->Data[in->RPos], len);
+        // move RPos
+        in->RPos = (in->RPos + len) % in->Size;
+    }
 
     return Stream_Ok;
 }
@@ -619,7 +693,7 @@ Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* v
 
     index = (stream->RPos + index) % stream->Size;
 
-    if (index + len > stream->Size) {
+    if (index + len >= stream->Size) {
         Stream_LenType tmpLen;
 
         tmpLen = stream->Size - index;
@@ -640,7 +714,7 @@ Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uin
 
     index = (stream->RPos + index) % stream->Size;
 
-    if (index + len > stream->Size) {
+    if (index + len >= stream->Size) {
         Stream_LenType tmpLen;
 
         tmpLen = stream->Size - index;
@@ -754,7 +828,7 @@ int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val
 
     tmpLen = Stream_directAvailableAt(stream, index);
     if (tmpLen < len) {
-        if (result = (int8_t) memcmp(Stream_getReadPtrAt(stream, index), val, tmpLen)) {
+        if ((result = (int8_t) memcmp(Stream_getReadPtrAt(stream, index), val, tmpLen)) != 0) {
             return result;
         }
 

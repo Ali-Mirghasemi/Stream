@@ -11,12 +11,15 @@ struct __IStream;
 typedef struct __IStream IStream;
 
 typedef void (*IStream_ReceiveFn)(IStream* stream, uint8_t* buff, Stream_LenType len);
+typedef Stream_LenType (*IStream_CheckReceiveFn)(IStream* stream);
 
 
 struct __IStream {
     Stream                  Buffer;
     void*                   Args;
     IStream_ReceiveFn       receive;
+    IStream_CheckReceiveFn  checkReceive;
+    Stream_LenType          IncomingBytes;
 };
 
 
@@ -33,13 +36,15 @@ Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType
 void  IStream_setArgs(IStream* stream, void* args);
 void* IStream_getArgs(IStream* stream);
 
-#define IStream_available(STREAM)                   Stream_available(&((STREAM)->Buffer))
+void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);
+
+Stream_LenType IStream_available(IStream* stream);
+
+Stream_LenType IStream_incomingBytes(IStream* stream);
 
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
 
 #define IStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
-
-#define IStream_incomingBytesLen(STREAM)            Stream_directSpace(&((STREAM)->Buffer));
 
 #if STREAM_BYTE_ORDER
     #define IStream_getSystemByteOrder()            Stream_getSystemByteOrder()
@@ -50,7 +55,8 @@ void* IStream_getArgs(IStream* stream);
 /* Read function same as Stream read functions */
 #define IStream_read(STREAM)                        Stream_read(&((STREAM)->Buffer))
 #define IStream_readBytes(STREAM, VAL, LEN)         Stream_readBytes(&((STREAM)->Buffer), (VAL), (LEN))
-#define IStream_readBytesReverse(STREAM, VAL, LEN)  Stream_readBytesReverse(&((STREAM)->Buffer), (VAL), (LEN));
+#define IStream_readBytesReverse(STREAM, VAL, LEN)  Stream_readBytesReverse(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_readStream(IN, OUT, LEN)            Stream_writeStream(&((IN)->Buffer), &((OUT)->Buffer), (LEN))
 #define IStream_readChar(STREAM)                    Stream_readChar(&((STREAM)->Buffer))
 #define IStream_readUInt8(STREAM)                   Stream_readUInt8(&((STREAM)->Buffer))
 #define IStream_readInt8(STREAM)                    Stream_readInt8(&((STREAM)->Buffer))
