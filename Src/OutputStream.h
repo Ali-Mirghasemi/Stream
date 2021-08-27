@@ -33,7 +33,13 @@ Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len);
 void  OStream_setArgs(OStream* stream, void* args);
 void* OStream_getArgs(OStream* stream);
 
+/**
+ * @brief return number of bytes waiting for transmit 
+ */
 #define OStream_pendingBytes(STREAM)                Stream_available(&((STREAM)->Buffer))
+/**
+ * @brief return available space for push into stream
+ */
 #define OStream_space(STREAM)                       Stream_space(&((STREAM)->Buffer))
 
 #define OStream_getDataPtr(STREAM)                  Stream_getReadPtr(&((STREAM)->Buffer))

@@ -81,6 +81,7 @@ void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size);
 void Stream_deinit(Stream* stream);
 
 /*************** General APIs *************/
+
 Stream_LenType Stream_available(Stream* stream);
 Stream_LenType Stream_space(Stream* stream);
 uint8_t Stream_isEmpty(Stream* stream);

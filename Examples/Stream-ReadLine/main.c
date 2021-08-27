@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../Src/Stream.h"
+#include "StreamBuffer.h"
 
 static const char CRLF[2] = "\r\n";
 

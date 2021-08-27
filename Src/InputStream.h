@@ -39,6 +39,8 @@ void* IStream_getArgs(IStream* stream);
 
 #define IStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
 
+#define IStream_incomingBytesLen(STREAM)            Stream_directSpace(&((STREAM)->Buffer));
+
 #if STREAM_BYTE_ORDER
     #define IStream_getSystemByteOrder()            Stream_getSystemByteOrder()
     #define IStream_setByteOrder(STREAM, ORDER)     Stream_setByteOrder(&((STREAM)->Buffer), ORDER)
