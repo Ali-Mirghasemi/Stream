@@ -145,6 +145,7 @@ Stream_LenType OStream_space(OStream* stream) {
                 len = stream->OutgoingBytes;
             }
             Stream_moveReadPos(&stream->Buffer, len);
+            stream->OutgoingBytes -= len;
             if (stream->Buffer.RPos == 0) {
                 OStream_flush(stream);
             }

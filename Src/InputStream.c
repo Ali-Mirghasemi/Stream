@@ -109,6 +109,7 @@ Stream_LenType IStream_available(IStream* stream) {
                 len = stream->IncomingBytes;
             }
             Stream_moveWritePos(&stream->Buffer, len);
+            stream->IncomingBytes -= len;
             if (stream->Buffer.WPos == 0) {
                 IStream_receive(stream);
             }

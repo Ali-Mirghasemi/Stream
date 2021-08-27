@@ -1,3 +1,6 @@
 [submodule "Examples/STM32F4-Echo"]
 	path = Examples/STM32F4-Echo
 	url = https://github.com/Ali-Mirghasemi/STM32F4-Echo-Stream
+[submodule "Examples/STM32F4-ReadLine"]
+	path = Examples/STM32F4-ReadLine
+	url = https://github.com/Ali-Mirghasemi/STM32F4-ReadLine-Stream
