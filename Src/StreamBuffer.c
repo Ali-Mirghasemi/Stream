@@ -822,7 +822,7 @@ int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val
     int8_t result;
     Stream_LenType tmpLen;
 
-    if (Stream_available(stream) < len) {
+    if (Stream_available(stream) - index < len) {
         return -2;
     }
 
