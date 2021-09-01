@@ -4,9 +4,9 @@
  * @brief this library implement input stream over stream buffer
  * @version 0.1
  * @date 2021-09-01
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #ifndef _INPUT_STREAM_H_
 #define _INPUT_STREAM_H_
@@ -81,7 +81,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #define IStream_read(STREAM)                        Stream_read(&((STREAM)->Buffer))
 #define IStream_readBytes(STREAM, VAL, LEN)         Stream_readBytes(&((STREAM)->Buffer), (VAL), (LEN))
 #define IStream_readBytesReverse(STREAM, VAL, LEN)  Stream_readBytesReverse(&((STREAM)->Buffer), (VAL), (LEN))
-#define OStream_readStream(IN, OUT, LEN)            Stream_writeStream(&((IN)->Buffer), &((OUT)->Buffer), (LEN))
+#define IStream_readStream(IN, OUT, LEN)            Stream_readStream(&((IN)->Buffer), &((OUT)->Buffer), (LEN))
 #define IStream_readChar(STREAM)                    Stream_readChar(&((STREAM)->Buffer))
 #define IStream_readUInt8(STREAM)                   Stream_readUInt8(&((STREAM)->Buffer))
 #define IStream_readInt8(STREAM)                    Stream_readInt8(&((STREAM)->Buffer))

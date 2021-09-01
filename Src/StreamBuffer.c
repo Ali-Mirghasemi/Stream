@@ -29,7 +29,7 @@ static const Stream_GetBytesFn getBytesAt[2] = {
     #define __getBytesAt(STREAM, INDEX, VAL, LEN)   Stream_getBytesAt((STREAM), (INDEX), (VAL), (LEN))
 #endif // STREAM_BYTE_ORDER
 /* private function */
-void memrcpy(void* dest, const void* src, int len);
+static void memrcpy(void* dest, const void* src, int len);
 
 /**
  * @brief initialize stream
@@ -1106,7 +1106,7 @@ Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, 
 }
 
 // TODO: need to implement with more performance
-void memrcpy(void* dest, const void* src, int len) {
+static void memrcpy(void* dest, const void* src, int len) {
     uint8_t* pDest = (uint8_t*) dest;
     const uint8_t* pSrc = (const uint8_t*) src + len - 1;
 
