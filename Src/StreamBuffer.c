@@ -106,11 +106,21 @@ uint8_t Stream_isFull(Stream* stream) {
     return stream->RPos == stream->WPos && stream->Overflow;
 }
 /**
- * @brief reset stream and ignore receive and transmit operations
+ * @brief reset stream
  *
  * @param stream
  */
 void Stream_reset(Stream* stream) {
+    stream->RPos = 0;
+    stream->WPos = 0;
+    stream->Overflow = 0;
+}
+/**
+ * @brief reset stream and ignore receive and transmit operations
+ * 
+ * @param stream 
+ */
+void Stream_resetIO(Stream* stream) {
     stream->RPos = 0;
     stream->WPos = 0;
     stream->Overflow = 0;

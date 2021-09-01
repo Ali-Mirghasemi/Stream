@@ -59,6 +59,8 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #define OStream_getDataPtr(STREAM)                  Stream_getReadPtr(&((STREAM)->Buffer))
 
 #define OStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
+#define OStream_reset(STREAM)                       Stream_reset(&((STREAM)->Buffer))
+#define OStream_resetIO(STREAM)                     Stream_resetIO(&((STREAM)->Buffer))
 
 #if STREAM_BYTE_ORDER
     #define OStream_getSystemByteOrder()            Stream_getSystemByteOrder()

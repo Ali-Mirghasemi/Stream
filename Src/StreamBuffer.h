@@ -156,6 +156,7 @@ uint8_t* Stream_getWritePtrAt(Stream* stream, Stream_LenType index);
 uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index);
 
 void Stream_reset(Stream* stream);
+void Stream_resetIO(Stream* stream);
 void Stream_clear(Stream* stream);
 
 uint8_t* Stream_getBuffer(Stream* stream);

@@ -55,6 +55,8 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
 
 #define IStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
+#define IStream_reset(STREAM)                       Stream_reset(&((STREAM)->Buffer))
+#define IStream_resetIO(STREAM)                     Stream_resetIO(&((STREAM)->Buffer))
 
 #if STREAM_BYTE_ORDER
     #define IStream_getSystemByteOrder()            Stream_getSystemByteOrder()
@@ -72,6 +74,8 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_getCursor(STREAM, CUR)          Stream_getCursor(&((STREAM)->Buffer), (CUR))
     #define IStream_len(STREAM, CUR)                Stream_getReadLen(&((STREAM)->Buffer), (CUR))
 #endif
+
+#define IStream_ignore(STREAM, LEN)                 Stream_moveWritePos(&((STREAM)->Buffer), (LEN))
 
 /* Read function same as Stream read functions */
 #define IStream_read(STREAM)                        Stream_read(&((STREAM)->Buffer))
