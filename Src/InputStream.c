@@ -5,6 +5,7 @@ void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, S
     Stream_init(&stream->Buffer, buff, size);
     stream->receive = receiveFn;
     stream->Args = (void*) 0;
+    stream->checkReceive = (IStream_CheckReceiveFn) 0;
 }
 void IStream_deinit(IStream* stream) {
     memset(stream, 0, sizeof(IStream));

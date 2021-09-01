@@ -27,7 +27,7 @@ static const Stream_GetBytesFn getBytesAt[2] = {
     #define __writeBytes(STREAM, VAL, LEN)          Stream_writeBytes((STREAM), (VAL), (LEN))
     #define __readBytes(STREAM, VAL, LEN)           Stream_readBytes((STREAM), (VAL), (LEN))
     #define __getBytesAt(STREAM, INDEX, VAL, LEN)   Stream_getBytesAt((STREAM), (INDEX), (VAL), (LEN))
-#endif
+#endif // STREAM_BYTE_ORDER
 /* private function */
 void memrcpy(void* dest, const void* src, int len);
 
@@ -50,6 +50,12 @@ void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
 #endif // STREAM_BYTE_ORDER
     stream->RPos = 0;
     stream->WPos = 0;
+#if STREAM_WRITE_LIMIT
+    stream->WriteLimit = STREAM_NO_LIMIT;
+#endif // STREAM_WRITE_LIMIT
+#if STREAM_READ_LIMIT
+    stream->ReadLimit = STREAM_NO_LIMIT;
+#endif // STREAM_READ_LIMIT
 }
 /**
  * @brief reset stream struct into default values
@@ -66,7 +72,7 @@ void Stream_deinit(Stream* stream) {
  * @param stream
  * @return Stream_LenType available bytes
  */
-Stream_LenType Stream_available(Stream* stream) {
+Stream_LenType Stream_availableReal(Stream* stream) {
     return stream->Overflow ? stream->WPos + (stream->Size - stream->RPos) :
                                 stream->WPos - stream->RPos;
 }
@@ -76,7 +82,7 @@ Stream_LenType Stream_available(Stream* stream) {
  * @param stream
  * @return Stream_LenType space for write
  */
-Stream_LenType Stream_space(Stream* stream) {
+Stream_LenType Stream_spaceReal(Stream* stream) {
     return stream->Overflow ? stream->RPos - stream->WPos:
                                 stream->RPos + (stream->Size - stream->WPos);
 }
@@ -104,12 +110,21 @@ uint8_t Stream_isFull(Stream* stream) {
  *
  * @param stream
  */
-void Stream_clear(Stream* stream) {
+void Stream_reset(Stream* stream) {
     stream->RPos = 0;
     stream->WPos = 0;
     stream->Overflow = 0;
     stream->InReceive = 0;
     stream->InTransmit = 0;
+}
+/**
+ * @brief clear buffer and reset stream
+ *
+ * @param stream
+ */
+void Stream_clear(Stream* stream) {
+    Stream_reset(stream);
+    memset(stream->Data, 0, stream->Size);
 }
 /**
  * @brief return Write Pos
@@ -160,7 +175,7 @@ Stream_LenType Stream_directSpace(Stream* stream) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_directAvailableAt(Stream* stream, Stream_LenType index) {
-    Stream_LenType len = Stream_available(stream);
+    Stream_LenType len = Stream_availableReal(stream);
     Stream_LenType dirLen = Stream_directAvailable(stream);
     if (len == dirLen) {
         return len - index;
@@ -179,7 +194,7 @@ Stream_LenType Stream_directAvailableAt(Stream* stream, Stream_LenType index) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_directSpaceAt(Stream* stream, Stream_LenType index) {
-    Stream_LenType len = Stream_space(stream);
+    Stream_LenType len = Stream_spaceReal(stream);
     Stream_LenType dirLen = Stream_directSpace(stream);
     if (len == dirLen) {
         return len - index;
@@ -300,9 +315,19 @@ Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps) {
  * @return ByteOrder
  */
 ByteOrder Stream_getSystemByteOrder(void) {
+#if STREAM_BYTE_ORDER_SYS_STATIC
+    static ByteOrder sysByteOrder = ByteOrder_Reserved;
+    if (sysByteOrder == ByteOrder_Reserved) {
+        const uint8_t arr[2] = {0xAA, 0xBB};
+        const uint16_t val = 0xAABB;
+        sysByteOrder = (ByteOrder) (memcmp(arr, (uint8_t*) &val, sizeof(val)) == 0);
+    }
+    return sysByteOrder;
+#else
     const uint8_t arr[2] = {0xAA, 0xBB};
     const uint16_t val = 0xAABB;
     return (ByteOrder) (memcmp(arr, (uint8_t*) &val, sizeof(val)) == 0);
+#endif
 }
 /**
  * @brief set stream r/w byte order
@@ -325,7 +350,118 @@ ByteOrder  Stream_getByteOrder(Stream* stream) {
     return (ByteOrder) stream->Order;
 }
 #endif
-
+#if STREAM_WRITE_LIMIT
+/**
+ * @brief set limit for write operations, you can't set limit greater than space
+ *
+ * @param stream
+ * @param len
+ */
+void       Stream_setWriteLimit(Stream* stream, Stream_LenType len) {
+    Stream_LenType space = Stream_spaceReal(stream);
+    if (space < len) {
+        len = space;
+    }
+    stream->WriteLimit = len;
+}
+/**
+ * @brief return write operation is limited or not
+ *
+ * @param stream
+ * @return uint8_t true means limited
+ */
+uint8_t    Stream_isWriteLimited(Stream* stream) {
+    return stream->WriteLimit >= 0;
+}
+/**
+ * @brief return space available for write bytes respect to write limit
+ *
+ * @param stream
+ * @return Stream_LenType
+ */
+Stream_LenType Stream_spaceLimit(Stream* stream) {
+    return stream->WriteLimit >= 0 ? stream->WriteLimit : Stream_spaceReal(stream);
+}
+Stream_LenType Stream_getWriteLimit(Stream* stream) {
+    return stream->WriteLimit;
+}
+#endif // STREAM_WRITE_LIMIT
+#if STREAM_READ_LIMIT
+/**
+ * @brief set limit for read operations, you can't set limit greater than available
+ *
+ * @param stream
+ * @param len
+ */
+void       Stream_setReadLimit(Stream* stream, Stream_LenType len) {
+    Stream_LenType available = Stream_availableReal(stream);
+    if (available < len) {
+        len = available;
+    }
+    stream->ReadLimit = len;
+}
+/**
+ * @brief return read operations is limited or not
+ *
+ * @param stream
+ * @return uint8_t true means it's limited
+ */
+uint8_t    Stream_isReadLimited(Stream* stream) {
+    return stream->ReadLimit >= 0;
+}
+/**
+ * @brief retruna available bytes for read respect to read limit
+ *
+ * @param stream
+ * @return Stream_LenType
+ */
+Stream_LenType Stream_availableLimit(Stream* stream) {
+    return stream->ReadLimit >= 0 ? stream->ReadLimit : Stream_availableReal(stream);
+}
+/**
+ * @brief return read limit
+ *
+ * @param stream
+ * @return Stream_LenType
+ */
+Stream_LenType Stream_getReadLimit(Stream* stream) {
+    return stream->ReadLimit;
+}
+#endif // STREAM_READ_LIMIT
+#if STREAM_CURSOR
+/**
+ * @brief fill cursor object based on given stream
+ *
+ * @param stream
+ * @param cursor
+ */
+void Stream_getCursor(Stream* stream, Stream_Cursor* cursor) {
+    cursor->WPos = stream->WPos;
+    cursor->RPos = stream->RPos;
+}
+/**
+ * @brief return read len from cursor pos
+ *
+ * @param stream
+ * @param cursor
+ * @return Stream_LenType
+ */
+Stream_LenType Stream_getReadLen(Stream* stream, Stream_Cursor* cursor) {
+    return cursor->RPos >= stream->RPos ? cursor->RPos - stream->RPos :
+                                            (stream->Size - cursor->RPos) + stream->RPos;
+}
+/**
+ * @brief return write len from cursor pos
+ *
+ * @param stream
+ * @param cursor
+ * @return Stream_LenType
+ */
+Stream_LenType Stream_getWriteLen(Stream* stream, Stream_Cursor* cursor) {
+    return cursor->WPos >= stream->WPos ? cursor->WPos - stream->WPos :
+                                            (stream->Size - cursor->WPos) + stream->WPos;
+}
+#endif // STREAM_CURSOR
 /**
  * @brief write byte array into stream
  *
@@ -338,6 +474,9 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
     if (Stream_space(stream) < len) {
         return Stream_NoSpace;
     }
+#if STREAM_WRITE_LIMIT
+    stream->WriteLimit -= len;
+#endif
 
     if (stream->WPos + len >= stream->Size) {
         Stream_LenType tmpLen;
@@ -360,16 +499,19 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
 }
 /**
  * @brief write array into stream in reverse order
- * 
- * @param stream 
- * @param val 
- * @param len 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param val
+ * @param len
+ * @return Stream_Result
  */
 Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
     if (Stream_space(stream) < len) {
         return Stream_NoSpace;
     }
+#if STREAM_WRITE_LIMIT
+    stream->WriteLimit -= len;
+#endif
 
     if (stream->WPos + len >= stream->Size) {
         Stream_LenType tmpLen;
@@ -392,11 +534,11 @@ Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenT
 }
 /**
  * @brief directly read from a stream and write to another
- * 
- * @param stream 
- * @param in 
- * @param len 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param in
+ * @param len
+ * @return Stream_Result
  */
 Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
     // check available space for write
@@ -407,6 +549,9 @@ Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
     if (Stream_available(in) < len) {
         return Stream_NoAvailable;
     }
+#if STREAM_WRITE_LIMIT
+    out->WriteLimit -= len;
+#endif
 
     if (out->WPos + len >= out->Size) {
         Stream_LenType tmpLen;
@@ -487,9 +632,13 @@ int16_t  Stream_read(Stream* stream) {
  * @return Stream_Result
  */
 Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
+    volatile Stream_LenType mlen = Stream_available(stream);
     if (Stream_available(stream) < len) {
         return Stream_NoAvailable;
     }
+#if STREAM_READ_LIMIT
+    stream->ReadLimit -= len;
+#endif
 
     if (stream->RPos + len >= stream->Size) {
         Stream_LenType tmpLen;
@@ -514,6 +663,9 @@ Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenTy
     if (Stream_available(stream) < len) {
         return Stream_NoAvailable;
     }
+#if STREAM_READ_LIMIT
+    stream->ReadLimit -= len;
+#endif
 
     if (stream->RPos + len >= stream->Size) {
         Stream_LenType tmpLen;
@@ -541,6 +693,9 @@ Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len) {
     if (Stream_space(out) < len) {
         return Stream_NoSpace;
     }
+#if STREAM_READ_LIMIT
+    in->ReadLimit -= len;
+#endif
 
     if (in->RPos + len >= in->Size) {
         Stream_LenType tmpLen;
@@ -844,7 +999,7 @@ Stream_LenType Stream_findByte(Stream* stream, uint8_t val) {
     uint8_t* pStart = &stream->Data[stream->RPos];
     uint8_t* pEnd;
 
-    if (Stream_isEmpty(stream)) {
+    if (Stream_available(stream) == 0) {
         return -1;
     }
 

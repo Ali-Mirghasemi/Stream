@@ -5,6 +5,7 @@ void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff,
     Stream_init(&stream->Buffer, buff, size);
     stream->transmit = transmitFn;
     stream->Args = (void*) 0;
+    stream->checkTransmit = (OStream_CheckTransmitFn) 0;
 }
 void OStream_deinit(OStream* stream) {
     memset(stream, 0, sizeof(OStream));

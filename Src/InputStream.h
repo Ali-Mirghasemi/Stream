@@ -1,3 +1,13 @@
+/**
+ * @file InputStream.h
+ * @author Ali Mirghasemi (ali.mirghasemi1376@gamil.com)
+ * @brief this library implement input stream over stream buffer
+ * @version 0.1
+ * @date 2021-09-01
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef _INPUT_STREAM_H_
 #define _INPUT_STREAM_H_
 
@@ -50,6 +60,17 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_getSystemByteOrder()            Stream_getSystemByteOrder()
     #define IStream_setByteOrder(STREAM, ORDER)     Stream_setByteOrder(&((STREAM)->Buffer), ORDER)
     #define IStream_getByteOrder(STREAM)            Stream_getByteOrder(&((STREAM)->Buffer))
+#endif
+
+#if STREAM_READ_LIMIT
+    #define IStream_setLimit(STREAM, LEN)           Stream_setReadLimit(&((STREAM)->Buffer), (LEN))
+    #define IStream_getLimit(STREAM)                Stream_getReadLimit(&((STREAM)->Buffer))
+    #define IStream_isLimited(STREAM)               Stream_isReadLimited(&((STREAM)->Buffer))
+#endif
+
+#if STREAM_CURSOR
+    #define IStream_getCursor(STREAM, CUR)          Stream_getCursor(&((STREAM)->Buffer), (CUR))
+    #define IStream_len(STREAM, CUR)                Stream_getReadLen(&((STREAM)->Buffer), (CUR))
 #endif
 
 /* Read function same as Stream read functions */

@@ -1,3 +1,13 @@
+/**
+ * @file StreamBuffer.h
+ * @author Ali Mirghasemi (ali.mirghasemi1376@gmail.com)
+ * @brief this library implement stream buffer with read & write operations
+ * @version 0.3
+ * @date 2021-09-01
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef _STREAM_H_
 #define _STREAM_H_
 
@@ -15,24 +25,49 @@ extern "C" {
  * @brief you can enable ByteOrder option to have r/w operation
  * on what endian you need
  */
-#define STREAM_BYTE_ORDER               1
+#define STREAM_BYTE_ORDER                   1
+#if STREAM_BYTE_ORDER 
+    /**
+     * @brief save system byte order in static variable for avoide calculate each time
+     * run Stream_getSystemByteOrder function
+     */
+    #define STREAM_BYTE_ORDER_SYS_STATIC    1
+#endif
+/**
+ * @brief enable set limit for write functions
+ */
+#define STREAM_WRITE_LIMIT                  1
+/**
+ * @brief enable set limit for read operations
+ */
+#define STREAM_READ_LIMIT                   1
+/**
+ * @brief enable cursor object for check how many bytes read or write
+ */
+#define STREAM_CURSOR                       1
 /**
  * @brief if your platform support 64bit variables and you need it
  * you can enable this option
  */
-#define STREAM_UINT64                   1
+#define STREAM_UINT64                       1
 /**
  * @brief if you need r/w double variables and your platform support
  * you can enable this option
  */
-#define STREAM_DOUBLE                   1
+#define STREAM_DOUBLE                       1
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
+ * must be signed type
  */
 typedef int16_t Stream_LenType;
 
 /************************************************************************/
+
+/**
+ * @brief use for disable limit
+ */
+#define STREAM_NO_LIMIT         -1
 
 /**
  * @brief you can choose what ByteOrder can use for r/w operations
@@ -64,6 +99,12 @@ typedef struct {
     Stream_LenType          Size;
     Stream_LenType          WPos;
     Stream_LenType          RPos;
+#if STREAM_WRITE_LIMIT
+    Stream_LenType          WriteLimit;
+#endif // STREAM_WRITE_LIMIT
+#if STREAM_READ_LIMIT
+    Stream_LenType          ReadLimit;
+#endif
     uint8_t                 Overflow    : 1;
     uint8_t                 InReceive   : 1;
     uint8_t                 InTransmit  : 1;
@@ -76,14 +117,30 @@ typedef struct {
 #endif
 } Stream;
 
+typedef struct {
+    Stream_LenType          WPos;
+    Stream_LenType          RPos;
+} Stream_Cursor;
 
 void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size);
 void Stream_deinit(Stream* stream);
 
 /*************** General APIs *************/
 
-Stream_LenType Stream_available(Stream* stream);
-Stream_LenType Stream_space(Stream* stream);
+#if STREAM_WRITE_LIMIT
+    #define Stream_space(STREAM)                Stream_spaceLimit((STREAM))
+#else
+    #define Stream_space(STREAM)                Stream_spaceReal((STREAM))
+#endif // STREAM_WRITE_LIMIT
+
+#if STREAM_READ_LIMIT
+    #define Stream_available(STREAM)            Stream_availableLimit((STREAM))
+#else
+    #define Stream_available(STREAM)            Stream_availableReal((STREAM))
+#endif // STREAM_READ_LIMIT
+
+Stream_LenType Stream_availableReal(Stream* stream);
+Stream_LenType Stream_spaceReal(Stream* stream);
 uint8_t Stream_isEmpty(Stream* stream);
 uint8_t Stream_isFull(Stream* stream);
 
@@ -98,6 +155,7 @@ uint8_t* Stream_getReadPtr(Stream* stream);
 uint8_t* Stream_getWritePtrAt(Stream* stream, Stream_LenType index);
 uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index);
 
+void Stream_reset(Stream* stream);
 void Stream_clear(Stream* stream);
 
 uint8_t* Stream_getBuffer(Stream* stream);
@@ -115,7 +173,27 @@ Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps);
     ByteOrder  Stream_getSystemByteOrder(void);
     void       Stream_setByteOrder(Stream* stream, ByteOrder order);
     ByteOrder  Stream_getByteOrder(Stream* stream);
-#endif
+#endif // STREAM_BYTE_ORDER
+
+#if STREAM_WRITE_LIMIT
+    void       Stream_setWriteLimit(Stream* stream, Stream_LenType len);
+    uint8_t    Stream_isWriteLimited(Stream* stream);
+    Stream_LenType Stream_spaceLimit(Stream* stream);
+    Stream_LenType Stream_getWriteLimit(Stream* stream);
+#endif // STREAM_WRITE_LIMIT
+
+#if STREAM_READ_LIMIT
+    void       Stream_setReadLimit(Stream* stream, Stream_LenType len);
+    uint8_t    Stream_isReadLimited(Stream* stream);
+    Stream_LenType Stream_availableLimit(Stream* stream);
+    Stream_LenType Stream_getReadLimit(Stream* stream);
+#endif // STREAM_READ_LIMIT
+
+#if STREAM_CURSOR
+    void       Stream_getCursor(Stream* stream, Stream_Cursor* cursor);
+    Stream_LenType Stream_getReadLen(Stream* stream, Stream_Cursor* cursor);
+    Stream_LenType Stream_getWriteLen(Stream* stream, Stream_Cursor* cursor);
+#endif // STREAM_CURSOR
 
 /**************** Write APIs **************/
 Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len);

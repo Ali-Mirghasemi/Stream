@@ -1,3 +1,13 @@
+/**
+ * @file OutputStream.h
+ * @author Ali Mirghasemi (ali.mirghasemi1376@gmail.com)
+ * @brief this library implement output stream over stream buffer
+ * @version 0.2
+ * @date 2021-09-01
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef _OUTPUT_STREAM_H_
 #define _OUTPUT_STREAM_H_
 
@@ -54,6 +64,17 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
     #define OStream_getSystemByteOrder()            Stream_getSystemByteOrder()
     #define OStream_setByteOrder(STREAM, ORDER)     Stream_setByteOrder(&((STREAM)->Buffer), ORDER)
     #define OStream_getByteOrder(STREAM)            Stream_getByteOrder(&((STREAM)->Buffer))
+#endif
+
+#if STREAM_WRITE_LIMIT
+    #define OStream_setLimit(STREAM, LEN)           Stream_setWriteLimit(&((STREAM)->Buffer), (LEN))
+    #define OStream_getLimit(STREAM)                Stream_getWriteLimit(&((STREAM)->Buffer))
+    #define OStream_isLimited(STREAM)               Stream_isWriteLimited(&((STREAM)->Buffer))
+#endif
+
+#if STREAM_CURSOR
+    #define OStream_getCursor(STREAM, CUR)          Stream_getCursor(&((STREAM)->Buffer), (CUR))
+    #define OStream_len(STREAM, CUR)                Stream_getWriteLen(&((STREAM)->Buffer), (CUR))
 #endif
 
 #define OStream_writeBytes(STREAM, VAL, LEN)        Stream_writeBytes(&((STREAM)->Buffer), (VAL), (LEN))
