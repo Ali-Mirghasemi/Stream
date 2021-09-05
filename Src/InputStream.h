@@ -11,7 +11,7 @@
 #ifndef _INPUT_STREAM_H_
 #define _INPUT_STREAM_H_
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -148,7 +148,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #define IStream_readBytesUntilPattern(STREAM, PAT, PAT_LEN, VAL, LEN)           Stream_readBytesUntilPattern(&((STREAM)->Buffer), (PAT), (PAT_LEN), (VAL), (LEN))
 #define IStream_readBytesUntilPatternAt(STREAM, IDX, PAT, PAT_LEN, VAL, LEN)    Stream_readBytesUntilPatternAt(&((STREAM)->Buffer), (IDX), (PAT), (PAT_LEN), (VAL), (LEN))
 
-#if __cplusplus
+#ifdef __cplusplus
 };
 #endif
 

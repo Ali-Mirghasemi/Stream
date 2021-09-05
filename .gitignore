@@ -2,3 +2,7 @@
 *.o
 *.layout
 *.depend
+*.cci
+*.h~
+*.hci
+*.c~

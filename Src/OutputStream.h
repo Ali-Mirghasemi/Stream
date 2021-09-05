@@ -11,7 +11,7 @@
 #ifndef _OUTPUT_STREAM_H_
 #define _OUTPUT_STREAM_H_
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -103,7 +103,7 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 
 
 
-#if __cplusplus
+#ifdef __cplusplus
 };
 #endif
 

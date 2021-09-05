@@ -11,7 +11,7 @@
 #ifndef _STREAM_H_
 #define _STREAM_H_
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -25,7 +25,7 @@ extern "C" {
  * @brief you can enable ByteOrder option to have r/w operation
  * on what endian you need
  */
-#define STREAM_BYTE_ORDER                   1
+#define STREAM_BYTE_ORDER                   0
 #if STREAM_BYTE_ORDER 
     /**
      * @brief save system byte order in static variable for avoide calculate each time
@@ -36,25 +36,25 @@ extern "C" {
 /**
  * @brief enable set limit for write functions
  */
-#define STREAM_WRITE_LIMIT                  1
+#define STREAM_WRITE_LIMIT                  0
 /**
  * @brief enable set limit for read operations
  */
-#define STREAM_READ_LIMIT                   1
+#define STREAM_READ_LIMIT                   0
 /**
  * @brief enable cursor object for check how many bytes read or write
  */
-#define STREAM_CURSOR                       1
+#define STREAM_CURSOR                       0
 /**
  * @brief if your platform support 64bit variables and you need it
  * you can enable this option
  */
-#define STREAM_UINT64                       1
+#define STREAM_UINT64                       0
 /**
  * @brief if you need r/w double variables and your platform support
  * you can enable this option
  */
-#define STREAM_DOUBLE                       1
+#define STREAM_DOUBLE                       0
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
@@ -67,7 +67,12 @@ typedef int16_t Stream_LenType;
 /**
  * @brief use for disable limit
  */
-#define STREAM_NO_LIMIT         -1
+#define STREAM_NO_LIMIT                     -1
+
+/**
+ * @brief default value for read function if cause error
+ */
+#define STREAM_READ_DEFAULT_VALUE           0
 
 /**
  * @brief you can choose what ByteOrder can use for r/w operations
@@ -75,7 +80,7 @@ typedef int16_t Stream_LenType;
 typedef enum {
     ByteOrder_LittleEndian  = 0,
     ByteOrder_BigEndian     = 1,
-    ByteOrder_Reserved      = 0xFF,
+    ByteOrder_Reserved      = 0x0F,
 } ByteOrder;
 /**
  * @brief result of Stream functions
@@ -283,7 +288,7 @@ Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, const
 Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len);
 Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
 
-#if __cplusplus
+#ifdef __cplusplus
 };
 #endif
 

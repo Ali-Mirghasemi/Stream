@@ -642,7 +642,6 @@ int16_t  Stream_read(Stream* stream) {
  * @return Stream_Result
  */
 Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
-    volatile Stream_LenType mlen = Stream_available(stream);
     if (Stream_available(stream) < len) {
         return Stream_NoAvailable;
     }
@@ -726,83 +725,61 @@ Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len) {
     return Stream_Ok;
 }
 char     Stream_readChar(Stream* stream) {
-    char val;
-    if (Stream_readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    char val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 uint8_t  Stream_readUInt8(Stream* stream) {
-    uint8_t val;
-    if (Stream_readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint8_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int8_t   Stream_readInt8(Stream* stream) {
-    int8_t val;
-    if (Stream_readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int8_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 uint16_t Stream_readUInt16(Stream* stream) {
-    uint16_t val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint16_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int16_t  Stream_readInt16(Stream* stream) {
-    int16_t val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int16_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 uint32_t Stream_readUInt32(Stream* stream) {
-    uint32_t val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint32_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int32_t  Stream_readInt32(Stream* stream) {
-    int32_t val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int32_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 float    Stream_readFloat(Stream* stream) {
-    float val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    float val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #if STREAM_UINT64
 uint64_t Stream_readUInt64(Stream* stream) {
-    uint64_t val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint64_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int64_t  Stream_readInt64(Stream* stream) {
-    int64_t val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int64_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
 double   Stream_readDouble(Stream* stream) {
-    double val;
-    if (__readBytes(stream, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    double val = STREAM_READ_DEFAULT_VALUE;
+    Stream_readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #endif // STREAM_DOUBLE
@@ -894,83 +871,61 @@ Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uin
     return Stream_Ok;
 }
 char     Stream_getCharAt(Stream* stream, Stream_LenType index) {
-    char val;
-    if (Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    char val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 uint8_t  Stream_getUInt8At(Stream* stream, Stream_LenType index) {
-    uint8_t val;
-    if (Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint8_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int8_t   Stream_getInt8At(Stream* stream, Stream_LenType index) {
-    int8_t val;
-    if (Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int8_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 uint16_t Stream_getUInt16At(Stream* stream, Stream_LenType index) {
-    uint16_t val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint16_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int16_t  Stream_getInt16At(Stream* stream, Stream_LenType index) {
-    int16_t val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int16_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 uint32_t Stream_getUInt32At(Stream* stream, Stream_LenType index) {
-    uint32_t val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint32_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int32_t  Stream_getInt32At(Stream* stream, Stream_LenType index) {
-    int32_t val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int32_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 float    Stream_getFloatAt(Stream* stream, Stream_LenType index) {
-    float val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    float val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #if STREAM_UINT64
 uint64_t Stream_getUInt64At(Stream* stream, Stream_LenType index) {
-    uint64_t val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    uint64_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 int64_t  Stream_getInt64At(Stream* stream, Stream_LenType index) {
-    int64_t val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    int64_t val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
 double   Stream_getDoubleAt(Stream* stream, Stream_LenType index) {
-    double val;
-    if (__getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)) != Stream_Ok) {
-        return 0;
-    }
+    double val = STREAM_READ_DEFAULT_VALUE;
+    Stream_getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #endif // STREAM_DOUBLE
