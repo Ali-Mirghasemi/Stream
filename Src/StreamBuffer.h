@@ -222,6 +222,8 @@ Stream_Result Stream_writeFloat(Stream* stream, float val);
 
 Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len);
 
+Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType len);
+
 /**************** Read APIs **************/
 int16_t  Stream_read(Stream* stream);
 Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len);

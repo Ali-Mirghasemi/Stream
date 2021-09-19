@@ -75,7 +75,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_len(STREAM, CUR)                Stream_getReadLen(&((STREAM)->Buffer), (CUR))
 #endif
 
-#define IStream_ignore(STREAM, LEN)                 Stream_moveWritePos(&((STREAM)->Buffer), (LEN))
+#define IStream_ignore(STREAM, LEN)                 Stream_moveReadPos(&((STREAM)->Buffer), (LEN))
 
 /* Read function same as Stream read functions */
 #define IStream_read(STREAM)                        Stream_read(&((STREAM)->Buffer))

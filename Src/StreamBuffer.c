@@ -581,6 +581,41 @@ Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
     return Stream_Ok;
 
 }
+/**
+ * @brief this function can use for write value multiple time into stream, can use for padding
+ * 
+ * @param stream 
+ * @param val 
+ * @param len 
+ * @return Stream_Result 
+ */
+Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType len) {
+    if (Stream_space(stream) < len) {
+        return Stream_NoSpace;
+    }
+#if STREAM_WRITE_LIMIT
+    stream->WriteLimit -= len;
+#endif
+
+    if (stream->WPos + len >= stream->Size) {
+        Stream_LenType tmpLen;
+
+        tmpLen = stream->Size - stream->WPos;
+        len -= tmpLen;
+        memset(&stream->Data[stream->WPos], val, tmpLen);
+        val += tmpLen;
+        // move WPos
+        stream->WPos = (stream->WPos + tmpLen) % stream->Size;
+        stream->Overflow = 1;
+    }
+    if (len > 0) {
+        memset(&stream->Data[stream->WPos], val, len);
+        // move WPos
+        stream->WPos = (stream->WPos + len) % stream->Size;
+    }
+
+    return Stream_Ok;
+}
 Stream_Result Stream_writeChar(Stream* stream, char val) {
     return Stream_writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
