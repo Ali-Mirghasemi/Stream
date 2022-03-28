@@ -18,3 +18,29 @@
 1625572475 d:\works\myprojects\libs\stream\src\stream.h
 	<stdint.h>
 
+1638898684 source:d:\works\myprojects\libs\libs\stream\examples\stream-example\main.c
+	<stdio.h>
+	<stdlib.h>
+	"StreamBuffer.h"
+
+1638898954 d:\works\myprojects\libs\libs\stream\src\streambuffer.h
+	<stdint.h>
+
+1630628047 source:d:\works\myprojects\libs\libs\stream\src\inputstream.c
+	"InputStream.h"
+	<string.h>
+
+1631129086 d:\works\myprojects\libs\libs\stream\src\inputstream.h
+	"StreamBuffer.h"
+
+1630628047 source:d:\works\myprojects\libs\libs\stream\src\outputstream.c
+	"OutputStream.h"
+	<string.h>
+
+1631130653 d:\works\myprojects\libs\libs\stream\src\outputstream.h
+	"StreamBuffer.h"
+
+1631130392 source:d:\works\myprojects\libs\libs\stream\src\streambuffer.c
+	"StreamBuffer.h"
+	<string.h>
+

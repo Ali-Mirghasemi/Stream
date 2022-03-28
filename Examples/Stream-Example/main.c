@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Stream.h"
+#include "StreamBuffer.h"
 
 const char* const ByteOrderStrs[2] = {
     "LittleEndian", "BigEndian"

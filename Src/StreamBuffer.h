@@ -4,9 +4,9 @@
  * @brief this library implement stream buffer with read & write operations
  * @version 0.3
  * @date 2021-09-01
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #ifndef _STREAM_H_
 #define _STREAM_H_
@@ -25,8 +25,8 @@ extern "C" {
  * @brief you can enable ByteOrder option to have r/w operation
  * on what endian you need
  */
-#define STREAM_BYTE_ORDER                   0
-#if STREAM_BYTE_ORDER 
+#define STREAM_BYTE_ORDER                   1
+#if STREAM_BYTE_ORDER
     /**
      * @brief save system byte order in static variable for avoide calculate each time
      * run Stream_getSystemByteOrder function
@@ -49,12 +49,12 @@ extern "C" {
  * @brief if your platform support 64bit variables and you need it
  * you can enable this option
  */
-#define STREAM_UINT64                       0
+#define STREAM_UINT64                       1
 /**
  * @brief if you need r/w double variables and your platform support
  * you can enable this option
  */
-#define STREAM_DOUBLE                       0
+#define STREAM_DOUBLE                       1
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
