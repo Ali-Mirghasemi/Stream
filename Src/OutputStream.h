@@ -15,6 +15,10 @@
 extern "C" {
 #endif
 
+#define OSTREAM_VER_MAJOR    0
+#define OSTREAM_VER_MINOR    1
+#define OSTREAM_VER_FIX      0
+
 #include "StreamBuffer.h"
 
 struct __OStream;
