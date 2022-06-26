@@ -17,6 +17,10 @@ extern "C" {
 
 #include <stdint.h>
 
+#define STREAM_VER_MAJOR    0
+#define STREAM_VER_MINOR    1
+#define STREAM_VER_FIX      1
+
 /************************************************************************/
 /*                            Configuration                             */
 /************************************************************************/
@@ -28,7 +32,7 @@ extern "C" {
 #define STREAM_BYTE_ORDER                   1
 #if STREAM_BYTE_ORDER
     /**
-     * @brief save system byte order in static variable for avoide calculate each time
+     * @brief save system byte order in static variable for avoid calculate each time
      * run Stream_getSystemByteOrder function
      */
     #define STREAM_BYTE_ORDER_SYS_STATIC    1
@@ -86,7 +90,7 @@ typedef enum {
  * @brief result of Stream functions
  */
 typedef enum {
-    Stream_Ok               = 0,    /**< everythings is OK */
+    Stream_Ok               = 0,    /**< everything is OK */
     Stream_NoSpace          = 1,    /**< there is no space for write operation */
     Stream_NoAvailable      = 2,    /**< there no available bytes for read operation */
     Stream_BufferFull       = 3,    /**< buffer full*/
