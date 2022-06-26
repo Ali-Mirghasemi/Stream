@@ -15,6 +15,10 @@
 extern "C" {
 #endif
 
+#define ISTREAM_VER_MAJOR    0
+#define ISTREAM_VER_MINOR    1
+#define ISTREAM_VER_FIX      0
+
 #include "StreamBuffer.h"
 
 struct __IStream;
