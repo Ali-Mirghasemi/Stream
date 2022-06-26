@@ -3,6 +3,10 @@
 
 #include "StreamBuffer.h"
 
+#if !STREAM_WRITE_LIMIT || !STREAM_READ_LIMIT
+    #error "Enable 'STREAM_WRITE_LIMIT' and 'STREAM_READ_LIMIT'"
+#endif
+
 void printBuff(uint8_t* buff, int len);
 
 uint8_t buff[50] = {0};
