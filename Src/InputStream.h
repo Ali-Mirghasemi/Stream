@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define ISTREAM_VER_MAJOR    0
-#define ISTREAM_VER_MINOR    1
+#define ISTREAM_VER_MINOR    2
 #define ISTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -103,6 +103,23 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_readDouble(STREAM)              Stream_readDouble(&((STREAM)->Buffer))
 #endif // STREAM_DOUBLE
 
+#define IStream_readCharArray(STREAM, VAL, LEN)     Stream_readCharArray(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_readUInt8Array(STREAM, VAL, LEN)    Stream_readUInt8Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_readInt8Array(STREAM, VAL, LEN)     Stream_readInt8Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_readUInt16Array(STREAM, VAL, LEN)   Stream_readUInt16Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_readInt16Array(STREAM, VAL, LEN)    Stream_readInt16Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_readUInt32Array(STREAM, VAL, LEN)   Stream_readUInt32Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_readInt32Array(STREAM, VAL, LEN)    Stream_readInt32Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_readFloatArray(STREAM, VAL, LEN)    Stream_readFloatArray(&((STREAM)->Buffer), (VAL), (LEN))
+
+#if STREAM_UINT64
+    #define IStream_readUInt64Array(STREAM,VAL,LEN) Stream_readUInt64Array(&((STREAM)->Buffer), (VAL), (LEN))
+    #define IStream_readInt64Array(STREAM,VAL,LEN)  Stream_readInt64Array(&((STREAM)->Buffer), (VAL), (LEN))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define IStream_readDoubleArray(STREAM,VAL,LEN) Stream_readDoubleArray(&((STREAM)->Buffer), (VAL), (LEN))
+#endif // STREAM_DOUBLE
+
 #define IStream_getBytes(STREAM, VAL, LEN)          Stream_getBytes((STREAM), (VAL), (LEN))
 #define IStream_getBytesReverse(STREAM, VAL, LEN)   Stream_getBytesReverse(&((STREAM)->Buffer), (VAL), (LEN));
 #define IStream_getChar(STREAM)                     Stream_getChar(&((STREAM)->Buffer))
@@ -120,6 +137,23 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
     #define IStream_getDouble(STREAM)               Stream_getDouble(&((STREAM)->Buffer))
+#endif // STREAM_DOUBLE
+
+#define IStream_getCharArray(STREAM, VAL, LEN)      Stream_getCharArray(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_getUInt8Array(STREAM, VAL, LEN)     Stream_getUInt8Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_getInt8Array(STREAM, VAL, LEN)      Stream_getInt8Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_getUInt16Array(STREAM, VAL, LEN)    Stream_getUInt16Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_getInt16Array(STREAM, VAL, LEN)     Stream_getInt16Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_getUInt32Array(STREAM, VAL, LEN)    Stream_getUInt32Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_getInt32Array(STREAM, VAL, LEN)     Stream_getInt32Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_getFloatArray(STREAM, VAL, LEN)     Stream_getFloatArray(&((STREAM)->Buffer), (VAL), (LEN))
+
+#if STREAM_UINT64
+    #define IStream_getUInt64Array(STREAM,VAL,LEN)  Stream_getUInt64Array(&((STREAM)->Buffer), (VAL), (LEN))
+    #define IStream_getInt64Array(STREAM,VAL,LEN)   Stream_getInt64Array(&((STREAM)->Buffer), (VAL), (LEN))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define IStream_getDoubleArray(STREAM,VAL,LEN)  Stream_getDoubleArray(&((STREAM)->Buffer), (VAL), (LEN))
 #endif // STREAM_DOUBLE
 
 #define IStream_getBytesAt(STREAM, IXD, VAL, LEN)           Stream_getBytesAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
@@ -141,6 +175,22 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_getDoubleAt(STREAM)                     Stream_getDoubleAt(&((STREAM)->Buffer), (IDX))
 #endif // STREAM_DOUBLE
 
+#define IStream_getCharArrayAt(STREAM, IDX, VAL, LEN)       Stream_getCharArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#define IStream_getUInt8ArrayAt(STREAM, IDX, VAL, LEN)      Stream_getUInt8ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#define IStream_getInt8ArrayAt(STREAM, IDX, VAL, LEN)       Stream_getInt8ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#define IStream_getUInt16ArrayAt(STREAM, IDX, VAL, LEN)     Stream_getUInt16ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#define IStream_getInt16ArrayAt(STREAM, IDX, VAL, LEN)      Stream_getInt16ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#define IStream_getUInt32ArrayAt(STREAM, IDX, VAL, LEN)     Stream_getUInt32ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#define IStream_getInt32ArrayAt(STREAM, IDX, VAL, LEN)      Stream_getInt32ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#define IStream_getFloatArrayAt(STREAM, IDX, VAL, LEN)      Stream_getFloatArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+
+#if STREAM_UINT64
+    #define IStream_getUInt64ArrayAt(STREAM,IDX,VAL,LEN)    Stream_getUInt64ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+    #define IStream_getInt64ArrayAt(STREAM,IDX,VAL,LEN)     Stream_getInt64ArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define IStream_getDoubleArrayAt(STREAM,IDX,VAL,LEN)    Stream_getDoubleArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
+#endif // STREAM_DOUBLE
 
 #define IStream_compareAt(STREAM, IDX, VAL, LEN)                                Stream_compareAt(&((STREAM)->Buffer)), (IDX), (VAL), (LEN))
 #define IStream_findByte(STREAM, VAL)                                           Stream_findByte(&((STREAM)->Buffer)), (VAL))
