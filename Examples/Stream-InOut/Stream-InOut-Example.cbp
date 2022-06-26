@@ -38,7 +38,7 @@
 		<Unit filename="../../Src/OutputStream.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../Src/Stream.c">
+		<Unit filename="../../Src/StreamBuffer.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.c">
