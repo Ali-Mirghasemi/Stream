@@ -3,7 +3,7 @@
 
 #include "InputStream.h"
 #include "OutputStream.h"
-#include "Stream.h"
+#include "StreamBuffer.h"
 
 uint8_t mediaBuff[200] = {0};
 Stream mediaStream;
