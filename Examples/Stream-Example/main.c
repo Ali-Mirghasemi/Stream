@@ -46,7 +46,7 @@ int main()
     printf("Int16:  %d\n", Stream_readInt16(&stream));
     printf("UInt32: %u\n", Stream_readUInt32(&stream));
     printf("Char:   %c\n", Stream_readChar(&stream));
-    printf("Double: %g\n", Stream_readDouble(&stream));
+    printf("Double: %lg\n", Stream_readDouble(&stream));
     printf("UInt32: %u\n", Stream_readUInt32(&stream)); // no bytes available
 
     printf("\nAvailable: %u, Space: %u\n", Stream_available(&stream), Stream_space(&stream));
@@ -74,7 +74,7 @@ int main()
     printf("Int16:  %d\n", Stream_readInt16(&stream));
     printf("UInt32: %u\n", Stream_readUInt32(&stream));
     printf("Char:   %c\n", Stream_readChar(&stream));
-    printf("Double: %g\n", Stream_readDouble(&stream));
+    printf("Double: %lg\n", Stream_readDouble(&stream));
     printf("UInt32: %u\n", Stream_readUInt32(&stream)); // no bytes available
 
     printf("\nAvailable: %u, Space: %u\n", Stream_available(&stream), Stream_space(&stream));
