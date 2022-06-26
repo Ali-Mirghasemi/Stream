@@ -105,8 +105,21 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #define OStream_writeDouble(STREAM, VAL)            Stream_writeDouble(&((STREAM)->Buffer), (VAL))
 #endif // STREAM_DOUBLE
 
-
-
+#define OStream_writeCharArray(STREAM, VAL, LEN)    Stream_writeCharArray(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeUInt8Array(STREAM, VAL, LEN)   Stream_writeUInt8Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeInt8Array(STREAM, VAL, LEN)    Stream_writeInt8Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeUInt16Array(STREAM, VAL, LEN)  Stream_writeUInt16Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeInt16Array(STREAM, VAL, LEN)   Stream_writeInt16Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeUInt32Array(STREAM, VAL, LEN)  Stream_writeUInt32Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeInt32Array(STREAM, VAL, LEN)   Stream_writeInt32Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeFloatArray(STREAM, VAL, LEN)   Stream_writeFloatArray(&((STREAM)->Buffer), (VAL), (LEN))
+#if STREAM_UINT64
+#define OStream_writeUInt64Array(STREAM, VAL, LEN)  Stream_writeUInt64Array(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_writeInt64Array(STREAM, VAL, LEN)   Stream_writeInt64Array(&((STREAM)->Buffer), (VAL), (LEN))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+#define OStream_writeDoubleArray(STREAM, VAL, LEN)  Stream_writeDoubleArray(&((STREAM)->Buffer), (VAL), (LEN))
+#endif // STREAM_DOUBLE
 
 
 
