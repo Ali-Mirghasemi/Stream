@@ -21,19 +21,49 @@ extern "C" {
 
 #include "StreamBuffer.h"
 
+/************************************************************************/
+/*                            Configuration                             */
+/************************************************************************/
+
+/**
+ * @brief enable user argument in OStream
+ */
+#define OSTREAM_ARGS                1
+/**
+ * @brief enable checkTransmit function
+ */
+#define OSTREAM_CHECK_TRANSMIT      1
+
+/************************************************************************/
+
+/**
+ * @brief show stream version in string format
+ */
+#define OSTREAM_VER_STR                     _STREAM_VER_STR(OSTREAM_VER_MAJOR, OSTREAM_VER_MINOR, OSTREAM_VER_FIX)
+/**
+ * @brief show stream version in integer format, ex: 0.2.0 -> 200
+ */
+#define OSTREAM_VER                         ((OSTREAM_VER_MAJOR * 10000UL) + (OSTREAM_VER_MINOR * 100UL) + (OSTREAM_VER_FIX))
+
 struct __OStream;
 typedef struct __OStream OStream;
 
 typedef void (*OStream_TransmitFn)(OStream* stream, uint8_t* buff, Stream_LenType len);
 typedef Stream_LenType (*OStream_CheckTransmitFn)(OStream* stream);
 
-
+/**
+ * @brief hold OutputStream properties
+ */
 struct __OStream {
-    Stream                  Buffer;
-    void*                   Args;
-    OStream_TransmitFn      transmit;
-    OStream_CheckTransmitFn checkTransmit;
-    Stream_LenType          OutgoingBytes;
+    Stream                  Buffer;         /**< stream buffer */
+    OStream_TransmitFn      transmit;       /**< transmit function */
+#if OSTREAM_ARGS
+    void*                   Args;           /**< user argument */
+#endif
+#if OSTREAM_CHECK_TRANSMIT
+    OStream_CheckTransmitFn checkTransmit;  /**< check transmit function */
+#endif
+    Stream_LenType          OutgoingBytes;  /**< outgoing bytes */
 };
 
 
@@ -47,13 +77,17 @@ Stream_Result OStream_flush(OStream* stream);
 Stream_Result OStream_transmitByte(OStream* stream);
 Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len);
 
-void  OStream_setArgs(OStream* stream, void* args);
-void* OStream_getArgs(OStream* stream);
-
-void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn);
-
 Stream_LenType OStream_space(OStream* stream);
 Stream_LenType OStream_outgoingBytes(OStream* stream);
+
+#if OSTREAM_ARGS
+    void  OStream_setArgs(OStream* stream, void* args);
+    void* OStream_getArgs(OStream* stream);
+#endif // OSTREAM_ARGS
+
+#if OSTREAM_CHECK_TRANSMIT
+    void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn);
+#endif // OSTREAM_CHECK_TRANSMIT
 
 /**
  * @brief return number of bytes waiting for transmit 

@@ -1,12 +1,29 @@
 #include "OutputStream.h"
 #include <string.h>
 
+/**
+ * @brief Initialize OutputStream
+ * 
+ * @param stream OutputStream to initialize
+ * @param transmitFn Function to transmit data
+ * @param buff Buffer to hold data
+ * @param size Size of buffer
+ */
 void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
     stream->transmit = transmitFn;
+#if OSTREAM_ARGS
     stream->Args = (void*) 0;
+#endif
+#if OSTREAM_CHECK_TRANSMIT
     stream->checkTransmit = (OStream_CheckTransmitFn) 0;
+#endif
 }
+/**
+ * @brief Deinitialize OutputStream
+ * 
+ * @param stream OutputStream to deinitialize
+ */
 void OStream_deinit(OStream* stream) {
     memset(stream, 0, sizeof(OStream));
 }
@@ -81,7 +98,7 @@ Stream_Result OStream_transmitByte(OStream* stream) {
     }
 }
 /**
- * @brief blocking transmite n byte just call transmit function no need handle function
+ * @brief blocking transmit n byte just call transmit function no need handle function
  * 
  * @param stream 
  * @return Stream_Result 
@@ -115,6 +132,7 @@ Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len) {
     }
     return Stream_Ok;
 }
+#if OSTREAM_ARGS
 /**
  * @brief set args for OStream
  * 
@@ -133,12 +151,26 @@ void  OStream_setArgs(OStream* stream, void* args) {
 void* OStream_getArgs(OStream* stream) {
     return stream->Args;
 }
-
+#endif // OSTREAM_ARGS
+#if OSTREAM_CHECK_TRANSMIT
+/**
+ * @brief set check transmit function for OStream
+ * 
+ * @param stream 
+ * @param checkTransmit 
+ */
 void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn) {
     stream->checkTransmit = fn;
 }
-
+#endif // OSTREAM_CHECK_TRANSMIT
+/**
+ * @brief return available space for write in bytes
+ * 
+ * @param stream 
+ * @return OStream_CheckTransmitFn 
+ */
 Stream_LenType OStream_space(OStream* stream) {
+#if OSTREAM_CHECK_TRANSMIT
     if (stream->checkTransmit) {
         Stream_LenType len = stream->checkTransmit(stream);
         if (len > 0) {
@@ -152,9 +184,15 @@ Stream_LenType OStream_space(OStream* stream) {
             }
         }
     }
+#endif // OSTREAM_CHECK_TRANSMIT
     return Stream_space(&stream->Buffer);
 }
-
+/**
+ * @brief return number of bytes that are in transmit
+ * 
+ * @param stream 
+ * @return Stream_LenType 
+ */
 Stream_LenType OStream_outgoingBytes(OStream* stream) {
     return stream->OutgoingBytes;
 }
