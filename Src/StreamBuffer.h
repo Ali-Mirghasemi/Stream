@@ -68,6 +68,17 @@ typedef int16_t Stream_LenType;
 
 /************************************************************************/
 
+#define __STREAM_VER_STR(major, minor, fix)     #major "." #minor "." #fix
+#define _STREAM_VER_STR(major, minor, fix)      __STREAM_VER_STR(major, minor, fix)
+/**
+ * @brief show stream version in string format
+ */
+#define STREAM_VER_STR                          _STREAM_VER_STR(STREAM_VER_MAJOR, STREAM_VER_MINOR, STREAM_VER_FIX)
+/**
+ * @brief show stream version in integer format, ex: 0.2.0 -> 200
+ */
+#define STREAM_VER                              ((STREAM_VER_MAJOR * 10000UL) + (STREAM_VER_MINOR * 100UL) + (STREAM_VER_FIX))
+
 /**
  * @brief use for disable limit
  */
@@ -82,8 +93,8 @@ typedef int16_t Stream_LenType;
  * @brief you can choose what ByteOrder can use for r/w operations
  */
 typedef enum {
-    ByteOrder_LittleEndian  = 0,
-    ByteOrder_BigEndian     = 1,
+    ByteOrder_LittleEndian  = 0,    /**< little endian */
+    ByteOrder_BigEndian     = 1,    /**< big endian */
     ByteOrder_Reserved      = 0x0F,
 } ByteOrder;
 /**
@@ -104,28 +115,30 @@ typedef enum {
  * contains everything need for handle stream
  */
 typedef struct {
-    uint8_t*                Data;
-    Stream_LenType          Size;
-    Stream_LenType          WPos;
-    Stream_LenType          RPos;
+    uint8_t*                Data;                   /**< pointer to buffer */
+    Stream_LenType          Size;                   /**< size of buffer */
+    Stream_LenType          WPos;                   /**< write position */
+    Stream_LenType          RPos;                   /**< read position */
 #if STREAM_WRITE_LIMIT
-    Stream_LenType          WriteLimit;
+    Stream_LenType          WriteLimit;             /**< limit for write operation */
 #endif // STREAM_WRITE_LIMIT
 #if STREAM_READ_LIMIT
-    Stream_LenType          ReadLimit;
+    Stream_LenType          ReadLimit;              /**< limit for read operation */
 #endif
-    uint8_t                 Overflow    : 1;
-    uint8_t                 InReceive   : 1;
-    uint8_t                 InTransmit  : 1;
+    uint8_t                 Overflow    : 1;        /**< overflow flag */
+    uint8_t                 InReceive   : 1;        /**< stream is in receive mode */
+    uint8_t                 InTransmit  : 1;        /**< stream is in transmit mode */
 #if STREAM_BYTE_ORDER
-    uint8_t                 Order       : 1;
-    uint8_t                 OrderFn     : 1;
-    uint8_t                 Reserved    : 3;
+    uint8_t                 Order       : 1;        /**< byte order */
+    uint8_t                 OrderFn     : 1;        /**< byte order function */
+    uint8_t                 Reserved    : 3;        /**< reserved */
 #else
-    uint8_t                 Reserved    : 5;
+    uint8_t                 Reserved    : 5;        /**< reserved */
 #endif
 } Stream;
-
+/**
+ * @brief hold properties of cursor over stream
+ */
 typedef struct {
     Stream_LenType          WPos;
     Stream_LenType          RPos;
