@@ -8,6 +8,7 @@
 - `InputStream` and `OutputStream` can work over a HAL (Hardware Abstract Layer)
 - User access to customize configuration base on hardware need
 - Any bytes buffer can turn into `StreamBuffer` without zero copy
+- Support Stream over polling, Interrupt and DMA
 
 ## Examples
 - [Stream-Example](./Examples/Stream-Example/) shows basic usage of `Stream` Library
