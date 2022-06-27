@@ -20,6 +20,8 @@ int main()
 {
     uint8_t buff[23] = {0};
 
+    printf("------ StreamBuffer Ver: %s -------\n\n", STREAM_VER_STR);
+
     Stream stream;
 
     Stream_init(&stream, buff, sizeof(buff));
