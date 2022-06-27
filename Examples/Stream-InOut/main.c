@@ -44,6 +44,12 @@ int main()
     IStream inStream;
     OStream outStream;
 
+    puts("--------------------------------------");
+    printf("StreamBuffer Ver: %s\n", STREAM_VER_STR);
+    printf("OutputStream Ver: %s\n", OSTREAM_VER_STR);
+    printf("InputStream  Ver: %s\n", ISTREAM_VER_STR);
+    puts("--------------------------------------\n");
+
     Stream_init(&mediaStream, mediaBuff, sizeof(mediaBuff));
     IStream_init(&inStream, MyStream_receive, rxBuff, sizeof(rxBuff));
     OStream_init(&outStream, MyStream_transmit, txBuff, sizeof(txBuff));
