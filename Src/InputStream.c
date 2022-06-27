@@ -1,12 +1,29 @@
 #include "InputStream.h"
 #include <string.h>
 
+/**
+ * @brief Initialize InputStream
+ * 
+ * @param stream InputStream to initialize
+ * @param receiveFn Function to receive data
+ * @param buff Buffer to hold data
+ * @param size Size of buffer
+ */
 void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
     stream->receive = receiveFn;
+#if ISTREAM_ARGS
     stream->Args = (void*) 0;
+#endif
+#if ISTREAM_CHECK_TRANSMIT
     stream->checkReceive = (IStream_CheckReceiveFn) 0;
+#endif
 }
+/**
+ * @brief Deinitialize InputStream
+ * 
+ * @param stream InputStream to deinitialize
+ */
 void IStream_deinit(IStream* stream) {
     memset(stream, 0, sizeof(IStream));
 }
@@ -82,6 +99,7 @@ Stream_Result IStream_receiveByte(IStream* stream, uint8_t val) {
 Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len) {
     return Stream_writeBytes(&stream->Buffer, val, len);
 }
+#if ISTREAM_ARGS
 /**
  * @brief set args for IStream
  * 
@@ -100,9 +118,15 @@ void  IStream_setArgs(IStream* stream, void* args) {
 void* IStream_getArgs(IStream* stream) {
     return stream->Args;
 }
-
+#endif // ISTREAM_ARGS
+/** 
+ * @brief return available bytes in buffer to read
+ * 
+ * @param stream 
+ * @return Stream_LenType
+ */
 Stream_LenType IStream_available(IStream* stream) {
-    // check
+#if ISTREAM_CHECK_TRANSMIT
     if (stream->checkReceive) {
         Stream_LenType len = stream->checkReceive(stream);
         if (len > 0) {
@@ -116,13 +140,27 @@ Stream_LenType IStream_available(IStream* stream) {
             }
         }
     }
+#endif // ISTREAM_CHECK_TRANSMIT
     // now get available bytes len
     return Stream_available(&stream->Buffer);
 }
-
+#if ISTREAM_CHECK_TRANSMIT
+/**
+ * @brief set check receive function
+ * 
+ * @param stream 
+ * @param fn 
+ */
 void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
     stream->checkReceive = fn;
 }
+#endif // ISTREAM_CHECK_TRANSMIT
+/**
+ * @brief return number of bytes that in receive
+ * 
+ * @param stream 
+ * @return Stream_LenType 
+ */
 Stream_LenType IStream_incomingBytes(IStream* stream) {
     return stream->IncomingBytes;
 }

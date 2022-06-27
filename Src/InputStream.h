@@ -21,19 +21,49 @@ extern "C" {
 
 #include "StreamBuffer.h"
 
+/************************************************************************/
+/*                            Configuration                             */
+/************************************************************************/
+
+/**
+ * @brief enable user argument in OStream
+ */
+#define ISTREAM_ARGS                1
+/**
+ * @brief enable checkTransmit function
+ */
+#define ISTREAM_CHECK_TRANSMIT      1
+
+/************************************************************************/
+
+/**
+ * @brief show stream version in string format
+ */
+#define ISTREAM_VER_STR                     _STREAM_VER_STR(ISTREAM_VER_MAJOR, ISTREAM_VER_MINOR, ISTREAM_VER_FIX)
+/**
+ * @brief show stream version in integer format, ex: 0.2.0 -> 200
+ */
+#define ISTREAM_VER                         ((ISTREAM_VER_MAJOR * 10000UL) + (ISTREAM_VER_MINOR * 100UL) + (ISTREAM_VER_FIX))
+
 struct __IStream;
 typedef struct __IStream IStream;
 
 typedef void (*IStream_ReceiveFn)(IStream* stream, uint8_t* buff, Stream_LenType len);
 typedef Stream_LenType (*IStream_CheckReceiveFn)(IStream* stream);
 
-
+/**
+ * @brief hold InputStream properties
+ */
 struct __IStream {
-    Stream                  Buffer;
-    void*                   Args;
-    IStream_ReceiveFn       receive;
-    IStream_CheckReceiveFn  checkReceive;
-    Stream_LenType          IncomingBytes;
+    Stream                  Buffer;         /**< hold stream buffer */
+    IStream_ReceiveFn       receive;        /**< receive function */
+#if ISTREAM_ARGS
+    void*                   Args;           /**< hold user defined arguments */
+#endif
+#if ISTREAM_CHECK_TRANSMIT
+    IStream_CheckReceiveFn  checkReceive;   /**< check receive function */
+#endif
+    Stream_LenType          IncomingBytes;  /**< hold how many bytes are coming */
 };
 
 
@@ -47,14 +77,18 @@ Stream_Result IStream_receive(IStream* stream);
 Stream_Result IStream_receiveByte(IStream* stream, uint8_t val);
 Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len);
 
-void  IStream_setArgs(IStream* stream, void* args);
-void* IStream_getArgs(IStream* stream);
-
-void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);
-
 Stream_LenType IStream_available(IStream* stream);
 
 Stream_LenType IStream_incomingBytes(IStream* stream);
+
+#if ISTREAM_ARGS
+    void  IStream_setArgs(IStream* stream, void* args);
+    void* IStream_getArgs(IStream* stream);
+#endif // ISTREAM_ARGS
+
+#if ISTREAM_CHECK_TRANSMIT
+    void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);
+#endif // ISTREAM_CHECK_TRANSMIT
 
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
 
