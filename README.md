@@ -6,9 +6,13 @@
 - Support serialize and deserialize all standard data types
 - Memory safe for reading unaligned data
 - `InputStream` and `OutputStream` can work over a HAL (Hardware Abstract Layer)
-- User access to customize configuration base on hardware need
+- User access to custom configuration base on hardware need
 - Any bytes buffer can turn into `StreamBuffer` without zero copy
-- Support Stream over polling, Interrupt and DMA
+- Support Stream over Polling, Interrupt and DMA
+
+## Dependencies
+- `stdint.h`
+- `string.h`
 
 ## Examples
 - [Stream-Test](./Examples/Stream-Test/) test case for stream library
