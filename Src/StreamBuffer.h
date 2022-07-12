@@ -40,11 +40,11 @@ extern "C" {
 /**
  * @brief enable set limit for write functions
  */
-#define STREAM_WRITE_LIMIT                  0
+#define STREAM_WRITE_LIMIT                  1
 /**
  * @brief enable set limit for read operations
  */
-#define STREAM_READ_LIMIT                   0
+#define STREAM_READ_LIMIT                   1
 /**
  * @brief enable cursor object for check how many bytes read or write
  */
@@ -222,7 +222,6 @@ Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps);
 Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_writeChar(Stream* stream, char val);
-Stream_Result Stream_writeUInt8(Stream* stream, uint8_t val);
 Stream_Result Stream_writeUInt8(Stream* stream, uint8_t val);
 Stream_Result Stream_writeInt8(Stream* stream, int8_t val);
 Stream_Result Stream_writeUInt16(Stream* stream, uint16_t val);
