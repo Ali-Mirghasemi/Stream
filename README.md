@@ -11,6 +11,7 @@
 - Support Stream over polling, Interrupt and DMA
 
 ## Examples
+- [Stream-Test](./Examples/Stream-Test/) test case for stream library
 - [Stream-Example](./Examples/Stream-Example/) shows basic usage of `Stream` Library
 - [Stream-InOut](./Examples/Stream-InOut/) shows basic usage of `Stream` Library for `InputStream` and `OutputStream`
 - [Stream-Limit](./Examples/Stream-Limit/) shows basic usage of `Stream` Library for `InputStream` and `OutputStream` with limit
