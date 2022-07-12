@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "StreamBuffer.h"
+#include <string.h>
 
 #define CYCLES_NUM      20
 
@@ -9,7 +10,7 @@
 
 uint32_t assertResult;
 uint8_t cycles;
-uint8_t index;
+uint8_t index = 0;
 // assert functions
 uint32_t Assert_Int8(int8_t num1, int8_t num2, uint16_t line, uint8_t cycle, uint8_t index);
 uint32_t Assert_Int16(int16_t num1, int16_t num2, uint16_t line, uint8_t cycle, uint8_t index);
@@ -44,10 +45,10 @@ int main()
 {
     uint32_t result;
     uint32_t errorCount = 0;
-    int index;
+    int testIndex;
 
-    for (index = 0; index < TESTES_LEN; index++) {
-        result = TESTS[index]();
+    for (testIndex = 0; testIndex < TESTES_LEN; testIndex++) {
+        result = TESTS[testIndex]();
         if (result) {
             errorCount++;
             PRINTF("Cycle: %3u, Index: %3u, Line: %3u\n\n", result & 0xFF, (result >> 8) & 0xFF, (result >> 16) & 0xFFFF);
@@ -76,11 +77,11 @@ uint32_t Test_readWrite(void) {
     #define testBytes(TYPE, PAT, N)     PRINTF("Write/Read " #TYPE ", %ux\n", N);\
                                         for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
                                             for (index = 0; index < N; index++) {\
-                                                Stream_write ##TYPE (&stream, PAT, sizeof(PAT));\
+                                                Stream_write ##TYPE (&stream, (uint8_t*) PAT, sizeof(PAT));\
                                             }\
                                             for (index = 0; index < N; index++) {\
                                                 Stream_read ##TYPE (&stream, tempBuff, sizeof(PAT));\
-                                                assert(Bytes, tempBuff, PAT, sizeof(PAT));\
+                                                assert(Bytes, tempBuff, (uint8_t*) PAT, sizeof(PAT));\
                                             }\
                                         }
 
@@ -224,15 +225,13 @@ uint32_t Test_readStream(void) {
 
     for (cycles = 0; cycles < CYCLES_NUM; cycles++) {
         // write to out
-        Stream_writeBytes(&out, PAT, sizeof(PAT));
+        Stream_writeBytes(&out, (uint8_t*) PAT, sizeof(PAT));
         // transfer output to input
         Stream_readStream(&out, &in, Stream_available(&out));
         // read from input
         Stream_readBytes(&in, tempBuff, Stream_available(&in));
         // verify
-        if (memcmp(tempBuff, PAT, sizeof(PAT)) != 0) {
-            PRINTF("Cycles: %u\n", cycles);
-        }
+        assert(Bytes, tempBuff, (uint8_t*) PAT, sizeof(PAT));
         // clear temp
         memset(tempBuff, 0, sizeof(tempBuff));
     }
@@ -242,7 +241,7 @@ uint32_t Test_readStream(void) {
 /********************************************************/
 #define ASSERT_NUM(TYPE, DTYPE)     uint32_t Assert_ ##TYPE (DTYPE num1, DTYPE num2, uint16_t line, uint8_t cycle, uint8_t index) {\
                                         if (num1 != num2) {\
-                                        PRINTF("Expected: %lld, Found: %lld\n", num2, num1);\
+                                        PRINTF("Expected: %ld, Found: %ld\n", (long int) num2, (long int) num1);\
                                             return line << 16 | index << 8 | cycles;\
                                         }\
                                         return 0;\
