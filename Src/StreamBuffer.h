@@ -18,7 +18,7 @@ extern "C" {
 #include <stdint.h>
 
 #define STREAM_VER_MAJOR    0
-#define STREAM_VER_MINOR    2
+#define STREAM_VER_MINOR    3
 #define STREAM_VER_FIX      0
 
 /************************************************************************/
@@ -109,6 +109,8 @@ typedef enum {
     Stream_NoTransmitFn     = 5,    /**< no transmit function set for OStream */
     Stream_NoReceive		= 6,    /**< stream is not in receive mode */
     Stream_NoTransmit		= 7,    /**< stream is not in transmit mode */
+    Stream_InReceive		= 8,    /**< stream is in receive mode */
+    Stream_InTransmit		= 9,    /**< stream is in transmit mode */
 } Stream_Result;
 /**
  * @brief Stream struct
