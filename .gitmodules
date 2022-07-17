@@ -4,3 +4,6 @@
 [submodule "Examples/STM32F4-ReadLine"]
 	path = Examples/STM32F4-ReadLine
 	url = https://github.com/Ali-Mirghasemi/STM32F4-ReadLine-Stream
+[submodule "Examples/STM32F429-DISCO-Stream"]
+	path = Examples/STM32F429-DISCO-Stream
+	url = https://github.com/Ali-Mirghasemi/STM32F429-DISCO-Stream.git
