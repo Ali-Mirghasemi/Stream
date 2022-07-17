@@ -6,4 +6,4 @@
 	url = https://github.com/Ali-Mirghasemi/STM32F4-ReadLine-Stream
 [submodule "Examples/STM32F429-DISCO-Stream"]
 	path = Examples/STM32F429-DISCO-Stream
-	url = https://github.com/Ali-Mirghasemi/STM32F429-DISCO-Stream.git
+	url = C:\\Works\\Libs\\Embedded-Libs\\Stream\\Examples\\STM32F429-DISCO-Stream

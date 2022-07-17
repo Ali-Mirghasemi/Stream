@@ -22,3 +22,4 @@
 - [Stream-ReadLine](./Examples/Stream-ReadLine/) shows how to read single line or pattern over `InputStream`
 - [STM32F4-Echo](./Examples/STM32F4-Echo/) shows how to port `Stream` Library for `STM32F4xx` microcontrollers and echo data over `UART`
 - [STM32F4-ReadLine](./Examples/STM32F4-ReadLine/) shows how to port `Stream` Library for `STM32F4xx` microcontrollers and read single line or pattern over `UART`
+- [STM32F429-DISCO](./Examples/STM32F429-DISCO-Stream/) shows how to port `Stream` Library for `STM32F429xx` microcontrollers and echo data over `UART`
