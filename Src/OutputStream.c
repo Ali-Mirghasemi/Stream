@@ -60,24 +60,29 @@ Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
  * @return Stream_Result 
  */
 Stream_Result OStream_flush(OStream* stream) {
-    Stream_LenType len = Stream_directAvailable(&stream->Buffer);
-    stream->OutgoingBytes = len;
-    if (len > 0) {
-        if (stream->transmit) {
-            stream->Buffer.InTransmit = 1;
-            stream->transmit(stream, OStream_getDataPtr(stream), len);
-            return Stream_Ok;
+    if (!stream->Buffer.InTransmit) {
+        Stream_LenType len = Stream_directAvailable(&stream->Buffer);
+        stream->OutgoingBytes = len;
+        if (len > 0) {
+            if (stream->transmit) {
+                stream->Buffer.InTransmit = 1;
+                stream->transmit(stream, OStream_getDataPtr(stream), len);
+                return Stream_Ok;
+            }
+            else {
+                return Stream_NoTransmitFn;
+            }
         }
         else {
-            return Stream_NoTransmitFn;
+            return Stream_NoAvailable;
         }
     }
     else {
-        return Stream_NoAvailable;
+        return Stream_InTransmit;
     }
 }
 /**
- * @brief blocking transmite 1 byte just call transmit function no need handle function
+ * @brief blocking transmit 1 byte just call transmit function no need handle function
  * 
  * @param stream 
  * @return Stream_Result 

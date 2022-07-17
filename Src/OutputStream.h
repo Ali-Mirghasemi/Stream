@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define OSTREAM_VER_MAJOR    0
-#define OSTREAM_VER_MINOR    2
+#define OSTREAM_VER_MINOR    3
 #define OSTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
