@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define ISTREAM_VER_MAJOR    0
-#define ISTREAM_VER_MINOR    2
+#define ISTREAM_VER_MINOR    3
 #define ISTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -32,7 +32,7 @@ extern "C" {
 /**
  * @brief enable checkTransmit function
  */
-#define ISTREAM_CHECK_TRANSMIT      1
+#define ISTREAM_CHECK_RECEIVE       1
 
 /************************************************************************/
 
@@ -60,7 +60,7 @@ struct __IStream {
 #if ISTREAM_ARGS
     void*                   Args;           /**< hold user defined arguments */
 #endif
-#if ISTREAM_CHECK_TRANSMIT
+#if ISTREAM_CHECK_RECEIVE
     IStream_CheckReceiveFn  checkReceive;   /**< check receive function */
 #endif
     Stream_LenType          IncomingBytes;  /**< hold how many bytes are coming */
@@ -86,9 +86,9 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     void* IStream_getArgs(IStream* stream);
 #endif // ISTREAM_ARGS
 
-#if ISTREAM_CHECK_TRANSMIT
+#if ISTREAM_CHECK_RECEIVE
     void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);
-#endif // ISTREAM_CHECK_TRANSMIT
+#endif // ISTREAM_CHECK_RECEIVE
 
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
 

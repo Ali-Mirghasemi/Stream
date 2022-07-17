@@ -60,20 +60,25 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
  * @return Stream_Result 
  */
 Stream_Result IStream_receive(IStream* stream) {
-    Stream_LenType len = Stream_directSpace(&stream->Buffer);
-    stream->IncomingBytes = len;
-    if (len > 0) {
-        if (stream->receive) {
-            stream->Buffer.InReceive = 1;
-            stream->receive(stream, IStream_getDataPtr(stream), len);
-            return Stream_Ok;
+    if (!stream->Buffer.InReceive) {
+        Stream_LenType len = Stream_directSpace(&stream->Buffer);
+        stream->IncomingBytes = len;
+        if (len > 0) {
+            if (stream->receive) {
+                stream->Buffer.InReceive = 1;
+                stream->receive(stream, IStream_getDataPtr(stream), len);
+                return Stream_Ok;
+            }
+            else {
+                return Stream_NoReceiveFn;
+            }
         }
         else {
-            return Stream_NoReceiveFn;
+            return Stream_NoSpace;
         }
     }
     else {
-        return Stream_NoSpace;
+        return Stream_InReceive;
     }
 }
 /**
@@ -126,7 +131,7 @@ void* IStream_getArgs(IStream* stream) {
  * @return Stream_LenType
  */
 Stream_LenType IStream_available(IStream* stream) {
-#if ISTREAM_CHECK_TRANSMIT
+#if ISTREAM_CHECK_RECEIVE
     if (stream->checkReceive) {
         Stream_LenType len = stream->checkReceive(stream);
         if (len > 0) {
@@ -140,11 +145,11 @@ Stream_LenType IStream_available(IStream* stream) {
             }
         }
     }
-#endif // ISTREAM_CHECK_TRANSMIT
+#endif // ISTREAM_CHECK_RECEIVE
     // now get available bytes len
     return Stream_available(&stream->Buffer);
 }
-#if ISTREAM_CHECK_TRANSMIT
+#if ISTREAM_CHECK_RECEIVE
 /**
  * @brief set check receive function
  * 
@@ -154,7 +159,7 @@ Stream_LenType IStream_available(IStream* stream) {
 void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
     stream->checkReceive = fn;
 }
-#endif // ISTREAM_CHECK_TRANSMIT
+#endif // ISTREAM_CHECK_RECEIVE
 /**
  * @brief return number of bytes that in receive
  * 
