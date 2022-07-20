@@ -34,10 +34,14 @@ typedef uint32_t (*Test_Fn)(void);
 
 uint32_t Test_readWrite(void);
 uint32_t Test_readStream(void);
+uint32_t Test_flip(void);
+uint32_t Test_lock(void);
 
 static const Test_Fn TESTS[] = {
     Test_readWrite,
     Test_readStream,
+    Test_flip,
+    Test_lock,
 };
 static const uint32_t TESTES_LEN = sizeof(TESTS) / sizeof(TESTS[0]);
 
@@ -239,10 +243,121 @@ uint32_t Test_readStream(void) {
     return 0;
 }
 /********************************************************/
+uint32_t Test_flip(void) {
+    #define testFlipWrite(N, W, R, O)           Stream_init(&stream, streamBuff, sizeof(streamBuff));\
+                                                stream.WPos = (W);\
+                                                stream.RPos = (R);\
+                                                stream.Overflow = (O);\
+                                                Stream_flipWrite(&stream, (N));\
+                                                assert(UInt32, Stream_space(&stream), (N));
+
+    #define testFlipRead(N, W, R, O)            Stream_init(&stream, streamBuff, sizeof(streamBuff));\
+                                                stream.WPos = (W);\
+                                                stream.RPos = (R);\
+                                                stream.Overflow = (O);\
+                                                Stream_flipRead(&stream, (N));\
+                                                assert(UInt32, Stream_available(&stream), (N));
+
+    uint8_t streamBuff[36];
+    Stream stream;
+
+    testFlipWrite(0, 0, 0, 0);
+    testFlipWrite(4, 0, 0, 0);
+    testFlipWrite(4, 4, 0, 0);
+    testFlipWrite(36, 0, 0, 0);
+    testFlipWrite(36, 4, 4, 0);
+    testFlipWrite(36, 32, 32, 0);
+    testFlipWrite(0, 8, 0, 0);
+    testFlipWrite(4, 8, 0, 0);
+    testFlipWrite(4, 12, 4, 0);
+    testFlipWrite(0, 32, 32, 0);
+    testFlipWrite(4, 32, 32, 0);
+    testFlipWrite(0, 4, 8, 1);
+    testFlipWrite(4, 4, 8, 1);
+    testFlipWrite(4, 12, 8, 0);
+    testFlipWrite(0, 28, 32, 1);
+    testFlipWrite(4, 28, 32, 1);
+    testFlipWrite(4, 20, 32, 1);
+
+
+
+    return 0;
+}
+/********************************************************/
+uint32_t Test_lock(void) {
+    #define testLock(PAT, N)                    PRINTF("Lock R/W " #PAT " , %ux\n", N);\
+                                                for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
+                                                    for (index = 0; index < N; index++) {\
+                                                        assert(UInt32, Stream_space(&stream), stream.Size - index * sizeof(PAT));\
+                                                        Stream_lockWrite(&stream, &lock, sizeof(PAT));\
+                                                        assert(UInt32, Stream_space(&lock), sizeof(PAT));\
+                                                        Stream_unlockWrite(&stream, &lock);\
+                                                        assert(UInt32, Stream_space(&stream), stream.Size - index * sizeof(PAT));\
+                                                        Stream_lockWrite(&stream, &lock, sizeof(PAT));\
+                                                        assert(UInt32, Stream_space(&lock), sizeof(PAT));\
+                                                        Stream_writeBytes(&lock, (uint8_t*) PAT, sizeof(PAT));\
+                                                        assert(UInt32, Stream_space(&lock), 0);\
+                                                        Stream_unlockWrite(&stream, &lock);\
+                                                    }\
+                                                    for (index = 0; index < N; index++) {\
+                                                        assert(UInt32, Stream_available(&stream), sizeof(PAT) * (N - index));\
+                                                        Stream_lockRead(&stream, &lock, sizeof(PAT));\
+                                                        assert(UInt32, Stream_available(&lock), sizeof(PAT));\
+                                                        Stream_unlockRead(&stream, &lock);\
+                                                        assert(UInt32, Stream_available(&stream), sizeof(PAT) * (N - index));\
+                                                        Stream_lockRead(&stream, &lock, sizeof(PAT));\
+                                                        assert(UInt32, Stream_available(&lock), sizeof(PAT));\
+                                                        Stream_readBytes(&lock, tempBuff, sizeof(PAT));\
+                                                        assert(UInt32, Stream_available(&lock), 0);\
+                                                        assert(Bytes, tempBuff, (uint8_t*) PAT, sizeof(PAT));\
+                                                        Stream_unlockRead(&stream, &lock);\
+                                                    }\
+                                                }
+
+    const uint8_t PAT1[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+    const uint8_t PAT2[] = {0x1A, 0x1B, 0x1C};
+    const uint8_t PAT3[] = {0x0A, 0x0B, 0x0C, 0x0D};
+    const uint8_t PAT4[] = {0x2A, 0x2B,};
+    const uint8_t PAT5[36] = {0};
+
+    uint8_t tempBuff[12];
+    uint8_t streamBuff[36];
+    Stream stream;
+    Stream lock;
+
+    Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    testLock(PAT1, 1);
+    testLock(PAT1, 3);
+    testLock(PAT1, 5);
+
+    testLock(PAT2, 1);
+    testLock(PAT2, 3);
+    testLock(PAT2, 5);
+    testLock(PAT2, 7);
+
+    testLock(PAT3, 1);
+    testLock(PAT3, 3);
+    testLock(PAT3, 5);
+    testLock(PAT3, 7);
+    testLock(PAT3, 9);
+
+    testLock(PAT4, 1);
+    testLock(PAT4, 3);
+    testLock(PAT4, 5);
+    testLock(PAT4, 7);
+    testLock(PAT4, 9);
+    testLock(PAT4, 18);
+
+    testLock(PAT5, 1);
+
+    return 0;
+}
+/********************************************************/
 #define ASSERT_NUM(TYPE, DTYPE)     uint32_t Assert_ ##TYPE (DTYPE num1, DTYPE num2, uint16_t line, uint8_t cycle, uint8_t index) {\
                                         if (num1 != num2) {\
                                         PRINTF("Expected: %ld, Found: %ld\n", (long int) num2, (long int) num1);\
-                                            return line << 16 | index << 8 | cycles;\
+                                            return line << 16 | index << 8 | cycle;\
                                         }\
                                         return 0;\
                                     }
@@ -264,7 +379,7 @@ ASSERT_NUM(Float, float);
 
 uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8_t cycle, uint8_t index) {
     if (memcmp(a, b, len) != 0) {
-        return line << 16 | index << 8 | cycles;
+        return line << 16 | index << 8 | cycle;
     }
     return 0;
 }
