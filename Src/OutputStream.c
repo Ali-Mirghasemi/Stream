@@ -201,4 +201,28 @@ Stream_LenType OStream_space(OStream* stream) {
 Stream_LenType OStream_outgoingBytes(OStream* stream) {
     return stream->OutgoingBytes;
 }
-
+#if OSTREAM_LOCK
+/**
+ * @brief lock output stream for fixed write
+ * 
+ * @param stream 
+ * @param lock 
+ * @return Stream_Result 
+ */
+Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len) {
+    Stream_Result res;
+    if ((res = Stream_lockWrite(&stream->Buffer, &lock->Buffer, len) == Stream_Ok)) {
+        memcpy(&lock->transmit, &stream->transmit, sizeof(OStream) - sizeof(Stream));
+    }
+    return res;
+}
+/**
+ * @brief unlock output stream
+ * 
+ * @param stream 
+ * @param lock 
+ */
+void OStream_unlock(OStream* stream, OStream* lock) {
+    Stream_unlockWrite(&stream->Buffer, &lock->Buffer);
+}
+#endif // OSTREAM_LOCK

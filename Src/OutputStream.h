@@ -33,6 +33,10 @@ extern "C" {
  * @brief enable checkTransmit function
  */
 #define OSTREAM_CHECK_TRANSMIT      1
+/**
+ * @brief enable lock write feature
+ */
+#define OSTREAM_LOCK                STREAM_WRITE_LOCK
 
 /************************************************************************/
 
@@ -88,6 +92,11 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #if OSTREAM_CHECK_TRANSMIT
     void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn);
 #endif // OSTREAM_CHECK_TRANSMIT
+
+#if OSTREAM_LOCK
+    Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len);
+    void          OStream_unlock(OStream* stream, OStream* lock);
+#endif // OSTREAM_LOCK
 
 /**
  * @brief return number of bytes waiting for transmit 
