@@ -169,3 +169,28 @@ void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
 Stream_LenType IStream_incomingBytes(IStream* stream) {
     return stream->IncomingBytes;
 }
+#if ISTREAM_LOCK
+/**
+ * @brief lock input stream for fixed write
+ * 
+ * @param stream 
+ * @param lock 
+ * @return Stream_Result 
+ */
+Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len) {
+    Stream_Result res;
+    if ((res = Stream_lockRead(&stream->Buffer, &lock->Buffer, len) == Stream_Ok)) {
+        memcpy(&lock->receive, &stream->receive, sizeof(IStream) - sizeof(Stream));
+    }
+    return res;
+}
+/**
+ * @brief unlock input stream for reading
+ * 
+ * @param stream 
+ * @param lock 
+ */
+void IStream_unlock(IStream* stream, IStream* lock) {
+    Stream_unlockRead(&stream->Buffer, &lock->Buffer);
+}
+#endif // ISTREAM_LOCK

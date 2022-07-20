@@ -33,6 +33,11 @@ extern "C" {
  * @brief enable checkTransmit function
  */
 #define ISTREAM_CHECK_RECEIVE       1
+/**
+ * @brief enable lock read feature
+ */
+#define ISTREAM_LOCK                STREAM_READ_LOCK
+
 
 /************************************************************************/
 
@@ -89,6 +94,11 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #if ISTREAM_CHECK_RECEIVE
     void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);
 #endif // ISTREAM_CHECK_RECEIVE
+
+#if ISTREAM_LOCK
+    Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len);
+    void          IStream_unlock(IStream* stream, IStream* lock);
+#endif // ISTREAM_LOCK
 
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
 
