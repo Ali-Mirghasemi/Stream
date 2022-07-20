@@ -18,7 +18,7 @@ extern "C" {
 #include <stdint.h>
 
 #define STREAM_VER_MAJOR    0
-#define STREAM_VER_MINOR    3
+#define STREAM_VER_MINOR    4
 #define STREAM_VER_FIX      0
 
 /************************************************************************/
@@ -45,6 +45,14 @@ extern "C" {
  * @brief enable set limit for read operations
  */
 #define STREAM_READ_LIMIT                   1
+/**
+ * @brief enable write lock feature
+ */
+#define STREAM_WRITE_LOCK                   1
+/**
+ * @brief enable read lock feature
+ */
+#define STREAM_READ_LOCK                    1
 /**
  * @brief enable cursor object for check how many bytes read or write
  */
@@ -130,13 +138,11 @@ typedef struct {
     uint8_t                 Overflow    : 1;        /**< overflow flag */
     uint8_t                 InReceive   : 1;        /**< stream is in receive mode */
     uint8_t                 InTransmit  : 1;        /**< stream is in transmit mode */
-#if STREAM_BYTE_ORDER
     uint8_t                 Order       : 1;        /**< byte order */
     uint8_t                 OrderFn     : 1;        /**< byte order function */
-    uint8_t                 Reserved    : 3;        /**< reserved */
-#else
-    uint8_t                 Reserved    : 5;        /**< reserved */
-#endif
+    uint8_t                 WriteLocked : 1;        /**< stream write locked */
+    uint8_t                 ReadLocked  : 1;        /**< stream write locked */
+    uint8_t                 Reserved    : 1;        /**< reserved */
 } Stream;
 /**
  * @brief hold properties of cursor over stream
@@ -194,6 +200,9 @@ Stream_LenType Stream_getReadPos(Stream* stream);
 Stream_Result Stream_moveWritePos(Stream* stream, Stream_LenType steps);
 Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps);
 
+void Stream_flipWrite(Stream* stream, Stream_LenType len);
+void Stream_flipRead(Stream* stream, Stream_LenType len);
+
 #if STREAM_BYTE_ORDER
     ByteOrder  Stream_getSystemByteOrder(void);
     void       Stream_setByteOrder(Stream* stream, ByteOrder order);
@@ -219,6 +228,16 @@ Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps);
     Stream_LenType Stream_getReadLen(Stream* stream, Stream_Cursor* cursor);
     Stream_LenType Stream_getWriteLen(Stream* stream, Stream_Cursor* cursor);
 #endif // STREAM_CURSOR
+
+#if STREAM_WRITE_LOCK
+    Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len);
+    void          Stream_unlockWrite(Stream* stream, Stream* lock);
+#endif // STREAM_WRITE_LOCK
+
+#if STREAM_READ_LOCK
+    Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len);
+    void          Stream_unlockRead(Stream* stream, Stream* lock);
+#endif // STREAM_READ_LOCK
 
 /**************** Write APIs **************/
 Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len);

@@ -56,6 +56,12 @@ void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
 #if STREAM_READ_LIMIT
     stream->ReadLimit = STREAM_NO_LIMIT;
 #endif // STREAM_READ_LIMIT
+#if STREAM_WRITE_LOCK
+    stream->WriteLocked = 0;
+#endif // STREAM_WRITE_LOCK
+#if STREAM_READ_LOCK
+    stream->ReadLocked = 0;
+#endif // STREAM_READ_LOCK
 }
 /**
  * @brief reset stream struct into default values
@@ -83,7 +89,7 @@ Stream_LenType Stream_availableReal(Stream* stream) {
  * @return Stream_LenType space for write
  */
 Stream_LenType Stream_spaceReal(Stream* stream) {
-    return stream->Overflow ? stream->RPos - stream->WPos:
+    return stream->Overflow ? stream->RPos - stream->WPos :
                                 stream->RPos + (stream->Size - stream->WPos);
 }
 /**
@@ -316,7 +322,38 @@ Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps) {
 
     return Stream_Ok;
 }
-
+/**
+ * @brief flip space size for write
+ *
+ * @param stream
+ * @param len
+ */
+void Stream_flipWrite(Stream* stream, Stream_LenType len) {
+    stream->RPos = stream->WPos + len;
+    if (stream->RPos >= stream->Size) {
+        stream->RPos %= stream->Size;
+        stream->Overflow = 0;
+    }
+    else {
+        stream->Overflow = 1;
+    }
+}
+/**
+ * @brief flip available size for read
+ *
+ * @param stream
+ * @param len
+ */
+void Stream_flipRead(Stream* stream, Stream_LenType len) {
+    stream->WPos = stream->RPos + len;
+    if (stream->WPos >= stream->Size) {
+        stream->WPos %= stream->Size;
+        stream->Overflow = 1;
+    }
+    else {
+        stream->Overflow = 0;
+    }
+}
 #if STREAM_BYTE_ORDER
 
 /**
@@ -1947,6 +1984,97 @@ Stream_Result Stream_getDoubleArrayAt(Stream* stream, Stream_LenType index, doub
     }
 }
 #endif // STREAM_DOUBLE
+#if STREAM_WRITE_LOCK
+/**
+ * @brief lock the stream for writing
+ *
+ * @param stream
+ * @return Stream_Result
+ */
+Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len) {
+    Stream_LenType space = Stream_space(stream);
+    if (space >= len && !stream->WriteLocked) {
+        memcpy(lock, stream, sizeof(Stream));
+        Stream_flipWrite(lock, len);
+        stream->WriteLocked = 1;
+        return Stream_Ok;
+    }
+    else {
+        return Stream_NoSpace;
+    }
+}
+/**
+ * @brief unlock the stream for writing
+ *
+ * @param stream
+ * @return Stream_Result
+ */
+void Stream_unlockWrite(Stream* stream, Stream* lock) {
+    if (stream->WriteLocked) {
+        if (stream->WPos != lock->WPos) {
+            // some data wrote
+            if (stream->WPos < lock->WPos) {
+                Stream_moveWritePos(stream, lock->WPos - stream->WPos);
+            }
+            else {
+                Stream_moveWritePos(stream, (stream->Size - stream->WPos) + lock->WPos);
+            }
+        }
+        else if (stream->RPos == lock->RPos && 
+            stream->Overflow == 0 &&
+            lock->Overflow) {
+            stream->Overflow = 1;
+        }
+        stream->WriteLocked = 0;
+    }
+}
+#endif // STREAM_WRITE_LOCK
+
+#if STREAM_READ_LOCK
+/**
+ * @brief lock the stream for reading
+ *
+ * @param stream
+ * @return Stream_Result
+ */
+Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len) {
+    Stream_LenType available = Stream_available(stream);
+    if (available >= len && !stream->ReadLocked) {
+        memcpy(lock, stream, sizeof(Stream));
+        Stream_flipRead(lock, len);
+        stream->ReadLocked = 1;
+        return Stream_Ok;
+    }
+    else {
+        return Stream_NoAvailable;
+    }
+}
+/**
+ * @brief unlock the stream for reading
+ *
+ * @param stream
+ * @return Stream_Result
+ */
+void Stream_unlockRead(Stream* stream, Stream* lock) {
+    if (stream->ReadLocked) {
+        if (stream->RPos != lock->RPos) {
+            // some data read
+            if (stream->RPos < lock->RPos) {
+                Stream_moveReadPos(stream, lock->RPos - stream->RPos);
+            }
+            else {
+                Stream_moveReadPos(stream, (stream->Size - stream->RPos) + lock->RPos);
+            }
+        }
+        else if (stream->WPos == lock->WPos && 
+            stream->Overflow != 0 &&
+            !lock->Overflow) {
+            stream->Overflow = 0;
+        }
+        stream->ReadLocked = 0;
+    }
+}
+#endif // STREAM_READ_LOCK
 // TODO: need to implement with more performance
 static void memrcpy(void* dest, const void* src, int len) {
     uint8_t* pDest = (uint8_t*) dest;
