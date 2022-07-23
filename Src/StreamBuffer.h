@@ -2,7 +2,7 @@
  * @file StreamBuffer.h
  * @author Ali Mirghasemi (ali.mirghasemi1376@gmail.com)
  * @brief this library implement stream buffer with read & write operations
- * @version 0.3
+ * @version 0.5
  * @date 2021-09-01
  *
  * @copyright Copyright (c) 2021
@@ -18,7 +18,7 @@ extern "C" {
 #include <stdint.h>
 
 #define STREAM_VER_MAJOR    0
-#define STREAM_VER_MINOR    4
+#define STREAM_VER_MINOR    5
 #define STREAM_VER_FIX      0
 
 /************************************************************************/
@@ -67,6 +67,14 @@ extern "C" {
  * you can enable this option
  */
 #define STREAM_DOUBLE                       1
+/**
+ * @brief enable get functions
+ */
+#define STREAM_GET_FUNCTION                 1
+/**
+ * @brief enable getAt functions
+ */
+#define STREAM_GET_AT_FUNCTION              1
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
@@ -232,11 +240,13 @@ void Stream_flipRead(Stream* stream, Stream_LenType len);
 #if STREAM_WRITE_LOCK
     Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len);
     void          Stream_unlockWrite(Stream* stream, Stream* lock);
+    void          Stream_unlockWriteIgnore(Stream* stream);
 #endif // STREAM_WRITE_LOCK
 
 #if STREAM_READ_LOCK
     Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len);
     void          Stream_unlockRead(Stream* stream, Stream* lock);
+    void          Stream_unlockReadIgnore(Stream* stream);
 #endif // STREAM_READ_LOCK
 
 /**************** Write APIs **************/
@@ -316,6 +326,7 @@ Stream_Result Stream_readFloatArray(Stream* stream, float* val, Stream_LenType l
 
 Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len);
 
+#if STREAM_GET_AT_FUNCTION && STREAM_GET_FUNCTIONS
 Stream_Result Stream_getBytes(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_getBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
 char     Stream_getChar(Stream* stream);
@@ -349,6 +360,10 @@ Stream_Result Stream_getFloatArray(Stream* stream, float* val, Stream_LenType le
 #if STREAM_DOUBLE
     Stream_Result Stream_getDoubleArray(Stream* stream, double* val, Stream_LenType len);
 #endif // STREAM_DOUBLE
+
+#endif // STREAM_GET_FUNCTIONS
+
+#if STREAM_GET_AT_FUNCTION
 
 Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
@@ -384,6 +399,7 @@ Stream_Result Stream_getFloatArrayAt(Stream* stream, Stream_LenType index, float
     Stream_Result Stream_getDoubleArrayAt(Stream* stream, Stream_LenType index, double* val, Stream_LenType len);
 #endif // STREAM_DOUBLE
 
+#endif // STREAM_GET_AT_FUNCTION
 
 int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len);
 Stream_LenType Stream_findByte(Stream* stream, uint8_t val);
