@@ -2,7 +2,7 @@
  * @file InputStream.h
  * @author Ali Mirghasemi (ali.mirghasemi1376@gamil.com)
  * @brief this library implement input stream over stream buffer
- * @version 0.1
+ * @version 0.4
  * @date 2021-09-01
  *
  * @copyright Copyright (c) 2021
@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define ISTREAM_VER_MAJOR    0
-#define ISTREAM_VER_MINOR    3
+#define ISTREAM_VER_MINOR    4
 #define ISTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -98,6 +98,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #if ISTREAM_LOCK
     Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len);
     void          IStream_unlock(IStream* stream, IStream* lock);
+    void          IStream_unlockIgnore(IStream* stream);
 #endif // ISTREAM_LOCK
 
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
