@@ -2,7 +2,7 @@
  * @file OutputStream.h
  * @author Ali Mirghasemi (ali.mirghasemi1376@gmail.com)
  * @brief this library implement output stream over stream buffer
- * @version 0.2
+ * @version 0.4
  * @date 2021-09-01
  * 
  * @copyright Copyright (c) 2021
@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define OSTREAM_VER_MAJOR    0
-#define OSTREAM_VER_MINOR    3
+#define OSTREAM_VER_MINOR    4
 #define OSTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -96,6 +96,7 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #if OSTREAM_LOCK
     Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len);
     void          OStream_unlock(OStream* stream, OStream* lock);
+    void          OStream_unlockIgnore(OStream* stream);
 #endif // OSTREAM_LOCK
 
 /**
