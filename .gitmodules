@@ -7,3 +7,6 @@
 [submodule "Examples/STM32F429-DISCO-Stream"]
 	path = Examples/STM32F429-DISCO-Stream
 	url = https://github.com/Ali-Mirghasemi/STM32F429-DISCO-Stream
+[submodule "Examples/STM32F030F4"]
+	path = Examples/STM32F030F4
+	url = https://github.com/Ali-Mirghasemi/STM32F030F4-Stream
