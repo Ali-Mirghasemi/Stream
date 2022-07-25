@@ -3,7 +3,7 @@
 
 /**
  * @brief Initialize OutputStream
- * 
+ *
  * @param stream OutputStream to initialize
  * @param transmitFn Function to transmit data
  * @param buff Buffer to hold data
@@ -18,10 +18,11 @@ void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff,
 #if OSTREAM_CHECK_TRANSMIT
     stream->checkTransmit = (OStream_CheckTransmitFn) 0;
 #endif
+    stream->OutgoingBytes = 0;
 }
 /**
  * @brief Deinitialize OutputStream
- * 
+ *
  * @param stream OutputStream to deinitialize
  */
 void OStream_deinit(OStream* stream) {
@@ -31,10 +32,10 @@ void OStream_deinit(OStream* stream) {
 
 /**
  * @brief call it in interrupt or TxCplt for Async Transmit
- * 
- * @param stream 
- * @param len 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param len
+ * @return Stream_Result
  */
 Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
     Stream_Result res;
@@ -55,9 +56,9 @@ Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
 }
 /**
  * @brief start sending bytes and flush stream in Async Transmit
- * 
- * @param stream 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @return Stream_Result
  */
 Stream_Result OStream_flush(OStream* stream) {
     if (!stream->Buffer.InTransmit) {
@@ -83,9 +84,9 @@ Stream_Result OStream_flush(OStream* stream) {
 }
 /**
  * @brief blocking transmit 1 byte just call transmit function no need handle function
- * 
- * @param stream 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @return Stream_Result
  */
 Stream_Result OStream_transmitByte(OStream* stream) {
     Stream_LenType len = Stream_directAvailable(&stream->Buffer);
@@ -104,9 +105,9 @@ Stream_Result OStream_transmitByte(OStream* stream) {
 }
 /**
  * @brief blocking transmit n byte just call transmit function no need handle function
- * 
- * @param stream 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @return Stream_Result
  */
 Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len) {
     Stream_LenType dirLen = OStream_pendingBytes(stream);
@@ -140,18 +141,18 @@ Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len) {
 #if OSTREAM_ARGS
 /**
  * @brief set args for OStream
- * 
- * @param stream 
- * @param args 
+ *
+ * @param stream
+ * @param args
  */
 void  OStream_setArgs(OStream* stream, void* args) {
     stream->Args = args;
 }
 /**
  * @brief get args for OStream
- * 
- * @param stream 
- * @return void* 
+ *
+ * @param stream
+ * @return void*
  */
 void* OStream_getArgs(OStream* stream) {
     return stream->Args;
@@ -160,9 +161,9 @@ void* OStream_getArgs(OStream* stream) {
 #if OSTREAM_CHECK_TRANSMIT
 /**
  * @brief set check transmit function for OStream
- * 
- * @param stream 
- * @param checkTransmit 
+ *
+ * @param stream
+ * @param checkTransmit
  */
 void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn) {
     stream->checkTransmit = fn;
@@ -170,9 +171,9 @@ void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn) {
 #endif // OSTREAM_CHECK_TRANSMIT
 /**
  * @brief return available space for write in bytes
- * 
- * @param stream 
- * @return OStream_CheckTransmitFn 
+ *
+ * @param stream
+ * @return OStream_CheckTransmitFn
  */
 Stream_LenType OStream_space(OStream* stream) {
 #if OSTREAM_CHECK_TRANSMIT
@@ -194,9 +195,9 @@ Stream_LenType OStream_space(OStream* stream) {
 }
 /**
  * @brief return number of bytes that are in transmit
- * 
- * @param stream 
- * @return Stream_LenType 
+ *
+ * @param stream
+ * @return Stream_LenType
  */
 Stream_LenType OStream_outgoingBytes(OStream* stream) {
     return stream->OutgoingBytes;
@@ -204,10 +205,10 @@ Stream_LenType OStream_outgoingBytes(OStream* stream) {
 #if OSTREAM_LOCK
 /**
  * @brief lock output stream for fixed write
- * 
- * @param stream 
- * @param lock 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param lock
+ * @return Stream_Result
  */
 Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len) {
     Stream_Result res;
@@ -218,17 +219,17 @@ Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len) {
 }
 /**
  * @brief unlock output stream
- * 
- * @param stream 
- * @param lock 
+ *
+ * @param stream
+ * @param lock
  */
 void OStream_unlock(OStream* stream, OStream* lock) {
     Stream_unlockWrite(&stream->Buffer, &lock->Buffer);
 }
 /**
  * @brief unlock output stream with ignore changes
- * 
- * @param stream 
+ *
+ * @param stream
  */
 void OStream_unlockIgnore(OStream* stream) {
     Stream_unlockWriteIgnore(&stream->Buffer);
