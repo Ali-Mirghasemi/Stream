@@ -3,7 +3,7 @@
 
 /**
  * @brief Initialize InputStream
- * 
+ *
  * @param stream InputStream to initialize
  * @param receiveFn Function to receive data
  * @param buff Buffer to hold data
@@ -15,13 +15,14 @@ void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, S
 #if ISTREAM_ARGS
     stream->Args = (void*) 0;
 #endif
-#if ISTREAM_CHECK_TRANSMIT
+#if ISTREAM_CHECK_RECEIVE
     stream->checkReceive = (IStream_CheckReceiveFn) 0;
 #endif
+    stream->IncomingBytes = 0;
 }
 /**
  * @brief Deinitialize InputStream
- * 
+ *
  * @param stream InputStream to deinitialize
  */
 void IStream_deinit(IStream* stream) {
@@ -30,10 +31,10 @@ void IStream_deinit(IStream* stream) {
 
 /**
  * @brief call in interrupt or RxCplt callback for Async Receive
- * 
- * @param stream 
- * @param len 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param len
+ * @return Stream_Result
  */
 Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
     Stream_Result res;
@@ -55,9 +56,9 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
 }
 /**
  * @brief call receive function for Async read
- * 
- * @param stream 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @return Stream_Result
  */
 Stream_Result IStream_receive(IStream* stream) {
     if (!stream->Buffer.InReceive) {
@@ -83,10 +84,10 @@ Stream_Result IStream_receive(IStream* stream) {
 }
 /**
  * @brief blocking receive for 1 byte
- * 
- * @param stream 
- * @param val 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param val
+ * @return Stream_Result
  */
 Stream_Result IStream_receiveByte(IStream* stream, uint8_t val) {
     *IStream_getDataPtr(stream) = val;
@@ -95,11 +96,11 @@ Stream_Result IStream_receiveByte(IStream* stream, uint8_t val) {
 }
 /**
  * @brief blocking receive for n bytes
- * 
- * @param stream 
- * @param val 
- * @param len 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param val
+ * @param len
+ * @return Stream_Result
  */
 Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len) {
     return Stream_writeBytes(&stream->Buffer, val, len);
@@ -107,27 +108,27 @@ Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType
 #if ISTREAM_ARGS
 /**
  * @brief set args for IStream
- * 
- * @param stream 
- * @param args 
+ *
+ * @param stream
+ * @param args
  */
 void  IStream_setArgs(IStream* stream, void* args) {
     stream->Args = args;
 }
 /**
  * @brief get args form IStream
- * 
- * @param stream 
- * @return void* 
+ *
+ * @param stream
+ * @return void*
  */
 void* IStream_getArgs(IStream* stream) {
     return stream->Args;
 }
 #endif // ISTREAM_ARGS
-/** 
+/**
  * @brief return available bytes in buffer to read
- * 
- * @param stream 
+ *
+ * @param stream
  * @return Stream_LenType
  */
 Stream_LenType IStream_available(IStream* stream) {
@@ -152,9 +153,9 @@ Stream_LenType IStream_available(IStream* stream) {
 #if ISTREAM_CHECK_RECEIVE
 /**
  * @brief set check receive function
- * 
- * @param stream 
- * @param fn 
+ *
+ * @param stream
+ * @param fn
  */
 void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
     stream->checkReceive = fn;
@@ -162,9 +163,9 @@ void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
 #endif // ISTREAM_CHECK_RECEIVE
 /**
  * @brief return number of bytes that in receive
- * 
- * @param stream 
- * @return Stream_LenType 
+ *
+ * @param stream
+ * @return Stream_LenType
  */
 Stream_LenType IStream_incomingBytes(IStream* stream) {
     return stream->IncomingBytes;
@@ -172,10 +173,10 @@ Stream_LenType IStream_incomingBytes(IStream* stream) {
 #if ISTREAM_LOCK
 /**
  * @brief lock input stream for fixed write
- * 
- * @param stream 
- * @param lock 
- * @return Stream_Result 
+ *
+ * @param stream
+ * @param lock
+ * @return Stream_Result
  */
 Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len) {
     Stream_Result res;
@@ -186,17 +187,17 @@ Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len) {
 }
 /**
  * @brief unlock input stream for reading
- * 
- * @param stream 
- * @param lock 
+ *
+ * @param stream
+ * @param lock
  */
 void IStream_unlock(IStream* stream, IStream* lock) {
     Stream_unlockRead(&stream->Buffer, &lock->Buffer);
 }
 /**
  * @brief unlock input stream for reading with ignore changes
- * 
- * @param stream 
+ *
+ * @param stream
  */
 void IStream_unlockIgnore(IStream* stream) {
     Stream_unlockReadIgnore(&stream->Buffer);
