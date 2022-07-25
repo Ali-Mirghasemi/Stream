@@ -1,5 +1,13 @@
 # Changes Log
 
+## 07/25/2022
+#### StreamBuffer - v0.5.0
+- Add find functions for default data types, ex: uint16, uint32, ...
+- Add findAt functions for default data types, ex: uint16, uint32, ...
+
+#### IStream - v0.4.0 
+- Add find functions for default data types, ex: uint16, uint32, ...
+- Add findAt functions for default data types, ex: uint16, uint32, ...
 
 ## 07/17/2022
 
