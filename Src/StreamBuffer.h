@@ -70,11 +70,19 @@ extern "C" {
 /**
  * @brief enable get functions
  */
-#define STREAM_GET_FUNCTION                 1
+#define STREAM_GET_FUNCTIONS                1
 /**
  * @brief enable getAt functions
  */
-#define STREAM_GET_AT_FUNCTION              1
+#define STREAM_GET_AT_FUNCTIONS             1
+/**
+ * @brief enable find functions
+ */
+#define STREAM_FIND_FUNCTIONS               1
+/**
+ * @brief enable findAt functions
+ */
+#define STREAM_FIND_AT_FUNCTION             1
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
@@ -326,7 +334,7 @@ Stream_Result Stream_readFloatArray(Stream* stream, float* val, Stream_LenType l
 
 Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len);
 
-#if STREAM_GET_AT_FUNCTION && STREAM_GET_FUNCTIONS
+#if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
 Stream_Result Stream_getBytes(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_getBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
 char     Stream_getChar(Stream* stream);
@@ -363,7 +371,7 @@ Stream_Result Stream_getFloatArray(Stream* stream, float* val, Stream_LenType le
 
 #endif // STREAM_GET_FUNCTIONS
 
-#if STREAM_GET_AT_FUNCTION
+#if STREAM_GET_AT_FUNCTIONS
 
 Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
@@ -401,13 +409,48 @@ Stream_Result Stream_getFloatArrayAt(Stream* stream, Stream_LenType index, float
 
 #endif // STREAM_GET_AT_FUNCTION
 
+#if STREAM_FIND_FUNCTIONS
+    Stream_LenType Stream_findByte(Stream* stream, uint8_t val);
+    Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t val);
+    Stream_LenType Stream_findPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen);
+    Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen);
+    Stream_LenType Stream_findUInt8(Stream* stream, uint8_t val);
+    Stream_LenType Stream_findInt8(Stream* stream, int8_t val);
+    Stream_LenType Stream_findUInt16(Stream* stream, uint16_t val);
+    Stream_LenType Stream_findInt16(Stream* stream, int16_t val);
+    Stream_LenType Stream_findUInt32(Stream* stream, uint32_t val);
+    Stream_LenType Stream_findInt32(Stream* stream, int32_t val);
+#if STREAM_UINT64
+    Stream_LenType Stream_findUInt64(Stream* stream, uint64_t val);
+    Stream_LenType Stream_findInt64(Stream* stream, int64_t val);
+#endif
+    Stream_LenType Stream_findFloat(Stream* stream, float val);
+#if STREAM_DOUBLE
+    Stream_LenType Stream_findDouble(Stream* stream, double val);
+#endif
+
+#if STREAM_FIND_AT_FUNCTION
+    Stream_LenType Stream_findUInt8At(Stream* stream, Stream_LenType offset, uint8_t val);
+    Stream_LenType Stream_findInt8At(Stream* stream, Stream_LenType offset, int8_t val);
+    Stream_LenType Stream_findUInt16At(Stream* stream, Stream_LenType offset, uint16_t val);
+    Stream_LenType Stream_findInt16At(Stream* stream, Stream_LenType offset, int16_t val);
+    Stream_LenType Stream_findUInt32At(Stream* stream, Stream_LenType offset, uint32_t val);
+    Stream_LenType Stream_findInt32At(Stream* stream, Stream_LenType offset, int32_t val);
+#if STREAM_UINT64
+    Stream_LenType Stream_findUInt64At(Stream* stream, Stream_LenType offset, uint64_t val);
+    Stream_LenType Stream_findInt64At(Stream* stream, Stream_LenType offset, int64_t val);
+#endif
+    Stream_LenType Stream_findFloatAt(Stream* stream, Stream_LenType offset, float val);
+#if STREAM_DOUBLE
+    Stream_LenType Stream_findDoubleAt(Stream* stream, Stream_LenType offset, double val);
+#endif
+#endif // STREAM_FIND_AT_FUNCTION
+
+    Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len);
+    Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
+#endif // STREAM_FIND_FUNCTIONS
+
 int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len);
-Stream_LenType Stream_findByte(Stream* stream, uint8_t val);
-Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t val);
-Stream_LenType Stream_findPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen);
-Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen);
-Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len);
-Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
 
 #ifdef __cplusplus
 };
