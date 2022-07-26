@@ -135,6 +135,7 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #define OStream_writeStream(OUT, IN, LEN)           Stream_writeStream(&((OUT)->Buffer), &((IN)->Buffer), (LEN))
 #define OStream_writePadding(STREAM, VAL, LEN)      Stream_writePadding(&((STREAM)->Buffer), (VAL), (LEN))
 #define OStream_writeChar(STREAM, VAL)              Stream_writeChar(&((STREAM)->Buffer), (VAL))
+#define OStream_writeStr(STREAM, VAL)               Stream_writeStr(&((STREAM)->Buffer), (VAL))
 #define OStream_writeUInt8(STREAM, VAL)             Stream_writeUInt8(&((STREAM)->Buffer), (VAL))
 #define OStream_writeInt8(STREAM, VAL)              Stream_writeInt8(&((STREAM)->Buffer), (VAL))
 #define OStream_writeUInt16(STREAM, VAL)            Stream_writeUInt16(&((STREAM)->Buffer), (VAL))

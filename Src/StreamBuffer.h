@@ -135,10 +135,10 @@ typedef enum {
     Stream_BufferFull       = 3,    /**< buffer full*/
     Stream_NoReceiveFn      = 4,    /**< no receive function set for IStream */
     Stream_NoTransmitFn     = 5,    /**< no transmit function set for OStream */
-    Stream_NoReceive		    = 6,    /**< stream is not in receive mode */
-    Stream_NoTransmit		    = 7,    /**< stream is not in transmit mode */
-    Stream_InReceive		    = 8,    /**< stream is in receive mode */
-    Stream_InTransmit		    = 9,    /**< stream is in transmit mode */
+    Stream_NoReceive        = 6,    /**< stream is not in receive mode */
+    Stream_NoTransmit       = 7,    /**< stream is not in transmit mode */
+    Stream_InReceive        = 8,    /**< stream is in receive mode */
+    Stream_InTransmit       = 9,    /**< stream is in transmit mode */
     Stream_ZeroLen          = 10,   /**< len parameter is zero */
 } Stream_Result;
 /**
@@ -269,6 +269,7 @@ void Stream_flipRead(Stream* stream, Stream_LenType len);
 Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_writeChar(Stream* stream, char val);
+Stream_Result Stream_writeStr(Stream* stream, const char* val);
 Stream_Result Stream_writeUInt8(Stream* stream, uint8_t val);
 Stream_Result Stream_writeInt8(Stream* stream, int8_t val);
 Stream_Result Stream_writeUInt16(Stream* stream, uint16_t val);

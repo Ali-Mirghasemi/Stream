@@ -702,6 +702,9 @@ Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType le
 Stream_Result Stream_writeChar(Stream* stream, char val) {
     return Stream_writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
+Stream_Result Stream_writeStr(Stream* stream, const char* val) {
+    return Stream_writeBytes(stream, (uint8_t*) val, strlen(val));
+}
 Stream_Result Stream_writeUInt8(Stream* stream, uint8_t val) {
     return Stream_writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
