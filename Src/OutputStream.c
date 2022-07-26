@@ -217,21 +217,4 @@ Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len) {
     }
     return res;
 }
-/**
- * @brief unlock output stream
- *
- * @param stream
- * @param lock
- */
-void OStream_unlock(OStream* stream, OStream* lock) {
-    Stream_unlockWrite(&stream->Buffer, &lock->Buffer);
-}
-/**
- * @brief unlock output stream with ignore changes
- *
- * @param stream
- */
-void OStream_unlockIgnore(OStream* stream) {
-    Stream_unlockWriteIgnore(&stream->Buffer);
-}
 #endif // OSTREAM_LOCK

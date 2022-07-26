@@ -94,9 +94,10 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #endif // OSTREAM_CHECK_TRANSMIT
 
 #if OSTREAM_LOCK
-    Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len);
-    void          OStream_unlock(OStream* stream, OStream* lock);
-    void          OStream_unlockIgnore(OStream* stream);
+    Stream_Result   OStream_lock(OStream* stream, OStream* lock, Stream_LenType len);
+    #define OStream_unlock(STREAM, LOCK)    Stream_unlockWrite(&(STREAM)->Buffer, &(LOCK)->Buffer);
+    #define OStream_unlockIgnore(STREAM)    Stream_unlockWriteIgnore(&(STREAM)->Buffer)
+    #define OStream_lockLen(STREAM, LOCK)   Stream_lockWriteLen(&(STREAM)->Buffer, &(LOCK)->Buffer)
 #endif // OSTREAM_LOCK
 
 /**
