@@ -185,21 +185,4 @@ Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len) {
     }
     return res;
 }
-/**
- * @brief unlock input stream for reading
- *
- * @param stream
- * @param lock
- */
-void IStream_unlock(IStream* stream, IStream* lock) {
-    Stream_unlockRead(&stream->Buffer, &lock->Buffer);
-}
-/**
- * @brief unlock input stream for reading with ignore changes
- *
- * @param stream
- */
-void IStream_unlockIgnore(IStream* stream) {
-    Stream_unlockReadIgnore(&stream->Buffer);
-}
 #endif // ISTREAM_LOCK

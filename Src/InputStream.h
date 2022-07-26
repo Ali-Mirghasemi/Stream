@@ -97,8 +97,9 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 
 #if ISTREAM_LOCK
     Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len);
-    void          IStream_unlock(IStream* stream, IStream* lock);
-    void          IStream_unlockIgnore(IStream* stream);
+    #define IStream_unlock(STREAM, LOCK)    Stream_unlockRead(&(STREAM)->Buffer, &(LOCK)->Buffer);
+    #define IStream_unlockIgnore(STREAM)    Stream_unlockReadIgnore(&(STREAM)->Buffer)
+    #define IStream_lockLen(STREAM, LOCK)   Stream_lockReadLen(&(STREAM)->Buffer, &(LOCK)->Buffer)
 #endif // ISTREAM_LOCK
 
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
@@ -263,21 +264,21 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #endif 
 
 #if STREAM_FIND_AT_FUNCTIONS
-    #define IStream_findUInt8At(STREAM, IDX, VAL)                                          Stream_findUInt8(&((STREAM)->Buffer), (IDX), (VAL))
-    #define IStream_findInt8At(STREAM, IDX, VAL)                                           Stream_findInt8(&((STREAM)->Buffer), (IDX), (VAL))
-    #define IStream_findUInt16At(STREAM, IDX, VAL)                                         Stream_findUInt16(&((STREAM)->Buffer), (IDX), (VAL))
-    #define IStream_findInt16At(STREAM, IDX, VAL)                                          Stream_findInt16(&((STREAM)->Buffer), (IDX), (VAL))
-    #define IStream_findUInt32At(STREAM, IDX, VAL)                                         Stream_findUInt32(&((STREAM)->Buffer), (IDX), (VAL))
-    #define IStream_findInt32At(STREAM, IDX, VAL)                                          Stream_findInt32(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findUInt8At(STREAM, IDX, VAL)                                   Stream_findUInt8(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findInt8At(STREAM, IDX, VAL)                                    Stream_findInt8(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findUInt16At(STREAM, IDX, VAL)                                  Stream_findUInt16(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findInt16At(STREAM, IDX, VAL)                                   Stream_findInt16(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findUInt32At(STREAM, IDX, VAL)                                  Stream_findUInt32(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findInt32At(STREAM, IDX, VAL)                                   Stream_findInt32(&((STREAM)->Buffer), (IDX), (VAL))
 #if STREAM_UINT64
-    #define IStream_findUInt64At(STREAM, IDX, VAL)                                         Stream_findUInt64(&((STREAM)->Buffer), (IDX), (VAL))
-    #define IStream_findInt64At(STREAM, IDX, VAL)                                          Stream_findInt64(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findUInt64At(STREAM, IDX, VAL)                                  Stream_findUInt64(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findInt64At(STREAM, IDX, VAL)                                   Stream_findInt64(&((STREAM)->Buffer), (IDX), (VAL))
 #endif
-    #define IStream_findFloatAt(STREAM, IDX, VAL)                                          Stream_findFloat(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findFloatAt(STREAM, IDX, VAL)                                   Stream_findFloat(&((STREAM)->Buffer), (IDX), (VAL))
 #if STREAM_DOUBLE
-    #define IStream_findDoubleAt(STREAM, IDX, VAL)                                         Stream_findDouble(&((STREAM)->Buffer), (IDX), (VAL))
+    #define IStream_findDoubleAt(STREAM, IDX, VAL)                                  Stream_findDouble(&((STREAM)->Buffer), (IDX), (VAL))
 #endif 
-#endif STREAM_FIND_AT_FUNCTIONS
+#endif // STREAM_FIND_AT_FUNCTIONS
 
 #endif // STREAM_FIND_FUNCTIONS
 
