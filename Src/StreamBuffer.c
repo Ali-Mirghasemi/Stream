@@ -72,6 +72,17 @@ void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
 #endif // STREAM_READ_LOCK
 }
 /**
+ * @brief initialize stream with a buffer that already have data in it
+ * 
+ * @param stream 
+ * @param buffer 
+ * @param size 
+ */
+void Stream_fromBuff(Stream* stream, uint8_t* buffer, Stream_LenType size) {
+    Stream_init(stream, buffer, size);
+    stream->WPos = size;
+}
+/**
  * @brief reset stream struct into default values
  *
  * @param stream address of stream
@@ -526,6 +537,11 @@ Stream_LenType Stream_getWriteLen(Stream* stream, Stream_Cursor* cursor) {
  * @return Stream_Result
  */
 Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_space(stream) < len) {
         return Stream_NoSpace;
     }
@@ -563,6 +579,11 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
  * @return Stream_Result
  */
 Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_space(stream) < len) {
         return Stream_NoSpace;
     }
@@ -600,6 +621,11 @@ Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenT
  */
 Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
     // check available space for write
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_space(out) < len) {
         return Stream_NoSpace;
     }
@@ -640,6 +666,11 @@ Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
  * @return Stream_Result
  */
 Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_space(stream) < len) {
         return Stream_NoSpace;
     }
@@ -729,6 +760,11 @@ int16_t  Stream_read(Stream* stream) {
  * @return Stream_Result
  */
 Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_available(stream) < len) {
         return Stream_NoAvailable;
     }
@@ -758,6 +794,11 @@ Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len)
     return Stream_Ok;
 }
 Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_available(stream) < len) {
         return Stream_NoAvailable;
     }
@@ -786,6 +827,11 @@ Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenTy
     return Stream_Ok;
 }
 Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_available(in) < len) {
         return Stream_NoAvailable;
     }
@@ -1151,6 +1197,11 @@ Stream_Result Stream_getDoubleArray(Stream* stream, double* val, Stream_LenType 
 #if STREAM_GET_AT_FUNCTIONS
 
 Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_available(stream) - index < len) {
         return Stream_NoAvailable;
     }
@@ -1172,6 +1223,11 @@ Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* v
     return Stream_Ok;
 }
 Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
     if (Stream_available(stream) - index < len) {
         return Stream_NoAvailable;
     }
@@ -1898,20 +1954,7 @@ Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len)
  */
 void Stream_unlockWrite(Stream* stream, Stream* lock) {
     if (stream->WriteLocked) {
-        if (stream->WPos != lock->WPos) {
-            // some data wrote
-            if (stream->WPos < lock->WPos) {
-                Stream_moveWritePos(stream, lock->WPos - stream->WPos);
-            }
-            else {
-                Stream_moveWritePos(stream, (stream->Size - stream->WPos) + lock->WPos);
-            }
-        }
-        else if (stream->RPos == lock->RPos && 
-            stream->Overflow == 0 &&
-            lock->Overflow) {
-            stream->Overflow = 1;
-        }
+        Stream_moveWritePos(stream, Stream_lockWriteLen(stream, lock));
         stream->WriteLocked = 0;
     }
 }
@@ -1923,6 +1966,32 @@ void Stream_unlockWrite(Stream* stream, Stream* lock) {
 void Stream_unlockWriteIgnore(Stream* stream) {
     if (stream->WriteLocked) {
         stream->WriteLocked = 0;
+    }
+}
+/**
+ * @brief return number of byte write in lock
+ * 
+ * @param stream 
+ * @param lock 
+ */
+Stream_LenType Stream_lockWriteLen(Stream* stream, Stream* lock) {
+    if (stream->WPos != lock->WPos) {
+        // some data wrote
+        if (stream->WPos < lock->WPos) {
+            return  lock->WPos - stream->WPos;
+        }
+        else {
+            return (stream->Size - stream->WPos) + lock->WPos;
+        }
+    }
+    else if (stream->RPos == lock->RPos && 
+        stream->Overflow == 0 &&
+        lock->Overflow) {
+        
+        return stream->Size;
+    }
+    else {
+        return 0;
     }
 }
 #endif // STREAM_WRITE_LOCK
@@ -1954,21 +2023,35 @@ Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len) 
  */
 void Stream_unlockRead(Stream* stream, Stream* lock) {
     if (stream->ReadLocked) {
-        if (stream->RPos != lock->RPos) {
-            // some data read
-            if (stream->RPos < lock->RPos) {
-                Stream_moveReadPos(stream, lock->RPos - stream->RPos);
-            }
-            else {
-                Stream_moveReadPos(stream, (stream->Size - stream->RPos) + lock->RPos);
-            }
-        }
-        else if (stream->WPos == lock->WPos && 
-            stream->Overflow != 0 &&
-            !lock->Overflow) {
-            stream->Overflow = 0;
-        }
+        Stream_moveReadPos(stream, Stream_lockReadLen(stream, lock));
         stream->ReadLocked = 0;
+    }
+}
+/**
+ * @brief return number of bytes that read
+ * 
+ * @param stream 
+ * @param lock 
+ * @return Stream_LenType 
+ */
+Stream_LenType Stream_lockReadLen(Stream* stream, Stream* lock) {
+    if (stream->RPos != lock->RPos) {
+        // some data read
+        if (stream->RPos < lock->RPos) {
+            return lock->RPos - stream->RPos;
+        }
+        else {
+            return (stream->Size - stream->RPos) + lock->RPos;
+        }
+    }
+    else if (stream->WPos == lock->WPos && 
+        stream->Overflow != 0 &&
+        !lock->Overflow) {
+
+        return stream->Size;
+    }
+    else {
+        return 0;
     }
 }
 /**
@@ -2193,7 +2276,11 @@ Stream_LenType Stream_findDoubleAt(Stream* stream, Stream_LenType offset, double
 int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len) {
     int8_t result;
     Stream_LenType tmpLen;
-
+  
+    if (len == 0) {
+      return 0;
+    }
+  
     if (Stream_available(stream) - index < len) {
         return -2;
     }

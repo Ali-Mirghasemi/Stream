@@ -82,7 +82,11 @@ extern "C" {
 /**
  * @brief enable findAt functions
  */
-#define STREAM_FIND_AT_FUNCTION             1
+#define STREAM_FIND_AT_FUNCTIONS            1
+/**
+ * @brief check len parameter in read/write functions
+ */
+#define STREAM_CHECK_ZERO_LEN               1
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
@@ -131,10 +135,11 @@ typedef enum {
     Stream_BufferFull       = 3,    /**< buffer full*/
     Stream_NoReceiveFn      = 4,    /**< no receive function set for IStream */
     Stream_NoTransmitFn     = 5,    /**< no transmit function set for OStream */
-    Stream_NoReceive		= 6,    /**< stream is not in receive mode */
-    Stream_NoTransmit		= 7,    /**< stream is not in transmit mode */
-    Stream_InReceive		= 8,    /**< stream is in receive mode */
-    Stream_InTransmit		= 9,    /**< stream is in transmit mode */
+    Stream_NoReceive		    = 6,    /**< stream is not in receive mode */
+    Stream_NoTransmit		    = 7,    /**< stream is not in transmit mode */
+    Stream_InReceive		    = 8,    /**< stream is in receive mode */
+    Stream_InTransmit		    = 9,    /**< stream is in transmit mode */
+    Stream_ZeroLen          = 10,   /**< len parameter is zero */
 } Stream_Result;
 /**
  * @brief Stream struct
@@ -169,6 +174,7 @@ typedef struct {
 } Stream_Cursor;
 
 void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size);
+void Stream_fromBuff(Stream* stream, uint8_t* buffer, Stream_LenType size);
 void Stream_deinit(Stream* stream);
 
 /*************** General APIs *************/
@@ -246,15 +252,17 @@ void Stream_flipRead(Stream* stream, Stream_LenType len);
 #endif // STREAM_CURSOR
 
 #if STREAM_WRITE_LOCK
-    Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len);
-    void          Stream_unlockWrite(Stream* stream, Stream* lock);
-    void          Stream_unlockWriteIgnore(Stream* stream);
+    Stream_Result   Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len);
+    void            Stream_unlockWrite(Stream* stream, Stream* lock);
+    void            Stream_unlockWriteIgnore(Stream* stream);
+    Stream_LenType  Stream_lockWriteLen(Stream* stream, Stream* lock);
 #endif // STREAM_WRITE_LOCK
 
 #if STREAM_READ_LOCK
-    Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len);
-    void          Stream_unlockRead(Stream* stream, Stream* lock);
-    void          Stream_unlockReadIgnore(Stream* stream);
+    Stream_Result   Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len);
+    void            Stream_unlockRead(Stream* stream, Stream* lock);
+    void            Stream_unlockReadIgnore(Stream* stream);
+    Stream_LenType  Stream_lockReadLen(Stream* stream, Stream* lock);
 #endif // STREAM_READ_LOCK
 
 /**************** Write APIs **************/
