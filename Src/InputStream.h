@@ -17,7 +17,7 @@ extern "C" {
 
 #define ISTREAM_VER_MAJOR    0
 #define ISTREAM_VER_MINOR    4
-#define ISTREAM_VER_FIX      0
+#define ISTREAM_VER_FIX      1
 
 #include "StreamBuffer.h"
 
@@ -282,7 +282,8 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 
 #endif // STREAM_FIND_FUNCTIONS
 
-#define IStream_compareAt(STREAM, IDX, VAL, LEN)                                Stream_compareAt(&((STREAM)->Buffer)), (IDX), (VAL), (LEN))
+#define IStream_compare(STREAM, VAL, LEN)                                           Stream_compareAt(&((STREAM)->Buffer), (VAL), (LEN))
+#define IStream_compareAt(STREAM, IDX, VAL, LEN)                                    Stream_compareAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
 
 #ifdef __cplusplus
 };
