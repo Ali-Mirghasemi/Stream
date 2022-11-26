@@ -459,6 +459,7 @@ Stream_Result Stream_getFloatArrayAt(Stream* stream, Stream_LenType index, float
     Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
 #endif // STREAM_FIND_FUNCTIONS
 
+int8_t Stream_compare(Stream* stream, const uint8_t* val, Stream_LenType len);
 int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len);
 
 #ifdef __cplusplus

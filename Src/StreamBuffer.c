@@ -2271,6 +2271,17 @@ Stream_LenType Stream_findDoubleAt(Stream* stream, Stream_LenType offset, double
  * @brief compare a given bytes at index with available bytes in stream
  *
  * @param stream
+ * @param val
+ * @param len
+ * @return int8_t
+ */
+int8_t Stream_compare(Stream* stream, const uint8_t* val, Stream_LenType len) {
+    return Stream_compareAt(stream, 0, val, len);
+}
+/**
+ * @brief compare a given bytes at index with available bytes in stream
+ *
+ * @param stream
  * @param index
  * @param val
  * @param len
