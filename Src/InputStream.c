@@ -67,8 +67,7 @@ Stream_Result IStream_receive(IStream* stream) {
         if (len > 0) {
             if (stream->receive) {
                 stream->Buffer.InReceive = 1;
-                stream->receive(stream, IStream_getDataPtr(stream), len);
-                return Stream_Ok;
+                return stream->receive(stream, IStream_getDataPtr(stream), len);
             }
             else {
                 return Stream_NoReceiveFn;
