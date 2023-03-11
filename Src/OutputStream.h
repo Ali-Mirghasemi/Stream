@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define OSTREAM_VER_MAJOR    0
-#define OSTREAM_VER_MINOR    4
+#define OSTREAM_VER_MINOR    5
 #define OSTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -37,6 +37,16 @@ extern "C" {
  * @brief enable lock write feature
  */
 #define OSTREAM_LOCK                STREAM_WRITE_LOCK
+/**
+ * @brief set default flush mode
+ * Stream_FlushMode_Single:     flush only pending bytes before call flush function
+ * Stream_FlushMode_Continue:   after flush complete if there is any pending bytes transmit pending bytes again
+ */
+#define OSTREAM_FLUSH_MODE          Stream_FlushMode_Continue
+/**
+ * @brief enable flush complete callback
+ */
+#define OSTREAM_FLUSH_CALLBACK      1
 
 /************************************************************************/
 
@@ -49,11 +59,29 @@ extern "C" {
  */
 #define OSTREAM_VER                         ((OSTREAM_VER_MAJOR * 10000UL) + (OSTREAM_VER_MINOR * 100UL) + (OSTREAM_VER_FIX))
 
+/* Pre-defined variables */
 struct __OStream;
 typedef struct __OStream OStream;
 
-typedef void (*OStream_TransmitFn)(OStream* stream, uint8_t* buff, Stream_LenType len);
+/**
+ * @brief transmit function, this function allow stream to work with hardware
+ * @param stream OStream
+ * @param buff uint8_t*
+ * @param len Stream_LenType
+ */
+typedef Stream_Result (*OStream_TransmitFn)(OStream* stream, uint8_t* buff, Stream_LenType len);
+/**
+ * @brief check how many bytes transmitted, this functions allow stream to check 
+ * how many bytes transmitted over hardware, it's good for work with DMA 
+ * @param stream OStream
+ * @return Stream_LenType return how many bytes transmitted
+ */
 typedef Stream_LenType (*OStream_CheckTransmitFn)(OStream* stream);
+/**
+ * @brief flush callback, call after flush completed
+ * 
+ */
+typedef void (*OStream_FlushCallbackFn)(OStream* stream);
 
 /**
  * @brief hold OutputStream properties
@@ -67,6 +95,9 @@ struct __OStream {
 #if OSTREAM_CHECK_TRANSMIT
     OStream_CheckTransmitFn checkTransmit;  /**< check transmit function */
 #endif
+#if OSTREAM_FLUSH_CALLBACK
+    OStream_FlushCallbackFn flushCallback;  /**< flush callback */
+#endif
     Stream_LenType          OutgoingBytes;  /**< outgoing bytes */
 };
 
@@ -78,11 +109,18 @@ void OStream_deinit(OStream* stream);
 /* Output Bytes of OStream */
 Stream_Result OStream_handle(OStream* stream, Stream_LenType len);
 Stream_Result OStream_flush(OStream* stream);
+Stream_Result OStream_flushBlocking(OStream* stream);
 Stream_Result OStream_transmitByte(OStream* stream);
 Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len);
 
+#define OStream_spaceUncheck(STREAM)                Stream_space(&(STREAM)->Buffer)
 Stream_LenType OStream_space(OStream* stream);
+
 Stream_LenType OStream_outgoingBytes(OStream* stream);
+
+#define OStream_setFlushMode(STREAM, MODE)          Stream_setFlushMode((STREAM), (MODE))
+
+#define OStream_inTransmit(STREAM)                  Stream_inTransmit(&(STREAM)->Buffer)
 
 #if OSTREAM_ARGS
     void  OStream_setArgs(OStream* stream, void* args);
@@ -92,6 +130,10 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #if OSTREAM_CHECK_TRANSMIT
     void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn);
 #endif // OSTREAM_CHECK_TRANSMIT
+
+#if OSTREAM_FLUSH_CALLBACK
+    void OStream_setFlushCallback(OStream* stream, OStream_FlushCallbackFn fn);
+#endif
 
 #if OSTREAM_LOCK
     Stream_Result   OStream_lock(OStream* stream, OStream* lock, Stream_LenType len);
