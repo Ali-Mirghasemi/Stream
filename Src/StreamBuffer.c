@@ -162,6 +162,33 @@ void Stream_clear(Stream* stream) {
     memset(stream->Data, 0, stream->Size);
 }
 /**
+ * @brief 
+ * 
+ * @param stream 
+ * @param mode 
+ */
+void Stream_setFlushMode(Stream* stream, Stream_FlushMode mode) {
+    stream->FlushMode = mode;
+}
+/**
+ * @brief return in receive flag
+ * 
+ * @param stream 
+ * @return uint8_t 
+ */
+uint8_t Stream_inReceive(Stream* stream) {
+    return stream->InReceive;
+}
+/**
+ * @brief return in transmit flag
+ * 
+ * @param stream 
+ * @return uint8_t 
+ */
+uint8_t Stream_inTransmit(Stream* stream) {
+    return stream->InTransmit;
+}
+/**
  * @brief return Write Pos
  *
  * @param stream
