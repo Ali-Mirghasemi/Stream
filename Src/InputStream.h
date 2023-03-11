@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 #define ISTREAM_VER_MAJOR    0
-#define ISTREAM_VER_MINOR    4
-#define ISTREAM_VER_FIX      1
+#define ISTREAM_VER_MINOR    5
+#define ISTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
 
@@ -50,10 +50,23 @@ extern "C" {
  */
 #define ISTREAM_VER                         ((ISTREAM_VER_MAJOR * 10000UL) + (ISTREAM_VER_MINOR * 100UL) + (ISTREAM_VER_FIX))
 
+/* Pre-defined variables */
 struct __IStream;
 typedef struct __IStream IStream;
-
-typedef void (*IStream_ReceiveFn)(IStream* stream, uint8_t* buff, Stream_LenType len);
+/**
+ * @brief receive function, OStream_space
+ * @param stream IStream 
+ * @param buff uint8_t*
+ * @param len Stream_LenType
+ * @return Stream_Result 
+ */
+typedef Stream_Result (*IStream_ReceiveFn)(IStream* stream, uint8_t* buff, Stream_LenType len);
+/**
+ * @brief check how many bytes received, this functions allows to check 
+ * how many bytes received in available function, it's good to work with DMA
+ * @param stream IStream
+ * @return Stream_LenType
+ */
 typedef Stream_LenType (*IStream_CheckReceiveFn)(IStream* stream);
 
 /**
@@ -82,9 +95,12 @@ Stream_Result IStream_receive(IStream* stream);
 Stream_Result IStream_receiveByte(IStream* stream, uint8_t val);
 Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len);
 
+#define IStream_availableUncheck(STREAM)            Stream_available(&(STREAM)->Buffer)
 Stream_LenType IStream_available(IStream* stream);
 
 Stream_LenType IStream_incomingBytes(IStream* stream);
+
+#define IStream_inReceive(STREAM)                   Stream_inReceive(&(STREAM)->Buffer)
 
 #if ISTREAM_ARGS
     void  IStream_setArgs(IStream* stream, void* args);
