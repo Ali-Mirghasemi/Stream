@@ -129,19 +129,20 @@ typedef enum {
  * @brief result of Stream functions
  */
 typedef enum {
-    Stream_Ok               = 0,    /**< everything is OK */
-    Stream_NoSpace          = 1,    /**< there is no space for write operation */
-    Stream_NoAvailable      = 2,    /**< there no available bytes for read operation */
-    Stream_BufferFull       = 3,    /**< buffer full*/
-    Stream_NoReceiveFn      = 4,    /**< no receive function set for IStream */
-    Stream_NoTransmitFn     = 5,    /**< no transmit function set for OStream */
-    Stream_NoReceive        = 6,    /**< stream is not in receive mode */
-    Stream_NoTransmit       = 7,    /**< stream is not in transmit mode */
-    Stream_InReceive        = 8,    /**< stream is in receive mode */
-    Stream_InTransmit       = 9,    /**< stream is in transmit mode */
-    Stream_ZeroLen          = 10,   /**< len parameter is zero */
-    Stream_ReceiveFailed    = 11,   /**< failed in receive */
-    Stream_TransmitFailed   = 12,   /**< failed in transmit */
+    Stream_Ok               = 0,        /**< everything is OK */
+    Stream_NoSpace          = 1,        /**< there is no space for write operation */
+    Stream_NoAvailable      = 2,        /**< there no available bytes for read operation */
+    Stream_BufferFull       = 3,        /**< buffer full*/
+    Stream_NoReceiveFn      = 4,        /**< no receive function set for IStream */
+    Stream_NoTransmitFn     = 5,        /**< no transmit function set for OStream */
+    Stream_NoReceive        = 6,        /**< stream is not in receive mode */
+    Stream_NoTransmit       = 7,        /**< stream is not in transmit mode */
+    Stream_InReceive        = 8,        /**< stream is in receive mode */
+    Stream_InTransmit       = 9,        /**< stream is in transmit mode */
+    Stream_ZeroLen          = 10,       /**< len parameter is zero */
+    Stream_ReceiveFailed    = 11,       /**< failed in receive */
+    Stream_TransmitFailed   = 12,       /**< failed in transmit */
+    Stream_CustomError      = 0x8000,   /**< can be used for custom errors */
 } Stream_Result;
 /**
  * @brief describe flush mode, use in OStream
