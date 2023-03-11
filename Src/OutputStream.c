@@ -11,6 +11,7 @@
  */
 void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
+    stream->Buffer.FlushMode = OSTREAM_FLUSH_MODE;
     stream->transmit = transmitFn;
 #if OSTREAM_ARGS
     stream->Args = (void*) 0;
@@ -52,7 +53,15 @@ Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
         return res;
     }
 
-    return OStream_flush(stream);
+#if OSTREAM_FLUSH_CALLBACK
+    if (stream->flushCallback && OStream_pendingBytes(stream) == 0) {
+        stream->flushCallback(stream);
+    }
+#endif
+
+    return stream->Buffer.FlushMode == Stream_FlushMode_Single ? 
+                                    OStream_flush(stream) :
+                                    Stream_Ok;
 }
 /**
  * @brief start sending bytes and flush stream in Async Transmit
@@ -67,8 +76,7 @@ Stream_Result OStream_flush(OStream* stream) {
         if (len > 0) {
             if (stream->transmit) {
                 stream->Buffer.InTransmit = 1;
-                stream->transmit(stream, OStream_getDataPtr(stream), len);
-                return Stream_Ok;
+                return stream->transmit(stream, OStream_getDataPtr(stream), len);
             }
             else {
                 return Stream_NoTransmitFn;
@@ -81,6 +89,23 @@ Stream_Result OStream_flush(OStream* stream) {
     else {
         return Stream_InTransmit;
     }
+}
+/**
+ * @brief flush and wait for transmit all pending bytes
+ * 
+ * @param stream 
+ * @return Stream_Result 
+ */
+Stream_Result OStream_flushBlocking(OStream* stream) {
+    Stream_Result res;
+
+    while (OStream_pendingBytes(stream) == 0) {
+        if ((res = OStream_flush(stream)) != Stream_Ok) {
+            break;
+        }
+    }
+
+    return res;
 }
 /**
  * @brief blocking transmit 1 byte just call transmit function no need handle function
@@ -169,6 +194,17 @@ void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn) {
     stream->checkTransmit = fn;
 }
 #endif // OSTREAM_CHECK_TRANSMIT
+#if OSTREAM_FLUSH_CALLBACK
+/**
+ * @brief set flush callback function
+ * 
+ * @param stream 
+ * @param fn 
+ */
+void OStream_setFlushCallback(OStream* stream, OStream_FlushCallbackFn fn) {
+    stream->flushCallback = fn;
+}
+#endif
 /**
  * @brief return available space for write in bytes
  *
