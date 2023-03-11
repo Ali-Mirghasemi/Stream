@@ -18,7 +18,7 @@ extern "C" {
 #include <stdint.h>
 
 #define STREAM_VER_MAJOR    0
-#define STREAM_VER_MINOR    5
+#define STREAM_VER_MINOR    6
 #define STREAM_VER_FIX      0
 
 /************************************************************************/
@@ -140,7 +140,16 @@ typedef enum {
     Stream_InReceive        = 8,    /**< stream is in receive mode */
     Stream_InTransmit       = 9,    /**< stream is in transmit mode */
     Stream_ZeroLen          = 10,   /**< len parameter is zero */
+    Stream_ReceiveFailed    = 11,   /**< failed in receive */
+    Stream_TransmitFailed   = 12,   /**< failed in transmit */
 } Stream_Result;
+/**
+ * @brief describe flush mode, use in OStream
+ */
+typedef enum {
+    Stream_FlushMode_Single     = 0,    /**< flush only pending bytes before call flush function */
+    Stream_FlushMode_Continue   = 1,    /**< after flush complete if there is any pending bytes transmit pending bytes again */
+} Stream_FlushMode;
 /**
  * @brief Stream struct
  * contains everything need for handle stream
@@ -156,14 +165,14 @@ typedef struct {
 #if STREAM_READ_LIMIT
     Stream_LenType          ReadLimit;              /**< limit for read operation */
 #endif
-    uint8_t                 Overflow    : 1;        /**< overflow flag */
-    uint8_t                 InReceive   : 1;        /**< stream is in receive mode */
-    uint8_t                 InTransmit  : 1;        /**< stream is in transmit mode */
-    uint8_t                 Order       : 1;        /**< byte order */
-    uint8_t                 OrderFn     : 1;        /**< byte order function */
-    uint8_t                 WriteLocked : 1;        /**< stream write locked */
-    uint8_t                 ReadLocked  : 1;        /**< stream write locked */
-    uint8_t                 Reserved    : 1;        /**< reserved */
+    uint8_t                 Overflow        : 1;    /**< overflow flag */
+    uint8_t                 InReceive       : 1;    /**< stream is in receive mode */
+    uint8_t                 InTransmit      : 1;    /**< stream is in transmit mode */
+    uint8_t                 Order           : 1;    /**< byte order */
+    uint8_t                 OrderFn         : 1;    /**< byte order function */
+    uint8_t                 WriteLocked     : 1;    /**< stream write locked */
+    uint8_t                 ReadLocked      : 1;    /**< stream write locked */
+    uint8_t                 FlushMode       : 1;    /**< flush mode */
 } Stream;
 /**
  * @brief hold properties of cursor over stream
@@ -210,6 +219,11 @@ uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index);
 void Stream_reset(Stream* stream);
 void Stream_resetIO(Stream* stream);
 void Stream_clear(Stream* stream);
+
+void Stream_setFlushMode(Stream* stream, Stream_FlushMode mode);
+
+uint8_t Stream_inReceive(Stream* stream);
+uint8_t Stream_inTransmit(Stream* stream);
 
 uint8_t* Stream_getBuffer(Stream* stream);
 
