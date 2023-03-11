@@ -142,7 +142,7 @@ typedef enum {
     Stream_ZeroLen          = 10,       /**< len parameter is zero */
     Stream_ReceiveFailed    = 11,       /**< failed in receive */
     Stream_TransmitFailed   = 12,       /**< failed in transmit */
-    Stream_CustomError      = 0x8000,   /**< can be used for custom errors */
+    Stream_CustomError      = 0x80,     /**< can be used for custom errors */
 } Stream_Result;
 /**
  * @brief describe flush mode, use in OStream
