@@ -17,7 +17,7 @@ void printArray(uint8_t* buff, int len) {
     putchar('\n');
 }
 
-void MyStream_receive(IStream* stream, uint8_t* buff, Stream_LenType len) {
+Stream_Result MyStream_receive(IStream* stream, uint8_t* buff, Stream_LenType len) {
 	Stream_LenType available = Stream_available(&mediaStream);
 
 	if (available < len) {
@@ -29,12 +29,14 @@ void MyStream_receive(IStream* stream, uint8_t* buff, Stream_LenType len) {
 		// call read completed
 		IStream_handle(stream, len);
 	}
+
+	return Stream_Ok;
 }
 
-void MyStream_transmit(OStream* stream, uint8_t* buff, Stream_LenType len) {
+Stream_Result MyStream_transmit(OStream* stream, uint8_t* buff, Stream_LenType len) {
 	Stream_writeBytes(&mediaStream, buff, len);
 	// call transmit completed
-	OStream_handle(stream, len);
+	return OStream_handle(stream, len);
 }
 
 int main()
