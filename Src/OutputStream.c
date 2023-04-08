@@ -59,7 +59,7 @@ Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
     }
 #endif
 
-    return stream->Buffer.FlushMode == Stream_FlushMode_Single ? 
+    return stream->Buffer.FlushMode != Stream_FlushMode_Single ? 
                                     OStream_flush(stream) :
                                     Stream_Ok;
 }
