@@ -118,7 +118,7 @@ Stream_LenType OStream_space(OStream* stream);
 
 Stream_LenType OStream_outgoingBytes(OStream* stream);
 
-#define OStream_setFlushMode(STREAM, MODE)          Stream_setFlushMode((STREAM), (MODE))
+#define OStream_setFlushMode(STREAM, MODE)          Stream_setFlushMode(&(STREAM)->Buffer, (MODE))
 
 #define OStream_inTransmit(STREAM)                  Stream_inTransmit(&(STREAM)->Buffer)
 
