@@ -87,6 +87,19 @@ extern "C" {
  * @brief check len parameter in read/write functions
  */
 #define STREAM_CHECK_ZERO_LEN               1
+/* Stream Memory IO States */
+#define STREAM_MEM_IO_DEFAULT               0
+#define STREAM_MEM_IO_CUSTOM                1
+#define STREAM_MEM_IO_DRIVER                2
+/**
+ * @brief This features help you to override memcpy, memrcpy, memset and etc with your custom functions
+ */
+#define STREAM_MEM_IO                       STREAM_MEM_IO_DEFAULT
+/* Default IO functions */
+#define STREAM_MEM_COPY                     memcpy
+#define STREAM_MEM_COPY_REVERSE             memrcpy
+#define STREAM_MEM_SET                      memset
+#define STREAM_MEM_REVERSE                  memreverse
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
@@ -152,10 +165,39 @@ typedef enum {
     Stream_FlushMode_Continue   = 1,    /**< after flush complete if there is any pending bytes transmit pending bytes again */
 } Stream_FlushMode;
 /**
+ * @brief Custom memcpy for override default function
+ */
+typedef Stream_LenType (*Stream_MemCopyFn)(void* dest, const void* src, Stream_LenType len);
+/**
+ * @brief Custom memrcpy for override default function
+ */
+typedef Stream_LenType (*Stream_MemCopyReverseFn)(void* dest, const void* src, Stream_LenType len);
+/**
+ * @brief Custom memset for override default function
+ */
+typedef Stream_LenType (*Stream_MemSetFn)(void* src, uint8_t val, Stream_LenType len);
+/**
+ * @brief Custom memset for override default function
+ */
+typedef Stream_LenType (*Stream_MemReverseFn)(void* src, Stream_LenType len);
+
+typedef struct {
+    Stream_MemCopyFn              copy;
+    Stream_MemCopyReverseFn       copyReverse;
+    Stream_MemSetFn               set;
+    Stream_MemReverseFn           reverse;
+} Stream_MemIO;
+
+/**
  * @brief Stream struct
  * contains everything need for handle stream
  */
 typedef struct {
+#if   STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+    Stream_MemIO            Mem;                    /**< Custom io functions for interact with memory */
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+    const Stream_MemIO*     Mem;                    /**< Custom io functions for interact with memory in driver mode */
+#endif
     uint8_t*                Data;                   /**< pointer to buffer */
     Stream_LenType          Size;                   /**< size of buffer */
     Stream_LenType          WPos;                   /**< write position */
@@ -186,6 +228,18 @@ typedef struct {
 void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size);
 void Stream_fromBuff(Stream* stream, uint8_t* buffer, Stream_LenType size);
 void Stream_deinit(Stream* stream);
+
+#if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+void Stream_setMemIO(
+    Stream*                 stream,
+    Stream_MemCopyFn          copy,
+    Stream_MemCopyReverseFn   copyReverse,
+    Stream_MemSetFn           set,
+    Stream_MemReverseFn       reverse
+);
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+void Stream_setMemIO(Stream* stream, const Stream_MemIO* mem);
+#endif
 
 /*************** General APIs *************/
 
@@ -453,7 +507,7 @@ Stream_Result Stream_getFloatArrayAt(Stream* stream, Stream_LenType index, float
     Stream_LenType Stream_findDouble(Stream* stream, double val);
 #endif
 
-#if STREAM_FIND_AT_FUNCTION
+#if STREAM_FIND_AT_FUNCTIONS
     Stream_LenType Stream_findUInt8At(Stream* stream, Stream_LenType offset, uint8_t val);
     Stream_LenType Stream_findInt8At(Stream* stream, Stream_LenType offset, int8_t val);
     Stream_LenType Stream_findUInt16At(Stream* stream, Stream_LenType offset, uint16_t val);
@@ -468,7 +522,7 @@ Stream_Result Stream_getFloatArrayAt(Stream* stream, Stream_LenType index, float
 #if STREAM_DOUBLE
     Stream_LenType Stream_findDoubleAt(Stream* stream, Stream_LenType offset, double val);
 #endif
-#endif // STREAM_FIND_AT_FUNCTION
+#endif // STREAM_FIND_AT_FUNCTIONS
 
     Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len);
     Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);

@@ -1,6 +1,26 @@
 #include "StreamBuffer.h"
 #include <string.h>
 
+/* Memory IO Macros */
+#if   STREAM_MEM_IO == STREAM_MEM_IO_DEFAULT
+    #define __memCopy(S, DEST, SRC, LEN)             STREAM_MEM_COPY((DEST), (SRC), (LEN))
+    #define __memCopyReverse(S, DEST, SRC, LEN)      STREAM_MEM_COPY_REVERSE((DEST), (SRC), (LEN))
+    #define __memSet(S, SRC, VAL, LEN)               STREAM_MEM_SET((SRC), (VAL), (LEN))
+    #define __memReverse(S, SRC, LEN)                STREAM_MEM_REVERSE((SRC), (LEN))
+#elif STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+    #define __memCopy(S, DEST, SRC, LEN)             (S)->Mem.copy((DEST), (SRC), (LEN))
+    #define __memCopyReverse(S, DEST, SRC, LEN)      (S)->Mem.copyReverse((DEST), (SRC), (LEN))
+    #define __memSet(S, SRC, VAL, LEN)               (S)->Mem.set((SRC), (VAL), (LEN))
+    #define __memReverse(S, SRC, LEN)                (S)->Mem.reverse((SRC), (LEN))
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+    #define __memCopy(S, DEST, SRC, LEN)             (S)->Mem->copy((DEST), (SRC), (LEN))
+    #define __memCopyReverse(S, DEST, SRC, LEN)      (S)->Mem->copyReverse((DEST), (SRC), (LEN))
+    #define __memSet(S, SRC, VAL, LEN)               (S)->Mem->set((SRC), (VAL), (LEN))
+    #define __memReverse(S, SRC, LEN)                (S)->Mem->reverse((SRC), (LEN))
+#else
+    #error "STREAM_MEM_IO is invalid!"
+#endif
+
 #if STREAM_BYTE_ORDER
 /* private typedef */
 typedef Stream_Result (*Stream_WriteBytesFn)(Stream* stream, uint8_t* val, Stream_LenType len);
@@ -26,7 +46,7 @@ static const Stream_GetBytesFn getBytesAt[2] = {
     #define __readBytes(STREAM, VAL, LEN)           readBytes[STREAM->OrderFn]((STREAM), (VAL), (LEN))
     #define __getBytesAt(STREAM, INDEX, VAL, LEN)   getBytesAt[STREAM->OrderFn]((STREAM), (INDEX), (VAL), (LEN))
 
-    #define __checkReverse(STREAM, VAL)             if (STREAM->OrderFn) {memreverse(&VAL, sizeof(VAL));}
+    #define __checkReverse(STREAM, VAL)             if (STREAM->OrderFn) {__memReverse((STREAM), &VAL, sizeof(VAL));}
 
 #else
     #define __writeBytes(STREAM, VAL, LEN)          Stream_writeBytes((STREAM), (VAL), (LEN))
@@ -35,9 +55,20 @@ static const Stream_GetBytesFn getBytesAt[2] = {
 
     #define __checkReverse(STREAM, VAL)
 #endif // STREAM_BYTE_ORDER
+
 /* private function */
 static void memrcpy(void* dest, const void* src, int len);
 static void memreverse(void* arr, int len);
+
+/* Stream MemIO default driver*/
+#if STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+static const Stream_MemIO STREAM_DEFAULT_DRIVER = {
+    (Stream_MemCopyFn) STREAM_MEM_COPY,
+    (Stream_MemCopyReverseFn) STREAM_MEM_COPY_REVERSE,
+    (Stream_MemSetFn) STREAM_MEM_SET,
+    (Stream_MemReverseFn) STREAM_MEM_REVERSE,
+};
+#endif
 
 /**
  * @brief initialize stream
@@ -70,13 +101,24 @@ void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
 #if STREAM_READ_LOCK
     stream->ReadLocked = 0;
 #endif // STREAM_READ_LOCK
+#if   STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+    Stream_setMemIO(
+        stream,
+        (Stream_MemCopyFn) STREAM_MEM_COPY,
+        (Stream_MemCopyReverseFn) STREAM_MEM_COPY_REVERSE,
+        (Stream_MemSetFn) STREAM_MEM_SET,
+        (Stream_MemReverseFn) STREAM_MEM_REVERSE
+    );
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+    Stream_setMemIO(stream, &STREAM_DEFAULT_DRIVER);
+#endif
 }
 /**
  * @brief initialize stream with a buffer that already have data in it
- * 
- * @param stream 
- * @param buffer 
- * @param size 
+ *
+ * @param stream
+ * @param buffer
+ * @param size
  */
 void Stream_fromBuff(Stream* stream, uint8_t* buffer, Stream_LenType size) {
     Stream_init(stream, buffer, size);
@@ -88,8 +130,43 @@ void Stream_fromBuff(Stream* stream, uint8_t* buffer, Stream_LenType size) {
  * @param stream address of stream
  */
 void Stream_deinit(Stream* stream) {
-    memset(stream, 0, sizeof(Stream));
+    __memSet(stream, stream, 0, sizeof(Stream));
 }
+#if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+/**
+ * @brief Set custom memory io functions
+ * if input is null use default functions
+ *
+ * @param stream
+ * @param copy
+ * @param copyReverse
+ * @param set
+ * @param reverse
+ */
+void Stream_setMemIO(
+    Stream*                 stream,
+    Stream_MemCopyFn          copy,
+    Stream_MemCopyReverseFn   copyReverse,
+    Stream_MemSetFn           set,
+    Stream_MemReverseFn       reverse
+) {
+    stream->Mem.copy = copy ? copy : (Stream_MemCopyFn) STREAM_MEM_COPY;
+    stream->Mem.copyReverse = copyReverse ? copyReverse : (Stream_MemCopyReverseFn) STREAM_MEM_COPY_REVERSE;
+    stream->Mem.set = set ? set : (Stream_MemSetFn) STREAM_MEM_SET;
+    stream->Mem.reverse = reverse ? reverse : (Stream_MemReverseFn) STREAM_MEM_REVERSE;
+}
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+/**
+ * @brief Set memory io driver
+ * if input is null use default driver. all function must exists
+ *
+ * @param stream
+ * @param mem
+ */
+void Stream_setMemIO(Stream* stream, const Stream_MemIO* mem) {
+    stream->Mem = mem ? mem : &STREAM_DEFAULT_DRIVER;
+}
+#endif
 
 /**
  * @brief return available bytes to read
@@ -157,31 +234,31 @@ void Stream_resetIO(Stream* stream) {
  */
 void Stream_clear(Stream* stream) {
     Stream_reset(stream);
-    memset(stream->Data, 0, stream->Size);
+    __memSet(stream, stream->Data, 0, stream->Size);
 }
 /**
- * @brief 
- * 
- * @param stream 
- * @param mode 
+ * @brief
+ *
+ * @param stream
+ * @param mode
  */
 void Stream_setFlushMode(Stream* stream, Stream_FlushMode mode) {
     stream->FlushMode = mode;
 }
 /**
  * @brief return in receive flag
- * 
- * @param stream 
- * @return uint8_t 
+ *
+ * @param stream
+ * @return uint8_t
  */
 uint8_t Stream_inReceive(Stream* stream) {
     return stream->InReceive;
 }
 /**
  * @brief return in transmit flag
- * 
- * @param stream 
- * @return uint8_t 
+ *
+ * @param stream
+ * @return uint8_t
  */
 uint8_t Stream_inTransmit(Stream* stream) {
     return stream->InTransmit;
@@ -581,14 +658,14 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
 
         tmpLen = stream->Size - stream->WPos;
         len -= tmpLen;
-        memcpy(&stream->Data[stream->WPos], val, tmpLen);
+        __memCopy(stream, &stream->Data[stream->WPos], val, tmpLen);
         val += tmpLen;
         // move WPos
         stream->WPos = 0;
         stream->Overflow = 1;
     }
     if (len > 0) {
-        memcpy(&stream->Data[stream->WPos], val, len);
+        __memCopy(stream, &stream->Data[stream->WPos], val, len);
         // move WPos
         stream->WPos += len;
     }
@@ -623,13 +700,13 @@ Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenT
 
         tmpLen = stream->Size - stream->WPos;
         len -= tmpLen;
-        memrcpy(&stream->Data[stream->WPos], val + len, tmpLen);
+        __memCopyReverse(stream, &stream->Data[stream->WPos], val + len, tmpLen);
         // move WPos
         stream->WPos = 0;
         stream->Overflow = 1;
     }
     if (len > 0) {
-        memrcpy(&stream->Data[stream->WPos], val, len);
+        __memCopyReverse(stream, &stream->Data[stream->WPos], val, len);
         // move WPos
         stream->WPos += len;
     }
@@ -710,14 +787,14 @@ Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType le
 
         tmpLen = stream->Size - stream->WPos;
         len -= tmpLen;
-        memset(&stream->Data[stream->WPos], val, tmpLen);
+        __memSet(stream, &stream->Data[stream->WPos], val, tmpLen);
         val += tmpLen;
         // move WPos
         stream->WPos = 0;
         stream->Overflow = 1;
     }
     if (len > 0) {
-        memset(&stream->Data[stream->WPos], val, len);
+        __memSet(stream, &stream->Data[stream->WPos], val, len);
         // move WPos
         stream->WPos += len;
     }
@@ -807,14 +884,14 @@ Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len)
 
         tmpLen = stream->Size - stream->RPos;
         len -= tmpLen;
-        memcpy(val, &stream->Data[stream->RPos], tmpLen);
+        __memCopy(stream, val, &stream->Data[stream->RPos], tmpLen);
         val += tmpLen;
         // move RPos
         stream->RPos = 0;
         stream->Overflow = 0;
     }
     if (len > 0) {
-        memcpy(val, &stream->Data[stream->RPos], len);
+        __memCopy(stream, val, &stream->Data[stream->RPos], len);
         // move RPos
         stream->RPos += len;
     }
@@ -841,13 +918,13 @@ Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenTy
 
         tmpLen = stream->Size - stream->RPos;
         len -= tmpLen;
-        memrcpy(val + len, &stream->Data[stream->RPos], tmpLen);
+        __memCopyReverse(stream, val + len, &stream->Data[stream->RPos], tmpLen);
         // move RPos
         stream->RPos = 0;
         stream->Overflow = 0;
     }
     if (len > 0) {
-        memrcpy(val, &stream->Data[stream->RPos], len);
+        __memCopyReverse(stream, val, &stream->Data[stream->RPos], len);
         // move RPos
         stream->RPos += len;
     }
@@ -1241,12 +1318,12 @@ Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* v
 
         tmpLen = stream->Size - index;
         len -= tmpLen;
-        memcpy(val, &stream->Data[index], tmpLen);
+        __memCopy(stream, val, &stream->Data[index], tmpLen);
         val += tmpLen;
         index = (index + tmpLen) % stream->Size;
     }
 
-    memcpy(val, &stream->Data[index], len);
+    __memCopy(stream, val, &stream->Data[index], len);
 
     return Stream_Ok;
 }
@@ -1267,12 +1344,12 @@ Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uin
 
         tmpLen = stream->Size - index;
         len -= tmpLen;
-        memrcpy(val, &stream->Data[index + len], tmpLen);
+        __memCopyReverse(stream, val, &stream->Data[index + len], tmpLen);
         val += tmpLen;
         index = (index + tmpLen) % stream->Size;
     }
 
-    memrcpy(val, &stream->Data[index], len);
+    __memCopyReverse(stream, val, &stream->Data[index], len);
 
     return Stream_Ok;
 }
@@ -1965,7 +2042,7 @@ Stream_Result Stream_readDoubleArray(Stream* stream, double* val, Stream_LenType
 Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len) {
     Stream_LenType space = Stream_space(stream);
     if (space >= len && !stream->WriteLocked) {
-        memcpy(lock, stream, sizeof(Stream));
+        __memCopy(stream, lock, stream, sizeof(Stream));
         Stream_flipWrite(lock, len);
         stream->WriteLocked = 1;
         return Stream_Ok;
@@ -1988,8 +2065,8 @@ void Stream_unlockWrite(Stream* stream, Stream* lock) {
 }
 /**
  * @brief unlock stream for write with ignore changes
- * 
- * @param stream 
+ *
+ * @param stream
  */
 void Stream_unlockWriteIgnore(Stream* stream) {
     if (stream->WriteLocked) {
@@ -1998,9 +2075,9 @@ void Stream_unlockWriteIgnore(Stream* stream) {
 }
 /**
  * @brief return number of byte write in lock
- * 
- * @param stream 
- * @param lock 
+ *
+ * @param stream
+ * @param lock
  */
 Stream_LenType Stream_lockWriteLen(Stream* stream, Stream* lock) {
     if (stream->WPos != lock->WPos) {
@@ -2012,10 +2089,10 @@ Stream_LenType Stream_lockWriteLen(Stream* stream, Stream* lock) {
             return (stream->Size - stream->WPos) + lock->WPos;
         }
     }
-    else if (stream->RPos == lock->RPos && 
+    else if (stream->RPos == lock->RPos &&
         stream->Overflow == 0 &&
         lock->Overflow) {
-        
+
         return stream->Size;
     }
     else {
@@ -2034,7 +2111,7 @@ Stream_LenType Stream_lockWriteLen(Stream* stream, Stream* lock) {
 Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len) {
     Stream_LenType available = Stream_available(stream);
     if (available >= len && !stream->ReadLocked) {
-        memcpy(lock, stream, sizeof(Stream));
+        __memCopy(stream, lock, stream, sizeof(Stream));
         Stream_flipRead(lock, len);
         stream->ReadLocked = 1;
         return Stream_Ok;
@@ -2057,10 +2134,10 @@ void Stream_unlockRead(Stream* stream, Stream* lock) {
 }
 /**
  * @brief return number of bytes that read
- * 
- * @param stream 
- * @param lock 
- * @return Stream_LenType 
+ *
+ * @param stream
+ * @param lock
+ * @return Stream_LenType
  */
 Stream_LenType Stream_lockReadLen(Stream* stream, Stream* lock) {
     if (stream->RPos != lock->RPos) {
@@ -2072,7 +2149,7 @@ Stream_LenType Stream_lockReadLen(Stream* stream, Stream* lock) {
             return (stream->Size - stream->RPos) + lock->RPos;
         }
     }
-    else if (stream->WPos == lock->WPos && 
+    else if (stream->WPos == lock->WPos &&
         stream->Overflow != 0 &&
         !lock->Overflow) {
 
@@ -2084,8 +2161,8 @@ Stream_LenType Stream_lockReadLen(Stream* stream, Stream* lock) {
 }
 /**
  * @brief unlock stream for read with ignore changes
- * 
- * @param stream 
+ *
+ * @param stream
  */
 void Stream_unlockReadIgnore(Stream* stream) {
     if (stream->ReadLocked) {
@@ -2197,10 +2274,10 @@ Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, 
 }
 /**
  * @brief find a uint8_t value in stream
- * 
- * @param stream 
- * @param val 
- * @return Stream_LenType 
+ *
+ * @param stream
+ * @param val
+ * @return Stream_LenType
  */
 Stream_LenType Stream_findUInt8(Stream* stream, uint8_t val) {
     return Stream_findByte(stream, val);
@@ -2245,7 +2322,7 @@ Stream_LenType Stream_findDouble(Stream* stream, double val) {
 }
 #endif
 
-#if STREAM_FIND_AT_FUNCTION
+#if STREAM_FIND_AT_FUNCTIONS
 Stream_LenType Stream_findUInt8At(Stream* stream, Stream_LenType offset, uint8_t val) {
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
@@ -2288,7 +2365,7 @@ Stream_LenType Stream_findDoubleAt(Stream* stream, Stream_LenType offset, double
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
 #endif
-#endif // STREAM_FIND_AT_FUNCTION
+#endif // STREAM_FIND_AT_FUNCTIONS
 
 #endif // STREAM_FIND_FUNCTIONS
 
@@ -2315,11 +2392,11 @@ int8_t Stream_compare(Stream* stream, const uint8_t* val, Stream_LenType len) {
 int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len) {
     int8_t result;
     Stream_LenType tmpLen;
-  
+
     if (len == 0) {
       return 0;
     }
-  
+
     if (Stream_available(stream) - index < len) {
         return -2;
     }
