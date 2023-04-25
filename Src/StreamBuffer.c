@@ -98,8 +98,7 @@ void Stream_deinit(Stream* stream) {
  * @return Stream_LenType available bytes
  */
 Stream_LenType Stream_availableReal(Stream* stream) {
-    return stream->Overflow ? stream->WPos + (stream->Size - stream->RPos) :
-                                stream->WPos - stream->RPos;
+    return stream->Size * stream->Overflow + stream->WPos - stream->RPos;
 }
 /**
  * @brief return buffer space for write bytes
@@ -108,8 +107,7 @@ Stream_LenType Stream_availableReal(Stream* stream) {
  * @return Stream_LenType space for write
  */
 Stream_LenType Stream_spaceReal(Stream* stream) {
-    return stream->Overflow ? stream->RPos - stream->WPos :
-                                stream->RPos + (stream->Size - stream->WPos);
+    return stream->Size * !stream->Overflow + stream->RPos - stream->WPos;
 }
 /**
  * @brief check stream is empty
@@ -586,13 +584,13 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
         memcpy(&stream->Data[stream->WPos], val, tmpLen);
         val += tmpLen;
         // move WPos
-        stream->WPos = (stream->WPos + tmpLen) % stream->Size;
+        stream->WPos = 0;
         stream->Overflow = 1;
     }
     if (len > 0) {
         memcpy(&stream->Data[stream->WPos], val, len);
         // move WPos
-        stream->WPos = (stream->WPos + len) % stream->Size;
+        stream->WPos += len;
     }
 
     return Stream_Ok;
@@ -627,13 +625,13 @@ Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenT
         len -= tmpLen;
         memrcpy(&stream->Data[stream->WPos], val + len, tmpLen);
         // move WPos
-        stream->WPos = (stream->WPos + tmpLen) % stream->Size;
+        stream->WPos = 0;
         stream->Overflow = 1;
     }
     if (len > 0) {
         memrcpy(&stream->Data[stream->WPos], val, len);
         // move WPos
-        stream->WPos = (stream->WPos + len) % stream->Size;
+        stream->WPos += len;
     }
 
     return Stream_Ok;
@@ -672,13 +670,13 @@ Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
         len -= tmpLen;
         Stream_readBytes(in, &out->Data[out->WPos], tmpLen);
         // move WPos
-        out->WPos = (out->WPos + tmpLen) % out->Size;
+        out->WPos = 0;
         out->Overflow = 1;
     }
     if (len > 0) {
         Stream_readBytes(in, &out->Data[out->WPos], len);
         // move WPos
-        out->WPos = (out->WPos + len) % out->Size;
+        out->WPos += len;
     }
 
     return Stream_Ok;
@@ -715,13 +713,13 @@ Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType le
         memset(&stream->Data[stream->WPos], val, tmpLen);
         val += tmpLen;
         // move WPos
-        stream->WPos = (stream->WPos + tmpLen) % stream->Size;
+        stream->WPos = 0;
         stream->Overflow = 1;
     }
     if (len > 0) {
         memset(&stream->Data[stream->WPos], val, len);
         // move WPos
-        stream->WPos = (stream->WPos + len) % stream->Size;
+        stream->WPos += len;
     }
 
     return Stream_Ok;
@@ -812,13 +810,13 @@ Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len)
         memcpy(val, &stream->Data[stream->RPos], tmpLen);
         val += tmpLen;
         // move RPos
-        stream->RPos = (stream->RPos + tmpLen) % stream->Size;
+        stream->RPos = 0;
         stream->Overflow = 0;
     }
     if (len > 0) {
         memcpy(val, &stream->Data[stream->RPos], len);
         // move RPos
-        stream->RPos = (stream->RPos + len) % stream->Size;
+        stream->RPos += len;
     }
 
     return Stream_Ok;
@@ -845,13 +843,13 @@ Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenTy
         len -= tmpLen;
         memrcpy(val + len, &stream->Data[stream->RPos], tmpLen);
         // move RPos
-        stream->RPos = (stream->RPos + tmpLen) % stream->Size;
+        stream->RPos = 0;
         stream->Overflow = 0;
     }
     if (len > 0) {
         memrcpy(val, &stream->Data[stream->RPos], len);
         // move RPos
-        stream->RPos = (stream->RPos + len) % stream->Size;
+        stream->RPos += len;
     }
 
     return Stream_Ok;
@@ -881,13 +879,13 @@ Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len) {
         len -= tmpLen;
         Stream_writeBytes(out, &in->Data[in->RPos], tmpLen);
         // move RPos
-        in->RPos = (in->RPos + tmpLen) % in->Size;
+        in->RPos = 0;
         in->Overflow = 0;
     }
     if (len > 0) {
         Stream_writeBytes(out, &in->Data[in->RPos], len);
         // move RPos
-        in->RPos = (in->RPos + len) % in->Size;
+        in->RPos += len;
     }
 
     return Stream_Ok;
