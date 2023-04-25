@@ -362,19 +362,19 @@ uint32_t Test_lock(void) {
                                         return 0;\
                                     }
 
-ASSERT_NUM(Int8, int8_t);
-ASSERT_NUM(Int16, int16_t);
-ASSERT_NUM(Int32, int32_t);
-ASSERT_NUM(UInt8, uint8_t);
-ASSERT_NUM(UInt16, uint16_t);
-ASSERT_NUM(UInt32, uint32_t);
-ASSERT_NUM(Float, float);
+ASSERT_NUM(Int8, int8_t)
+ASSERT_NUM(Int16, int16_t)
+ASSERT_NUM(Int32, int32_t)
+ASSERT_NUM(UInt8, uint8_t)
+ASSERT_NUM(UInt16, uint16_t)
+ASSERT_NUM(UInt32, uint32_t)
+ASSERT_NUM(Float, float)
 #if STREAM_UINT64
-    ASSERT_NUM(Int64, int64_t);
-    ASSERT_NUM(UInt64, uint64_t);
+    ASSERT_NUM(Int64, int64_t)
+    ASSERT_NUM(UInt64, uint64_t)
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    ASSERT_NUM(Double, double);
+    ASSERT_NUM(Double, double)
 #endif // STREAM_DOUBLE
 
 uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8_t cycle, uint8_t index) {
