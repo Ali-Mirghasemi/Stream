@@ -23,9 +23,9 @@
 
 #if STREAM_BYTE_ORDER
 /* private typedef */
-typedef Stream_Result (*Stream_WriteBytesFn)(Stream* stream, uint8_t* val, Stream_LenType len);
-typedef Stream_Result (*Stream_ReadBytesFn)(Stream* stream, uint8_t* val, Stream_LenType len);
-typedef Stream_Result (*Stream_GetBytesFn)(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+typedef Stream_Result (*Stream_WriteBytesFn)(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+typedef Stream_Result (*Stream_ReadBytesFn)(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+typedef Stream_Result (*Stream_GetBytesFn)(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
 /* private variables */
 static const Stream_WriteBytesFn writeBytes[2] = {
     Stream_writeBytes,
@@ -60,7 +60,7 @@ static const Stream_GetBytesFn getBytesAt[2] = {
 static void memrcpy(void* dest, const void* src, int len);
 static void memreverse(void* arr, int len);
 
-/* Stream MemIO default driver*/
+/* StreamBuffer MemIO default driver*/
 #if STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
 static const Stream_MemIO STREAM_DEFAULT_DRIVER = {
     (Stream_MemCopyFn) STREAM_MEM_COPY,
@@ -77,7 +77,7 @@ static const Stream_MemIO STREAM_DEFAULT_DRIVER = {
  * @param buffer address of byte buffer
  * @param size size of buffer
  */
-void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
+void Stream_init(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size) {
     stream->Data = buffer;
     stream->Size = size;
     stream->Overflow = 0;
@@ -120,7 +120,7 @@ void Stream_init(Stream* stream, uint8_t* buffer, Stream_LenType size) {
  * @param buffer
  * @param size
  */
-void Stream_fromBuff(Stream* stream, uint8_t* buffer, Stream_LenType size) {
+void Stream_fromBuff(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size) {
     Stream_init(stream, buffer, size);
     stream->WPos = size;
 }
@@ -129,8 +129,8 @@ void Stream_fromBuff(Stream* stream, uint8_t* buffer, Stream_LenType size) {
  *
  * @param stream address of stream
  */
-void Stream_deinit(Stream* stream) {
-    __memSet(stream, stream, 0, sizeof(Stream));
+void Stream_deinit(StreamBuffer* stream) {
+    __memSet(stream, stream, 0, sizeof(StreamBuffer));
 }
 #if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
 /**
@@ -144,7 +144,7 @@ void Stream_deinit(Stream* stream) {
  * @param reverse
  */
 void Stream_setMemIO(
-    Stream*                 stream,
+    StreamBuffer*                 stream,
     Stream_MemCopyFn          copy,
     Stream_MemCopyReverseFn   copyReverse,
     Stream_MemSetFn           set,
@@ -163,7 +163,7 @@ void Stream_setMemIO(
  * @param stream
  * @param mem
  */
-void Stream_setMemIO(Stream* stream, const Stream_MemIO* mem) {
+void Stream_setMemIO(StreamBuffer* stream, const Stream_MemIO* mem) {
     stream->Mem = mem ? mem : &STREAM_DEFAULT_DRIVER;
 }
 #endif
@@ -174,7 +174,7 @@ void Stream_setMemIO(Stream* stream, const Stream_MemIO* mem) {
  * @param stream
  * @return Stream_LenType available bytes
  */
-Stream_LenType Stream_availableReal(Stream* stream) {
+Stream_LenType Stream_availableReal(StreamBuffer* stream) {
     return stream->Size * stream->Overflow + stream->WPos - stream->RPos;
 }
 /**
@@ -183,7 +183,7 @@ Stream_LenType Stream_availableReal(Stream* stream) {
  * @param stream
  * @return Stream_LenType space for write
  */
-Stream_LenType Stream_spaceReal(Stream* stream) {
+Stream_LenType Stream_spaceReal(StreamBuffer* stream) {
     return stream->Size * !stream->Overflow + stream->RPos - stream->WPos;
 }
 /**
@@ -192,7 +192,7 @@ Stream_LenType Stream_spaceReal(Stream* stream) {
  * @param stream
  * @return uint8_t 0 -> Not Empty, 1-> it's empty
  */
-uint8_t Stream_isEmpty(Stream* stream) {
+uint8_t Stream_isEmpty(StreamBuffer* stream) {
     return stream->RPos == stream->WPos && !stream->Overflow;
 }
 /**
@@ -202,7 +202,7 @@ uint8_t Stream_isEmpty(Stream* stream) {
  * @param stream
  * @return uint8_t 0 -> Not Full, 1-> it's Full
  */
-uint8_t Stream_isFull(Stream* stream) {
+uint8_t Stream_isFull(StreamBuffer* stream) {
     return stream->RPos == stream->WPos && stream->Overflow;
 }
 /**
@@ -210,7 +210,7 @@ uint8_t Stream_isFull(Stream* stream) {
  *
  * @param stream
  */
-void Stream_reset(Stream* stream) {
+void Stream_reset(StreamBuffer* stream) {
     stream->RPos = 0;
     stream->WPos = 0;
     stream->Overflow = 0;
@@ -220,7 +220,7 @@ void Stream_reset(Stream* stream) {
  *
  * @param stream
  */
-void Stream_resetIO(Stream* stream) {
+void Stream_resetIO(StreamBuffer* stream) {
     stream->RPos = 0;
     stream->WPos = 0;
     stream->Overflow = 0;
@@ -232,7 +232,7 @@ void Stream_resetIO(Stream* stream) {
  *
  * @param stream
  */
-void Stream_clear(Stream* stream) {
+void Stream_clear(StreamBuffer* stream) {
     Stream_reset(stream);
     __memSet(stream, stream->Data, 0, stream->Size);
 }
@@ -242,7 +242,7 @@ void Stream_clear(Stream* stream) {
  * @param stream
  * @param mode
  */
-void Stream_setFlushMode(Stream* stream, Stream_FlushMode mode) {
+void Stream_setFlushMode(StreamBuffer* stream, Stream_FlushMode mode) {
     stream->FlushMode = mode;
 }
 /**
@@ -251,7 +251,7 @@ void Stream_setFlushMode(Stream* stream, Stream_FlushMode mode) {
  * @param stream
  * @return uint8_t
  */
-uint8_t Stream_inReceive(Stream* stream) {
+uint8_t Stream_inReceive(StreamBuffer* stream) {
     return stream->InReceive;
 }
 /**
@@ -260,7 +260,7 @@ uint8_t Stream_inReceive(Stream* stream) {
  * @param stream
  * @return uint8_t
  */
-uint8_t Stream_inTransmit(Stream* stream) {
+uint8_t Stream_inTransmit(StreamBuffer* stream) {
     return stream->InTransmit;
 }
 /**
@@ -269,7 +269,7 @@ uint8_t Stream_inTransmit(Stream* stream) {
  * @param stream
  * @return Stream_LenType it's between 0 ~ Size
  */
-Stream_LenType Stream_getWritePos(Stream* stream) {
+Stream_LenType Stream_getWritePos(StreamBuffer* stream) {
     return stream->WPos;
 }
 /**
@@ -278,7 +278,7 @@ Stream_LenType Stream_getWritePos(Stream* stream) {
  * @param stream
  * @return Stream_LenType it's between 0 ~ Size
  */
-Stream_LenType Stream_getReadPos(Stream* stream) {
+Stream_LenType Stream_getReadPos(StreamBuffer* stream) {
     return stream->RPos;
 }
 /**
@@ -288,7 +288,7 @@ Stream_LenType Stream_getReadPos(Stream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_directAvailable(Stream* stream) {
+Stream_LenType Stream_directAvailable(StreamBuffer* stream) {
     return stream->Overflow ? stream->Size - stream->RPos :
                                 stream->WPos - stream->RPos;
 }
@@ -299,7 +299,7 @@ Stream_LenType Stream_directAvailable(Stream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_directSpace(Stream* stream) {
+Stream_LenType Stream_directSpace(StreamBuffer* stream) {
     return stream->Overflow ? stream->RPos - stream->WPos :
                                 stream->Size - stream->WPos;
 }
@@ -311,7 +311,7 @@ Stream_LenType Stream_directSpace(Stream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_directAvailableAt(Stream* stream, Stream_LenType index) {
+Stream_LenType Stream_directAvailableAt(StreamBuffer* stream, Stream_LenType index) {
     Stream_LenType len = Stream_availableReal(stream);
     Stream_LenType dirLen = Stream_directAvailable(stream);
     if (len == dirLen) {
@@ -330,7 +330,7 @@ Stream_LenType Stream_directAvailableAt(Stream* stream, Stream_LenType index) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_directSpaceAt(Stream* stream, Stream_LenType index) {
+Stream_LenType Stream_directSpaceAt(StreamBuffer* stream, Stream_LenType index) {
     Stream_LenType len = Stream_spaceReal(stream);
     Stream_LenType dirLen = Stream_directSpace(stream);
     if (len == dirLen) {
@@ -347,7 +347,7 @@ Stream_LenType Stream_directSpaceAt(Stream* stream, Stream_LenType index) {
  * @param stream
  * @return uint8_t*
  */
-uint8_t* Stream_getWritePtr(Stream* stream) {
+uint8_t* Stream_getWritePtr(StreamBuffer* stream) {
     return &stream->Data[stream->WPos];
 }
 /**
@@ -356,10 +356,10 @@ uint8_t* Stream_getWritePtr(Stream* stream) {
  * @param stream
  * @return uint8_t*
  */
-uint8_t* Stream_getReadPtr(Stream* stream) {
+uint8_t* Stream_getReadPtr(StreamBuffer* stream) {
     return &stream->Data[stream->RPos];
 }
-uint8_t* Stream_getWritePtrAt(Stream* stream, Stream_LenType index) {
+uint8_t* Stream_getWritePtrAt(StreamBuffer* stream, Stream_LenType index) {
     index += stream->WPos;
 
     if (index >= stream->Size) {
@@ -368,7 +368,7 @@ uint8_t* Stream_getWritePtrAt(Stream* stream, Stream_LenType index) {
 
     return &stream->Data[index];
 }
-uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index) {
+uint8_t* Stream_getReadPtrAt(StreamBuffer* stream, Stream_LenType index) {
     index += stream->RPos;
 
     if (index >= stream->Size) {
@@ -382,7 +382,7 @@ uint8_t* Stream_getReadPtrAt(Stream* stream, Stream_LenType index) {
  *
  * @param stream
  */
-void Stream_setBuffer(Stream* stream, uint8_t* data, Stream_LenType size) {
+void Stream_setBuffer(StreamBuffer* stream, uint8_t* data, Stream_LenType size) {
     Stream_init(stream, data, size);
 }
 /**
@@ -391,7 +391,7 @@ void Stream_setBuffer(Stream* stream, uint8_t* data, Stream_LenType size) {
  * @param stream
  * @return uint8_t*
  */
-uint8_t* Stream_getBuffer(Stream* stream) {
+uint8_t* Stream_getBuffer(StreamBuffer* stream) {
     return stream->Data;
 }
 /**
@@ -400,7 +400,7 @@ uint8_t* Stream_getBuffer(Stream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_getBufferSize(Stream* stream) {
+Stream_LenType Stream_getBufferSize(StreamBuffer* stream) {
     return stream->Size;
 }
 /**
@@ -410,7 +410,7 @@ Stream_LenType Stream_getBufferSize(Stream* stream) {
  * @param steps
  * @return Stream_Result
  */
-Stream_Result Stream_moveWritePos(Stream* stream, Stream_LenType steps) {
+Stream_Result Stream_moveWritePos(StreamBuffer* stream, Stream_LenType steps) {
     if (Stream_space(stream) < steps) {
         return Stream_NoSpace;
     }
@@ -430,7 +430,7 @@ Stream_Result Stream_moveWritePos(Stream* stream, Stream_LenType steps) {
  * @param steps
  * @return Stream_Result
  */
-Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps) {
+Stream_Result Stream_moveReadPos(StreamBuffer* stream, Stream_LenType steps) {
     if (Stream_available(stream) < steps) {
         return Stream_NoAvailable;
     }
@@ -449,7 +449,7 @@ Stream_Result Stream_moveReadPos(Stream* stream, Stream_LenType steps) {
  * @param stream
  * @param len
  */
-void Stream_flipWrite(Stream* stream, Stream_LenType len) {
+void Stream_flipWrite(StreamBuffer* stream, Stream_LenType len) {
     stream->RPos = stream->WPos + len;
     if (stream->RPos >= stream->Size) {
         stream->RPos %= stream->Size;
@@ -465,7 +465,7 @@ void Stream_flipWrite(Stream* stream, Stream_LenType len) {
  * @param stream
  * @param len
  */
-void Stream_flipRead(Stream* stream, Stream_LenType len) {
+void Stream_flipRead(StreamBuffer* stream, Stream_LenType len) {
     stream->WPos = stream->RPos + len;
     if (stream->WPos >= stream->Size) {
         stream->WPos %= stream->Size;
@@ -503,7 +503,7 @@ ByteOrder Stream_getSystemByteOrder(void) {
  * @param stream
  * @param order
  */
-void       Stream_setByteOrder(Stream* stream, ByteOrder order) {
+void       Stream_setByteOrder(StreamBuffer* stream, ByteOrder order) {
     ByteOrder osOrder = Stream_getSystemByteOrder();
     stream->Order = order;
     stream->OrderFn = osOrder != order;
@@ -514,7 +514,7 @@ void       Stream_setByteOrder(Stream* stream, ByteOrder order) {
  * @param stream
  * @return ByteOrder
  */
-ByteOrder  Stream_getByteOrder(Stream* stream) {
+ByteOrder  Stream_getByteOrder(StreamBuffer* stream) {
     return (ByteOrder) stream->Order;
 }
 #endif
@@ -525,7 +525,7 @@ ByteOrder  Stream_getByteOrder(Stream* stream) {
  * @param stream
  * @param len
  */
-void       Stream_setWriteLimit(Stream* stream, Stream_LenType len) {
+void       Stream_setWriteLimit(StreamBuffer* stream, Stream_LenType len) {
     Stream_LenType space = Stream_spaceReal(stream);
     if (space < len) {
         len = space;
@@ -538,7 +538,7 @@ void       Stream_setWriteLimit(Stream* stream, Stream_LenType len) {
  * @param stream
  * @return uint8_t true means limited
  */
-uint8_t    Stream_isWriteLimited(Stream* stream) {
+uint8_t    Stream_isWriteLimited(StreamBuffer* stream) {
     return stream->WriteLimit >= 0;
 }
 /**
@@ -547,10 +547,10 @@ uint8_t    Stream_isWriteLimited(Stream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_spaceLimit(Stream* stream) {
+Stream_LenType Stream_spaceLimit(StreamBuffer* stream) {
     return stream->WriteLimit >= 0 ? stream->WriteLimit : Stream_spaceReal(stream);
 }
-Stream_LenType Stream_getWriteLimit(Stream* stream) {
+Stream_LenType Stream_getWriteLimit(StreamBuffer* stream) {
     return stream->WriteLimit;
 }
 #endif // STREAM_WRITE_LIMIT
@@ -561,7 +561,7 @@ Stream_LenType Stream_getWriteLimit(Stream* stream) {
  * @param stream
  * @param len
  */
-void Stream_setReadLimit(Stream* stream, Stream_LenType len) {
+void Stream_setReadLimit(StreamBuffer* stream, Stream_LenType len) {
     Stream_LenType available = Stream_availableReal(stream);
     if (available < len) {
         len = available;
@@ -574,7 +574,7 @@ void Stream_setReadLimit(Stream* stream, Stream_LenType len) {
  * @param stream
  * @return uint8_t true means it's limited
  */
-uint8_t Stream_isReadLimited(Stream* stream) {
+uint8_t Stream_isReadLimited(StreamBuffer* stream) {
     return stream->ReadLimit >= 0;
 }
 /**
@@ -583,7 +583,7 @@ uint8_t Stream_isReadLimited(Stream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_availableLimit(Stream* stream) {
+Stream_LenType Stream_availableLimit(StreamBuffer* stream) {
     return stream->ReadLimit >= 0 ? stream->ReadLimit : Stream_availableReal(stream);
 }
 /**
@@ -592,7 +592,7 @@ Stream_LenType Stream_availableLimit(Stream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType Stream_getReadLimit(Stream* stream) {
+Stream_LenType Stream_getReadLimit(StreamBuffer* stream) {
     return stream->ReadLimit;
 }
 #endif // STREAM_READ_LIMIT
@@ -603,7 +603,7 @@ Stream_LenType Stream_getReadLimit(Stream* stream) {
  * @param stream
  * @param cursor
  */
-void Stream_getCursor(Stream* stream, Stream_Cursor* cursor) {
+void Stream_getCursor(StreamBuffer* stream, Stream_Cursor* cursor) {
     cursor->WPos = stream->WPos;
     cursor->RPos = stream->RPos;
 }
@@ -614,7 +614,7 @@ void Stream_getCursor(Stream* stream, Stream_Cursor* cursor) {
  * @param cursor
  * @return Stream_LenType
  */
-Stream_LenType Stream_getReadLen(Stream* stream, Stream_Cursor* cursor) {
+Stream_LenType Stream_getReadLen(StreamBuffer* stream, Stream_Cursor* cursor) {
     return cursor->RPos >= stream->RPos ? cursor->RPos - stream->RPos :
                                             (stream->Size - cursor->RPos) + stream->RPos;
 }
@@ -625,7 +625,7 @@ Stream_LenType Stream_getReadLen(Stream* stream, Stream_Cursor* cursor) {
  * @param cursor
  * @return Stream_LenType
  */
-Stream_LenType Stream_getWriteLen(Stream* stream, Stream_Cursor* cursor) {
+Stream_LenType Stream_getWriteLen(StreamBuffer* stream, Stream_Cursor* cursor) {
     return cursor->WPos >= stream->WPos ? cursor->WPos - stream->WPos :
                                             (stream->Size - cursor->WPos) + stream->WPos;
 }
@@ -638,7 +638,7 @@ Stream_LenType Stream_getWriteLen(Stream* stream, Stream_Cursor* cursor) {
  * @param len len of array
  * @return Stream_Result
  */
-Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -680,7 +680,7 @@ Stream_Result Stream_writeBytes(Stream* stream, uint8_t* val, Stream_LenType len
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -721,7 +721,7 @@ Stream_Result Stream_writeBytesReverse(Stream* stream, uint8_t* val, Stream_LenT
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
+Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_LenType len) {
     // check available space for write
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
@@ -767,7 +767,7 @@ Stream_Result Stream_writeStream(Stream* out, Stream* in, Stream_LenType len) {
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType len) {
+Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -801,43 +801,43 @@ Stream_Result Stream_writePadding(Stream* stream, uint8_t val, Stream_LenType le
 
     return Stream_Ok;
 }
-Stream_Result Stream_writeChar(Stream* stream, char val) {
+Stream_Result Stream_writeChar(StreamBuffer* stream, char val) {
     return Stream_writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeStr(Stream* stream, const char* val) {
+Stream_Result Stream_writeStr(StreamBuffer* stream, const char* val) {
     return Stream_writeBytes(stream, (uint8_t*) val, strlen(val));
 }
-Stream_Result Stream_writeUInt8(Stream* stream, uint8_t val) {
+Stream_Result Stream_writeUInt8(StreamBuffer* stream, uint8_t val) {
     return Stream_writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeInt8(Stream* stream, int8_t val) {
+Stream_Result Stream_writeInt8(StreamBuffer* stream, int8_t val) {
     return Stream_writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeUInt16(Stream* stream, uint16_t val) {
+Stream_Result Stream_writeUInt16(StreamBuffer* stream, uint16_t val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeInt16(Stream* stream, int16_t val) {
+Stream_Result Stream_writeInt16(StreamBuffer* stream, int16_t val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeUInt32(Stream* stream, uint32_t val) {
+Stream_Result Stream_writeUInt32(StreamBuffer* stream, uint32_t val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeInt32(Stream* stream, int32_t val) {
+Stream_Result Stream_writeInt32(StreamBuffer* stream, int32_t val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeFloat(Stream* stream, float val) {
+Stream_Result Stream_writeFloat(StreamBuffer* stream, float val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
 #if STREAM_UINT64
-Stream_Result Stream_writeUInt64(Stream* stream, uint64_t val) {
+Stream_Result Stream_writeUInt64(StreamBuffer* stream, uint64_t val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_Result Stream_writeInt64(Stream* stream, int64_t val) {
+Stream_Result Stream_writeInt64(StreamBuffer* stream, int64_t val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-Stream_Result Stream_writeDouble(Stream* stream, double val) {
+Stream_Result Stream_writeDouble(StreamBuffer* stream, double val) {
     return __writeBytes(stream, (uint8_t*) &val, sizeof(val));
 }
 #endif // STREAM_DOUBLE
@@ -848,7 +848,7 @@ Stream_Result Stream_writeDouble(Stream* stream, double val) {
  * @param stream
  * @return int16_t
  */
-int16_t  Stream_read(Stream* stream) {
+int16_t  Stream_read(StreamBuffer* stream) {
     if (Stream_available(stream)) {
         return (int16_t) Stream_readUInt8(stream);
     }
@@ -864,7 +864,7 @@ int16_t  Stream_read(Stream* stream) {
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_readBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -898,7 +898,7 @@ Stream_Result Stream_readBytes(Stream* stream, uint8_t* val, Stream_LenType len)
 
     return Stream_Ok;
 }
-Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -931,7 +931,7 @@ Stream_Result Stream_readBytesReverse(Stream* stream, uint8_t* val, Stream_LenTy
 
     return Stream_Ok;
 }
-Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len) {
+Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -967,60 +967,60 @@ Stream_Result Stream_readStream(Stream* in, Stream* out, Stream_LenType len) {
 
     return Stream_Ok;
 }
-char     Stream_readChar(Stream* stream) {
+char     Stream_readChar(StreamBuffer* stream) {
     char val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-uint8_t  Stream_readUInt8(Stream* stream) {
+uint8_t  Stream_readUInt8(StreamBuffer* stream) {
     uint8_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int8_t   Stream_readInt8(Stream* stream) {
+int8_t   Stream_readInt8(StreamBuffer* stream) {
     int8_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-uint16_t Stream_readUInt16(Stream* stream) {
+uint16_t Stream_readUInt16(StreamBuffer* stream) {
     uint16_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int16_t  Stream_readInt16(Stream* stream) {
+int16_t  Stream_readInt16(StreamBuffer* stream) {
     int16_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-uint32_t Stream_readUInt32(Stream* stream) {
+uint32_t Stream_readUInt32(StreamBuffer* stream) {
     uint32_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int32_t Stream_readInt32(Stream* stream) {
+int32_t Stream_readInt32(StreamBuffer* stream) {
     int32_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-float Stream_readFloat(Stream* stream) {
+float Stream_readFloat(StreamBuffer* stream) {
     float val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #if STREAM_UINT64
-uint64_t Stream_readUInt64(Stream* stream) {
+uint64_t Stream_readUInt64(StreamBuffer* stream) {
     uint64_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int64_t Stream_readInt64(Stream* stream) {
+int64_t Stream_readInt64(StreamBuffer* stream) {
     int64_t val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-double   Stream_readDouble(Stream* stream) {
+double   Stream_readDouble(StreamBuffer* stream) {
     double val = STREAM_READ_DEFAULT_VALUE;
     __readBytes(stream, (uint8_t*) &val, sizeof(val));
     return val;
@@ -1029,46 +1029,46 @@ double   Stream_readDouble(Stream* stream) {
 
 #if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
 
-Stream_Result Stream_getBytes(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_getBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
     return Stream_getBytesAt(stream, stream->RPos, val, len);
 }
-Stream_Result Stream_getBytesReverse(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_getBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
     return Stream_getBytesAt(stream, stream->RPos, val, len);
 }
-char     Stream_getChar(Stream* stream) {
+char     Stream_getChar(StreamBuffer* stream) {
     return Stream_getCharAt(stream, stream->RPos);
 }
-uint8_t  Stream_getUInt8(Stream* stream) {
+uint8_t  Stream_getUInt8(StreamBuffer* stream) {
     return Stream_getUInt8At(stream, stream->RPos);
 }
-int8_t   Stream_getInt8(Stream* stream) {
+int8_t   Stream_getInt8(StreamBuffer* stream) {
     return Stream_getInt8At(stream, stream->RPos);
 }
-uint16_t Stream_getUInt16(Stream* stream) {
+uint16_t Stream_getUInt16(StreamBuffer* stream) {
     return Stream_getUInt16At(stream, stream->RPos);
 }
-int16_t  Stream_getInt16(Stream* stream) {
+int16_t  Stream_getInt16(StreamBuffer* stream) {
     return Stream_getInt16At(stream, stream->RPos);
 }
-uint32_t Stream_getUInt32(Stream* stream) {
+uint32_t Stream_getUInt32(StreamBuffer* stream) {
     return Stream_getUInt32At(stream, stream->RPos);
 }
-int32_t  Stream_getInt32(Stream* stream) {
+int32_t  Stream_getInt32(StreamBuffer* stream) {
     return Stream_getInt32At(stream, stream->RPos);
 }
-float    Stream_getFloat(Stream* stream) {
+float    Stream_getFloat(StreamBuffer* stream) {
     return Stream_getFloatAt(stream, stream->RPos);
 }
 #if STREAM_UINT64
-uint64_t Stream_getUInt64(Stream* stream) {
+uint64_t Stream_getUInt64(StreamBuffer* stream) {
     return Stream_getUInt64At(stream, stream->RPos);
 }
-int64_t  Stream_getInt64(Stream* stream) {
+int64_t  Stream_getInt64(StreamBuffer* stream) {
     return Stream_getInt64At(stream, stream->RPos);
 }
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-double   Stream_getDouble(Stream* stream) {
+double   Stream_getDouble(StreamBuffer* stream) {
     return Stream_getDoubleAt(stream, stream->RPos);
 }
 #endif // STREAM_DOUBLE
@@ -1080,7 +1080,7 @@ double   Stream_getDouble(Stream* stream) {
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getCharArray(Stream* stream, char* val, Stream_LenType len) {
+Stream_Result Stream_getCharArray(StreamBuffer* stream, char* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1100,7 +1100,7 @@ Stream_Result Stream_getCharArray(Stream* stream, char* val, Stream_LenType len)
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt8Array(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt8Array(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1120,7 +1120,7 @@ Stream_Result Stream_getUInt8Array(Stream* stream, uint8_t* val, Stream_LenType 
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt8Array(Stream* stream, int8_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt8Array(StreamBuffer* stream, int8_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1140,7 +1140,7 @@ Stream_Result Stream_getInt8Array(Stream* stream, int8_t* val, Stream_LenType le
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt16Array(Stream* stream, uint16_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt16Array(StreamBuffer* stream, uint16_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1160,7 +1160,7 @@ Stream_Result Stream_getUInt16Array(Stream* stream, uint16_t* val, Stream_LenTyp
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt16Array(Stream* stream, int16_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt16Array(StreamBuffer* stream, int16_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1180,7 +1180,7 @@ Stream_Result Stream_getInt16Array(Stream* stream, int16_t* val, Stream_LenType 
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt32Array(Stream* stream, uint32_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt32Array(StreamBuffer* stream, uint32_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1200,7 +1200,7 @@ Stream_Result Stream_getUInt32Array(Stream* stream, uint32_t* val, Stream_LenTyp
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt32Array(Stream* stream, int32_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt32Array(StreamBuffer* stream, int32_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1220,7 +1220,7 @@ Stream_Result Stream_getInt32Array(Stream* stream, int32_t* val, Stream_LenType 
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getFloatArray(Stream* stream, float* val, Stream_LenType len) {
+Stream_Result Stream_getFloatArray(StreamBuffer* stream, float* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1241,7 +1241,7 @@ Stream_Result Stream_getFloatArray(Stream* stream, float* val, Stream_LenType le
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt64Array(Stream* stream, uint64_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt64Array(StreamBuffer* stream, uint64_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1261,7 +1261,7 @@ Stream_Result Stream_getUInt64Array(Stream* stream, uint64_t* val, Stream_LenTyp
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt64Array(Stream* stream, int64_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt64Array(StreamBuffer* stream, int64_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1283,7 +1283,7 @@ Stream_Result Stream_getInt64Array(Stream* stream, int64_t* val, Stream_LenType 
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getDoubleArray(Stream* stream, double* val, Stream_LenType len) {
+Stream_Result Stream_getDoubleArray(StreamBuffer* stream, double* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         Stream_LenType index = 0;
         while (len-- > 0) {
@@ -1301,7 +1301,7 @@ Stream_Result Stream_getDoubleArray(Stream* stream, double* val, Stream_LenType 
 
 #if STREAM_GET_AT_FUNCTIONS
 
-Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -1327,7 +1327,7 @@ Stream_Result Stream_getBytesAt(Stream* stream, Stream_LenType index, uint8_t* v
 
     return Stream_Ok;
 }
-Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
       return Stream_ZeroLen;
@@ -1353,60 +1353,60 @@ Stream_Result Stream_getBytesReverseAt(Stream* stream, Stream_LenType index, uin
 
     return Stream_Ok;
 }
-char Stream_getCharAt(Stream* stream, Stream_LenType index) {
+char Stream_getCharAt(StreamBuffer* stream, Stream_LenType index) {
     char val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-uint8_t Stream_getUInt8At(Stream* stream, Stream_LenType index) {
+uint8_t Stream_getUInt8At(StreamBuffer* stream, Stream_LenType index) {
     uint8_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int8_t Stream_getInt8At(Stream* stream, Stream_LenType index) {
+int8_t Stream_getInt8At(StreamBuffer* stream, Stream_LenType index) {
     int8_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-uint16_t Stream_getUInt16At(Stream* stream, Stream_LenType index) {
+uint16_t Stream_getUInt16At(StreamBuffer* stream, Stream_LenType index) {
     uint16_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int16_t Stream_getInt16At(Stream* stream, Stream_LenType index) {
+int16_t Stream_getInt16At(StreamBuffer* stream, Stream_LenType index) {
     int16_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-uint32_t Stream_getUInt32At(Stream* stream, Stream_LenType index) {
+uint32_t Stream_getUInt32At(StreamBuffer* stream, Stream_LenType index) {
     uint32_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int32_t Stream_getInt32At(Stream* stream, Stream_LenType index) {
+int32_t Stream_getInt32At(StreamBuffer* stream, Stream_LenType index) {
     int32_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-float Stream_getFloatAt(Stream* stream, Stream_LenType index) {
+float Stream_getFloatAt(StreamBuffer* stream, Stream_LenType index) {
     float val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #if STREAM_UINT64
-uint64_t Stream_getUInt64At(Stream* stream, Stream_LenType index) {
+uint64_t Stream_getUInt64At(StreamBuffer* stream, Stream_LenType index) {
     uint64_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
-int64_t  Stream_getInt64At(Stream* stream, Stream_LenType index) {
+int64_t  Stream_getInt64At(StreamBuffer* stream, Stream_LenType index) {
     int64_t val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
 }
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-double   Stream_getDoubleAt(Stream* stream, Stream_LenType index) {
+double   Stream_getDoubleAt(StreamBuffer* stream, Stream_LenType index) {
     double val = STREAM_READ_DEFAULT_VALUE;
     __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val));
     return val;
@@ -1421,7 +1421,7 @@ double   Stream_getDoubleAt(Stream* stream, Stream_LenType index) {
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getCharArrayAt(Stream* stream, Stream_LenType index, char* val, Stream_LenType len) {
+Stream_Result Stream_getCharArrayAt(StreamBuffer* stream, Stream_LenType index, char* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getCharAt(stream, index++);
@@ -1440,7 +1440,7 @@ Stream_Result Stream_getCharArrayAt(Stream* stream, Stream_LenType index, char* 
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt8ArrayAt(Stream* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt8ArrayAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getUInt8At(stream, index++);
@@ -1459,7 +1459,7 @@ Stream_Result Stream_getUInt8ArrayAt(Stream* stream, Stream_LenType index, uint8
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt8ArrayAt(Stream* stream, Stream_LenType index, int8_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt8ArrayAt(StreamBuffer* stream, Stream_LenType index, int8_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getInt8At(stream, index++);
@@ -1478,7 +1478,7 @@ Stream_Result Stream_getInt8ArrayAt(Stream* stream, Stream_LenType index, int8_t
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt16ArrayAt(Stream* stream, Stream_LenType index, uint16_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt16ArrayAt(StreamBuffer* stream, Stream_LenType index, uint16_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getUInt16At(stream, index++);
@@ -1497,7 +1497,7 @@ Stream_Result Stream_getUInt16ArrayAt(Stream* stream, Stream_LenType index, uint
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt16ArrayAt(Stream* stream, Stream_LenType index, int16_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt16ArrayAt(StreamBuffer* stream, Stream_LenType index, int16_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getInt16At(stream, index++);
@@ -1516,7 +1516,7 @@ Stream_Result Stream_getInt16ArrayAt(Stream* stream, Stream_LenType index, int16
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt32ArrayAt(Stream* stream, Stream_LenType index, uint32_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt32ArrayAt(StreamBuffer* stream, Stream_LenType index, uint32_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getUInt32At(stream, index++);
@@ -1535,7 +1535,7 @@ Stream_Result Stream_getUInt32ArrayAt(Stream* stream, Stream_LenType index, uint
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt32ArrayAt(Stream* stream, Stream_LenType index, int32_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt32ArrayAt(StreamBuffer* stream, Stream_LenType index, int32_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getInt32At(stream, index++);
@@ -1554,7 +1554,7 @@ Stream_Result Stream_getInt32ArrayAt(Stream* stream, Stream_LenType index, int32
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getFloatArrayAt(Stream* stream, Stream_LenType index, float* val, Stream_LenType len) {
+Stream_Result Stream_getFloatArrayAt(StreamBuffer* stream, Stream_LenType index, float* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getFloatAt(stream, index++);
@@ -1574,7 +1574,7 @@ Stream_Result Stream_getFloatArrayAt(Stream* stream, Stream_LenType index, float
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getUInt64ArrayAt(Stream* stream, Stream_LenType index, uint64_t* val, Stream_LenType len) {
+Stream_Result Stream_getUInt64ArrayAt(StreamBuffer* stream, Stream_LenType index, uint64_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getUInt64At(stream, index++);
@@ -1593,7 +1593,7 @@ Stream_Result Stream_getUInt64ArrayAt(Stream* stream, Stream_LenType index, uint
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getInt64ArrayAt(Stream* stream, Stream_LenType index, int64_t* val, Stream_LenType len) {
+Stream_Result Stream_getInt64ArrayAt(StreamBuffer* stream, Stream_LenType index, int64_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getInt64At(stream, index++);
@@ -1614,7 +1614,7 @@ Stream_Result Stream_getInt64ArrayAt(Stream* stream, Stream_LenType index, int64
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_getDoubleArrayAt(Stream* stream, Stream_LenType index, double* val, Stream_LenType len) {
+Stream_Result Stream_getDoubleArrayAt(StreamBuffer* stream, Stream_LenType index, double* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_getDoubleAt(stream, index++);
@@ -1636,7 +1636,7 @@ Stream_Result Stream_getDoubleArrayAt(Stream* stream, Stream_LenType index, doub
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeCharArray(Stream* stream, char* val, Stream_LenType len) {
+Stream_Result Stream_writeCharArray(StreamBuffer* stream, char* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeChar(stream, *val++)) != Stream_Ok) {
@@ -1653,7 +1653,7 @@ Stream_Result Stream_writeCharArray(Stream* stream, char* val, Stream_LenType le
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeUInt8Array(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_writeUInt8Array(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeUInt8(stream, *val++)) != Stream_Ok) {
@@ -1670,7 +1670,7 @@ Stream_Result Stream_writeUInt8Array(Stream* stream, uint8_t* val, Stream_LenTyp
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeInt8Array(Stream* stream, int8_t* val, Stream_LenType len) {
+Stream_Result Stream_writeInt8Array(StreamBuffer* stream, int8_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeInt8(stream, *val++)) != Stream_Ok) {
@@ -1687,7 +1687,7 @@ Stream_Result Stream_writeInt8Array(Stream* stream, int8_t* val, Stream_LenType 
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeUInt16Array(Stream* stream, uint16_t* val, Stream_LenType len) {
+Stream_Result Stream_writeUInt16Array(StreamBuffer* stream, uint16_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeUInt16(stream, *val++)) != Stream_Ok) {
@@ -1704,7 +1704,7 @@ Stream_Result Stream_writeUInt16Array(Stream* stream, uint16_t* val, Stream_LenT
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeInt16Array(Stream* stream, int16_t* val, Stream_LenType len) {
+Stream_Result Stream_writeInt16Array(StreamBuffer* stream, int16_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeInt16(stream, *val++)) != Stream_Ok) {
@@ -1721,7 +1721,7 @@ Stream_Result Stream_writeInt16Array(Stream* stream, int16_t* val, Stream_LenTyp
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeUInt32Array(Stream* stream, uint32_t* val, Stream_LenType len) {
+Stream_Result Stream_writeUInt32Array(StreamBuffer* stream, uint32_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeUInt32(stream, *val++)) != Stream_Ok) {
@@ -1738,7 +1738,7 @@ Stream_Result Stream_writeUInt32Array(Stream* stream, uint32_t* val, Stream_LenT
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeInt32Array(Stream* stream, int32_t* val, Stream_LenType len) {
+Stream_Result Stream_writeInt32Array(StreamBuffer* stream, int32_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeInt32(stream, *val++)) != Stream_Ok) {
@@ -1755,7 +1755,7 @@ Stream_Result Stream_writeInt32Array(Stream* stream, int32_t* val, Stream_LenTyp
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeFloatArray(Stream* stream, float* val, Stream_LenType len) {
+Stream_Result Stream_writeFloatArray(StreamBuffer* stream, float* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeFloat(stream, *val++)) != Stream_Ok) {
@@ -1773,7 +1773,7 @@ Stream_Result Stream_writeFloatArray(Stream* stream, float* val, Stream_LenType 
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeUInt64Array(Stream* stream, uint64_t* val, Stream_LenType len) {
+Stream_Result Stream_writeUInt64Array(StreamBuffer* stream, uint64_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeUInt64(stream, *val++)) != Stream_Ok) {
@@ -1790,7 +1790,7 @@ Stream_Result Stream_writeUInt64Array(Stream* stream, uint64_t* val, Stream_LenT
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeInt64Array(Stream* stream, int64_t* val, Stream_LenType len) {
+Stream_Result Stream_writeInt64Array(StreamBuffer* stream, int64_t* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeInt64(stream, *val++)) != Stream_Ok) {
@@ -1809,7 +1809,7 @@ Stream_Result Stream_writeInt64Array(Stream* stream, int64_t* val, Stream_LenTyp
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeDoubleArray(Stream* stream, double val, Stream_LenType len) {
+Stream_Result Stream_writeDoubleArray(StreamBuffer* stream, double val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
         if ((result = Stream_writeDouble(stream, val)) != Stream_Ok) {
@@ -1827,7 +1827,7 @@ Stream_Result Stream_writeDoubleArray(Stream* stream, double val, Stream_LenType
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readCharArray(Stream* stream, char* val, Stream_LenType len) {
+Stream_Result Stream_readCharArray(StreamBuffer* stream, char* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readChar(stream);
@@ -1846,7 +1846,7 @@ Stream_Result Stream_readCharArray(Stream* stream, char* val, Stream_LenType len
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readUInt8Array(Stream* stream, uint8_t* val, Stream_LenType len) {
+Stream_Result Stream_readUInt8Array(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readUInt8(stream);
@@ -1865,7 +1865,7 @@ Stream_Result Stream_readUInt8Array(Stream* stream, uint8_t* val, Stream_LenType
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readInt8Array(Stream* stream, int8_t* val, Stream_LenType len) {
+Stream_Result Stream_readInt8Array(StreamBuffer* stream, int8_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readInt8(stream);
@@ -1884,7 +1884,7 @@ Stream_Result Stream_readInt8Array(Stream* stream, int8_t* val, Stream_LenType l
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readUInt16Array(Stream* stream, uint16_t* val, Stream_LenType len) {
+Stream_Result Stream_readUInt16Array(StreamBuffer* stream, uint16_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readUInt16(stream);
@@ -1903,7 +1903,7 @@ Stream_Result Stream_readUInt16Array(Stream* stream, uint16_t* val, Stream_LenTy
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readInt16Array(Stream* stream, int16_t* val, Stream_LenType len) {
+Stream_Result Stream_readInt16Array(StreamBuffer* stream, int16_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readInt16(stream);
@@ -1922,7 +1922,7 @@ Stream_Result Stream_readInt16Array(Stream* stream, int16_t* val, Stream_LenType
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readUInt32Array(Stream* stream, uint32_t* val, Stream_LenType len) {
+Stream_Result Stream_readUInt32Array(StreamBuffer* stream, uint32_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readUInt32(stream);
@@ -1941,7 +1941,7 @@ Stream_Result Stream_readUInt32Array(Stream* stream, uint32_t* val, Stream_LenTy
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readInt32Array(Stream* stream, int32_t* val, Stream_LenType len) {
+Stream_Result Stream_readInt32Array(StreamBuffer* stream, int32_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readInt32(stream);
@@ -1960,7 +1960,7 @@ Stream_Result Stream_readInt32Array(Stream* stream, int32_t* val, Stream_LenType
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readFloatArray(Stream* stream, float* val, Stream_LenType len) {
+Stream_Result Stream_readFloatArray(StreamBuffer* stream, float* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readFloat(stream);
@@ -1980,7 +1980,7 @@ Stream_Result Stream_readFloatArray(Stream* stream, float* val, Stream_LenType l
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readUInt64Array(Stream* stream, uint64_t* val, Stream_LenType len) {
+Stream_Result Stream_readUInt64Array(StreamBuffer* stream, uint64_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readUInt64(stream);
@@ -1999,7 +1999,7 @@ Stream_Result Stream_readUInt64Array(Stream* stream, uint64_t* val, Stream_LenTy
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readInt64Array(Stream* stream, int64_t* val, Stream_LenType len) {
+Stream_Result Stream_readInt64Array(StreamBuffer* stream, int64_t* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readInt64(stream);
@@ -2020,7 +2020,7 @@ Stream_Result Stream_readInt64Array(Stream* stream, int64_t* val, Stream_LenType
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_readDoubleArray(Stream* stream, double* val, Stream_LenType len) {
+Stream_Result Stream_readDoubleArray(StreamBuffer* stream, double* val, Stream_LenType len) {
     if (Stream_available(stream) >= len) {
         while (len-- > 0) {
             *val++ = Stream_readDouble(stream);
@@ -2039,10 +2039,10 @@ Stream_Result Stream_readDoubleArray(Stream* stream, double* val, Stream_LenType
  * @param stream
  * @return Stream_Result
  */
-Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len) {
+Stream_Result Stream_lockWrite(StreamBuffer* stream, StreamBuffer* lock, Stream_LenType len) {
     Stream_LenType space = Stream_space(stream);
     if (space >= len && !stream->WriteLocked) {
-        __memCopy(stream, lock, stream, sizeof(Stream));
+        __memCopy(stream, lock, stream, sizeof(StreamBuffer));
         Stream_flipWrite(lock, len);
         stream->WriteLocked = 1;
         return Stream_Ok;
@@ -2057,7 +2057,7 @@ Stream_Result Stream_lockWrite(Stream* stream, Stream* lock, Stream_LenType len)
  * @param stream
  * @return Stream_Result
  */
-void Stream_unlockWrite(Stream* stream, Stream* lock) {
+void Stream_unlockWrite(StreamBuffer* stream, StreamBuffer* lock) {
     if (stream->WriteLocked) {
         Stream_moveWritePos(stream, Stream_lockWriteLen(stream, lock));
         stream->WriteLocked = 0;
@@ -2068,7 +2068,7 @@ void Stream_unlockWrite(Stream* stream, Stream* lock) {
  *
  * @param stream
  */
-void Stream_unlockWriteIgnore(Stream* stream) {
+void Stream_unlockWriteIgnore(StreamBuffer* stream) {
     if (stream->WriteLocked) {
         stream->WriteLocked = 0;
     }
@@ -2079,7 +2079,7 @@ void Stream_unlockWriteIgnore(Stream* stream) {
  * @param stream
  * @param lock
  */
-Stream_LenType Stream_lockWriteLen(Stream* stream, Stream* lock) {
+Stream_LenType Stream_lockWriteLen(StreamBuffer* stream, StreamBuffer* lock) {
     if (stream->WPos != lock->WPos) {
         // some data wrote
         if (stream->WPos < lock->WPos) {
@@ -2108,10 +2108,10 @@ Stream_LenType Stream_lockWriteLen(Stream* stream, Stream* lock) {
  * @param stream
  * @return Stream_Result
  */
-Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len) {
+Stream_Result Stream_lockRead(StreamBuffer* stream, StreamBuffer* lock, Stream_LenType len) {
     Stream_LenType available = Stream_available(stream);
     if (available >= len && !stream->ReadLocked) {
-        __memCopy(stream, lock, stream, sizeof(Stream));
+        __memCopy(stream, lock, stream, sizeof(StreamBuffer));
         Stream_flipRead(lock, len);
         stream->ReadLocked = 1;
         return Stream_Ok;
@@ -2126,7 +2126,7 @@ Stream_Result Stream_lockRead(Stream* stream, Stream* lock, Stream_LenType len) 
  * @param stream
  * @return Stream_Result
  */
-void Stream_unlockRead(Stream* stream, Stream* lock) {
+void Stream_unlockRead(StreamBuffer* stream, StreamBuffer* lock) {
     if (stream->ReadLocked) {
         Stream_moveReadPos(stream, Stream_lockReadLen(stream, lock));
         stream->ReadLocked = 0;
@@ -2139,7 +2139,7 @@ void Stream_unlockRead(Stream* stream, Stream* lock) {
  * @param lock
  * @return Stream_LenType
  */
-Stream_LenType Stream_lockReadLen(Stream* stream, Stream* lock) {
+Stream_LenType Stream_lockReadLen(StreamBuffer* stream, StreamBuffer* lock) {
     if (stream->RPos != lock->RPos) {
         // some data read
         if (stream->RPos < lock->RPos) {
@@ -2164,7 +2164,7 @@ Stream_LenType Stream_lockReadLen(Stream* stream, Stream* lock) {
  *
  * @param stream
  */
-void Stream_unlockReadIgnore(Stream* stream) {
+void Stream_unlockReadIgnore(StreamBuffer* stream) {
     if (stream->ReadLocked) {
         stream->ReadLocked = 0;
     }
@@ -2172,7 +2172,7 @@ void Stream_unlockReadIgnore(Stream* stream) {
 #endif // STREAM_READ_LOCK
 
 #if STREAM_FIND_FUNCTIONS
-Stream_LenType Stream_findByte(Stream* stream, uint8_t val) {
+Stream_LenType Stream_findByte(StreamBuffer* stream, uint8_t val) {
     Stream_LenType tmpLen = 0;
     uint8_t* pStart = &stream->Data[stream->RPos];
     uint8_t* pEnd;
@@ -2190,7 +2190,7 @@ Stream_LenType Stream_findByte(Stream* stream, uint8_t val) {
 
     return pEnd != NULL ? (Stream_LenType)(pEnd - pStart) + tmpLen : -1;
 }
-Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t val) {
+Stream_LenType Stream_findByteAt(StreamBuffer* stream, Stream_LenType offset, uint8_t val) {
     Stream_LenType tmpLen = 0;
     uint8_t* pStart = Stream_getReadPtrAt(stream, offset);
     uint8_t* pEnd;
@@ -2208,7 +2208,7 @@ Stream_LenType Stream_findByteAt(Stream* stream, Stream_LenType offset, uint8_t 
 
     return pEnd != NULL ? (Stream_LenType)(pEnd - pStart) + offset : -1;
 }
-Stream_LenType Stream_findPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen) {
+Stream_LenType Stream_findPattern(StreamBuffer* stream, const uint8_t* pat, Stream_LenType patLen) {
     Stream_LenType index = 0;
 
     if (Stream_available(stream) < patLen) {
@@ -2224,7 +2224,7 @@ Stream_LenType Stream_findPattern(Stream* stream, const uint8_t* pat, Stream_Len
 
     return index;
 }
-Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen)  {
+Stream_LenType Stream_findPatternAt(StreamBuffer* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen)  {
     if (Stream_available(stream) < patLen) {
         return -1;
     }
@@ -2238,7 +2238,7 @@ Stream_LenType Stream_findPatternAt(Stream* stream, Stream_LenType offset, const
 
     return offset;
 }
-Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, Stream_LenType len) {
+Stream_LenType Stream_readBytesUntil(StreamBuffer* stream, uint8_t end, uint8_t* val, Stream_LenType len) {
     Stream_LenType tmpLen;
     // find end byte
     if ((tmpLen = Stream_findByte(stream, end)) >= 0) {
@@ -2255,7 +2255,7 @@ Stream_LenType Stream_readBytesUntil(Stream* stream, uint8_t end, uint8_t* val, 
 
     return 0;
 }
-Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len) {
+Stream_LenType Stream_readBytesUntilPattern(StreamBuffer* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len) {
     Stream_LenType tmpLen;
     // find end byte
     if ((tmpLen = Stream_findPattern(stream, pat, patLen)) >= 0) {
@@ -2279,88 +2279,88 @@ Stream_LenType Stream_readBytesUntilPattern(Stream* stream, const uint8_t* pat, 
  * @param val
  * @return Stream_LenType
  */
-Stream_LenType Stream_findUInt8(Stream* stream, uint8_t val) {
+Stream_LenType Stream_findUInt8(StreamBuffer* stream, uint8_t val) {
     return Stream_findByte(stream, val);
 }
-Stream_LenType Stream_findInt8(Stream* stream, int8_t val) {
+Stream_LenType Stream_findInt8(StreamBuffer* stream, int8_t val) {
     return Stream_findByte(stream, (uint8_t) val);
 }
-Stream_LenType Stream_findUInt16(Stream* stream, uint16_t val) {
+Stream_LenType Stream_findUInt16(StreamBuffer* stream, uint16_t val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findInt16(Stream* stream, int16_t val) {
+Stream_LenType Stream_findInt16(StreamBuffer* stream, int16_t val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findUInt32(Stream* stream, uint32_t val) {
+Stream_LenType Stream_findUInt32(StreamBuffer* stream, uint32_t val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findInt32(Stream* stream, int32_t val) {
+Stream_LenType Stream_findInt32(StreamBuffer* stream, int32_t val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
 #if STREAM_UINT64
-Stream_LenType Stream_findUInt64(Stream* stream, uint64_t val) {
+Stream_LenType Stream_findUInt64(StreamBuffer* stream, uint64_t val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findInt64(Stream* stream, int64_t val) {
+Stream_LenType Stream_findInt64(StreamBuffer* stream, int64_t val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
 #endif
-Stream_LenType Stream_findFloat(Stream* stream, float val) {
+Stream_LenType Stream_findFloat(StreamBuffer* stream, float val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
 #if STREAM_DOUBLE
-Stream_LenType Stream_findDouble(Stream* stream, double val) {
+Stream_LenType Stream_findDouble(StreamBuffer* stream, double val) {
     __checkReverse(stream, val);
     return Stream_findPattern(stream, (uint8_t*) &val, sizeof(val));
 }
 #endif
 
 #if STREAM_FIND_AT_FUNCTIONS
-Stream_LenType Stream_findUInt8At(Stream* stream, Stream_LenType offset, uint8_t val) {
+Stream_LenType Stream_findUInt8At(StreamBuffer* stream, Stream_LenType offset, uint8_t val) {
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findInt8At(Stream* stream, Stream_LenType offset, int8_t val) {
+Stream_LenType Stream_findInt8At(StreamBuffer* stream, Stream_LenType offset, int8_t val) {
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findUInt16At(Stream* stream, Stream_LenType offset, uint16_t val) {
+Stream_LenType Stream_findUInt16At(StreamBuffer* stream, Stream_LenType offset, uint16_t val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findInt16At(Stream* stream, Stream_LenType offset, int16_t val) {
+Stream_LenType Stream_findInt16At(StreamBuffer* stream, Stream_LenType offset, int16_t val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findUInt32At(Stream* stream, Stream_LenType offset, uint32_t val) {
+Stream_LenType Stream_findUInt32At(StreamBuffer* stream, Stream_LenType offset, uint32_t val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findInt32At(Stream* stream, Stream_LenType offset, int32_t val) {
+Stream_LenType Stream_findInt32At(StreamBuffer* stream, Stream_LenType offset, int32_t val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
 #if STREAM_UINT64
-Stream_LenType Stream_findUInt64At(Stream* stream, Stream_LenType offset, uint64_t val) {
+Stream_LenType Stream_findUInt64At(StreamBuffer* stream, Stream_LenType offset, uint64_t val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
-Stream_LenType Stream_findInt64At(Stream* stream, Stream_LenType offset, int64_t val) {
+Stream_LenType Stream_findInt64At(StreamBuffer* stream, Stream_LenType offset, int64_t val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
 #endif
-Stream_LenType Stream_findFloatAt(Stream* stream, Stream_LenType offset, float val) {
+Stream_LenType Stream_findFloatAt(StreamBuffer* stream, Stream_LenType offset, float val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
 #if STREAM_DOUBLE
-Stream_LenType Stream_findDoubleAt(Stream* stream, Stream_LenType offset, double val) {
+Stream_LenType Stream_findDoubleAt(StreamBuffer* stream, Stream_LenType offset, double val) {
     __checkReverse(stream, val);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
@@ -2377,7 +2377,7 @@ Stream_LenType Stream_findDoubleAt(Stream* stream, Stream_LenType offset, double
  * @param len
  * @return int8_t
  */
-int8_t Stream_compare(Stream* stream, const uint8_t* val, Stream_LenType len) {
+int8_t Stream_compare(StreamBuffer* stream, const uint8_t* val, Stream_LenType len) {
     return Stream_compareAt(stream, 0, val, len);
 }
 /**
@@ -2389,7 +2389,7 @@ int8_t Stream_compare(Stream* stream, const uint8_t* val, Stream_LenType len) {
  * @param len
  * @return int8_t
  */
-int8_t Stream_compareAt(Stream* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len) {
+int8_t Stream_compareAt(StreamBuffer* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len) {
     int8_t result;
     Stream_LenType tmpLen;
 

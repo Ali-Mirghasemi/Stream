@@ -249,7 +249,7 @@ Stream_LenType OStream_outgoingBytes(OStream* stream) {
 Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len) {
     Stream_Result res;
     if ((res = Stream_lockWrite(&stream->Buffer, &lock->Buffer, len)) == Stream_Ok) {
-        memcpy(&lock->transmit, &stream->transmit, sizeof(OStream) - sizeof(Stream));
+        memcpy(&lock->transmit, &stream->transmit, sizeof(OStream) - sizeof(StreamBuffer));
     }
     return res;
 }

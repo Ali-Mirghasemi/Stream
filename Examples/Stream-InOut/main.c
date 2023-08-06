@@ -6,7 +6,7 @@
 #include "StreamBuffer.h"
 
 uint8_t mediaBuff[200] = {0};
-Stream mediaStream;
+StreamBuffer mediaStream;
 
 void printArray(uint8_t* buff, int len) {
     putchar('[');

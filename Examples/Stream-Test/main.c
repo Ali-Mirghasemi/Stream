@@ -104,7 +104,7 @@ uint32_t Test_readWrite(void) {
     };
     uint8_t tempBuff[20];
     uint8_t streamBuff[37];
-    Stream stream;
+    StreamBuffer stream;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
 
@@ -220,8 +220,8 @@ uint32_t Test_readStream(void) {
     uint8_t tempBuff[40];
     uint8_t inBuff[40];
     uint8_t outBuff[40];
-    Stream in;
-    Stream out;
+    StreamBuffer in;
+    StreamBuffer out;
     int cycles;
 
     Stream_init(&in, inBuff, sizeof(inBuff));
@@ -259,7 +259,7 @@ uint32_t Test_flip(void) {
                                                 assert(UInt32, Stream_available(&stream), (N));
 
     uint8_t streamBuff[36];
-    Stream stream;
+    StreamBuffer stream;
 
     testFlipWrite(0, 0, 0, 0);
     testFlipWrite(4, 0, 0, 0);
@@ -322,8 +322,8 @@ uint32_t Test_lock(void) {
 
     uint8_t tempBuff[12];
     uint8_t streamBuff[36];
-    Stream stream;
-    Stream lock;
+    StreamBuffer stream;
+    StreamBuffer lock;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
 

@@ -180,7 +180,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream) {
 Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len) {
     Stream_Result res;
     if ((res = Stream_lockRead(&stream->Buffer, &lock->Buffer, len)) == Stream_Ok) {
-        memcpy(&lock->receive, &stream->receive, sizeof(IStream) - sizeof(Stream));
+        memcpy(&lock->receive, &stream->receive, sizeof(IStream) - sizeof(StreamBuffer));
     }
     return res;
 }

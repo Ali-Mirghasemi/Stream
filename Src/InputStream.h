@@ -73,7 +73,7 @@ typedef Stream_LenType (*IStream_CheckReceiveFn)(IStream* stream);
  * @brief hold InputStream properties
  */
 struct __IStream {
-    Stream                  Buffer;         /**< hold stream buffer */
+    StreamBuffer                  Buffer;         /**< hold stream buffer */
     IStream_ReceiveFn       receive;        /**< receive function */
 #if ISTREAM_ARGS
     void*                   Args;           /**< hold user defined arguments */
@@ -143,7 +143,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 
 #define IStream_ignore(STREAM, LEN)                 Stream_moveReadPos(&((STREAM)->Buffer), (LEN))
 
-/* Read function same as Stream read functions */
+/* Read function same as StreamBuffer read functions */
 #define IStream_read(STREAM)                        Stream_read(&((STREAM)->Buffer))
 #define IStream_readBytes(STREAM, VAL, LEN)         Stream_readBytes(&((STREAM)->Buffer), (VAL), (LEN))
 #define IStream_readBytesReverse(STREAM, VAL, LEN)  Stream_readBytesReverse(&((STREAM)->Buffer), (VAL), (LEN))

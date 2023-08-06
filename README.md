@@ -19,7 +19,7 @@ To use the StreamBuffer library in your C project, follow these steps:
 
 1. Copy the `StreamBuffer.h` and `StreamBuffer.c` files into your project directory.
 2. Include the `StreamBuffer.h` header file in your source files where you want to use the library functions.
-3. Initialize a `Stream` object and a buffer to hold the data.
+3. Initialize a `StreamBuffer` object and a buffer to hold the data.
 
 ```c
 #include "StreamBuffer.h"
@@ -27,17 +27,17 @@ To use the StreamBuffer library in your C project, follow these steps:
 
 int main() {
     uint8_t buff[128];
-    Stream stream;
+    StreamBuffer stream;
 
     Stream_init(&stream, buff, sizeof(buff));
-    // Now you can use the Stream functions to write and read data.
+    // Now you can use the StreamBuffer functions to write and read data.
     return 0;
 }
 ```
 
 ## Writing Data
 
-You can use the Stream functions to write data of various data types to the stream buffer:
+You can use the StreamBuffer functions to write data of various data types to the stream buffer:
 
 ```c
 Stream_writeFloat(&stream, 3.14f);
@@ -48,7 +48,7 @@ Stream_writeChar(&stream, 'A');
 
 ## Reading Data
 
-Similarly, you can use the Stream functions to read data from the stream buffer:
+Similarly, you can use the StreamBuffer functions to read data from the stream buffer:
 
 ```c
 float floatValue = Stream_readFloat(&stream);

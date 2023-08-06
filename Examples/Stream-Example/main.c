@@ -22,7 +22,7 @@ int main()
 
     printf("------ StreamBuffer Ver: %s -------\n\n", STREAM_VER_STR);
 
-    Stream stream;
+    StreamBuffer stream;
 
     Stream_init(&stream, buff, sizeof(buff));
     Stream_setByteOrder(&stream, ByteOrder_LittleEndian);

@@ -10,7 +10,7 @@
 void printBuff(uint8_t* buff, int len);
 
 uint8_t buff[50] = {0};
-Stream stream;
+StreamBuffer stream;
 
 int main() {
 

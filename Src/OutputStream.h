@@ -87,7 +87,7 @@ typedef void (*OStream_FlushCallbackFn)(OStream* stream);
  * @brief hold OutputStream properties
  */
 struct __OStream {
-    Stream                  Buffer;         /**< stream buffer */
+    StreamBuffer                  Buffer;         /**< stream buffer */
     OStream_TransmitFn      transmit;       /**< transmit function */
 #if OSTREAM_ARGS
     void*                   Args;           /**< user argument */
