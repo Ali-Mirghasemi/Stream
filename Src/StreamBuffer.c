@@ -2272,6 +2272,23 @@ Stream_LenType Stream_readBytesUntilPattern(StreamBuffer* stream, const uint8_t*
 
     return 0;
 }
+Stream_LenType Stream_readBytesUntilPatternAt(StreamBuffer* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len){
+    Stream_LenType tmpLen;
+    // find end byte
+    if ((tmpLen = Stream_findPatternAt(stream, offset, pat, patLen)) >= 0) {
+        tmpLen += patLen;
+
+        if (len < tmpLen) {
+            tmpLen = len;
+        }
+
+        if (Stream_readBytes(stream, val, tmpLen) == Stream_Ok) {
+            return tmpLen;
+        }
+    }
+
+    return 0;
+}
 /**
  * @brief find a uint8_t value in stream
  *

@@ -526,6 +526,7 @@ Stream_Result Stream_getFloatArrayAt(StreamBuffer* stream, Stream_LenType index,
 
     Stream_LenType Stream_readBytesUntil(StreamBuffer* stream, uint8_t end, uint8_t* val, Stream_LenType len);
     Stream_LenType Stream_readBytesUntilPattern(StreamBuffer* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
+    Stream_LenType Stream_readBytesUntilPatternAt(StreamBuffer* stream,  Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
 #endif // STREAM_FIND_FUNCTIONS
 
 int8_t Stream_compare(StreamBuffer* stream, const uint8_t* val, Stream_LenType len);
