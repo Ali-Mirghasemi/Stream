@@ -120,9 +120,9 @@ void Stream_init(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size) {
  * @param buffer
  * @param size
  */
-void Stream_fromBuff(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size) {
+void Stream_fromBuff(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size, Stream_LenType len) {
     Stream_init(stream, buffer, size);
-    stream->WPos = size;
+    stream->WPos = len;
 }
 /**
  * @brief reset stream struct into default values

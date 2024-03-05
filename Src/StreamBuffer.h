@@ -226,7 +226,7 @@ typedef struct {
 } Stream_Cursor;
 
 void Stream_init(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size);
-void Stream_fromBuff(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size);
+void Stream_fromBuff(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size, Stream_LenType len);
 void Stream_deinit(StreamBuffer* stream);
 
 #if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
