@@ -119,6 +119,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #endif // ISTREAM_LOCK
 
 #define IStream_getDataPtr(STREAM)                  Stream_getWritePtr(&((STREAM)->Buffer))
+#define IStream_getBufferSize(STREAM)               Stream_getBufferSize(&((STREAM)->Buffer))
 
 #define IStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
 #define IStream_reset(STREAM)                       Stream_reset(&((STREAM)->Buffer))

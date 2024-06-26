@@ -65,14 +65,14 @@ int main()
 	// flush buffer and transmit bytes as possible
 	printf("Space: %u\n", OStream_space(&outStream));
 	printf("Flush to Media..\n");
-	printArray(Stream_getBuffer(&outStream), Stream_getBufferSize(&outStream));
+	printArray(OStream_getDataPtr(&outStream), OStream_getBufferSize(&outStream));
 	OStream_flush(&outStream);
 
 	// start receive
 	printf("Start receive from Media..\n");
 	IStream_receive(&inStream);
 	printf("Available: %u\n", IStream_available(&inStream));
-	printArray(Stream_getBuffer(&inStream), Stream_getBufferSize(&inStream));
+	printArray(IStream_getDataPtr(&outStream), IStream_getBufferSize(&inStream));
 
 	printf("V0: %d\n", IStream_readInt32(&inStream));
 	printf("V1: %d\n", IStream_readInt8(&inStream));
