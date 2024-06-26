@@ -148,6 +148,7 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #define OStream_pendingBytes(STREAM)                Stream_available(&((STREAM)->Buffer))
 
 #define OStream_getDataPtr(STREAM)                  Stream_getReadPtr(&((STREAM)->Buffer))
+#define OStream_getBufferSize(STREAM)               Stream_getBufferSize(&((STREAM)->Buffer))
 
 #define OStream_clear(STREAM)                       Stream_clear(&((STREAM)->Buffer))
 #define OStream_reset(STREAM)                       Stream_reset(&((STREAM)->Buffer))
