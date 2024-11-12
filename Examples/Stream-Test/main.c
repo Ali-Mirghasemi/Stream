@@ -41,21 +41,45 @@ void Assert_dump(StreamBuffer* stream);
 typedef uint32_t (*Test_Fn)(void);
 
 uint32_t Test_readWrite(void);
-uint32_t Test_readStream(void);
-uint32_t Test_readWriteArray(void);
-uint32_t Test_get(void);
-uint32_t Test_find(void);
-uint32_t Test_flip(void);
-uint32_t Test_lock(void);
+#if STREAM_WRITE_STREAM && STREAM_READ_STREAM
+    uint32_t Test_readStream(void);
+#endif
+#if STREAM_WRITE_FLIP && STREAM_READ_FLIP
+    uint32_t Test_flip(void);
+#endif
+#if STREAM_WRITE_ARRAY && STREAM_READ_ARRAY
+    uint32_t Test_readWriteArray(void);
+#endif
+#if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
+    uint32_t Test_get(void);
+#endif
+#if STREAM_FIND_AT_FUNCTIONS && STREAM_FIND_FUNCTIONS
+    uint32_t Test_find(void);
+#endif
+#if STREAM_WRITE_LOCK && STREAM_READ_LOCK
+    uint32_t Test_lock(void);
+#endif
 
 static const Test_Fn TESTS[] = {
     Test_readWrite,
+#if STREAM_WRITE_STREAM && STREAM_READ_STREAM
     Test_readStream,
-    Test_readWriteArray,
-    Test_get,
-    Test_find,
+#endif
+#if STREAM_WRITE_FLIP && STREAM_READ_FLIP
     Test_flip,
+#endif
+#if STREAM_WRITE_ARRAY && STREAM_READ_ARRAY
+    Test_readWriteArray,
+#endif
+#if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
+    Test_get,
+#endif
+#if STREAM_FIND_AT_FUNCTIONS && STREAM_FIND_FUNCTIONS
+    Test_find,
+#endif
+#if STREAM_WRITE_LOCK && STREAM_READ_LOCK
     Test_lock,
+#endif
 };
 static const uint32_t TESTES_LEN = sizeof(TESTS) / sizeof(TESTS[0]);
 
@@ -233,6 +257,7 @@ uint32_t Test_readWrite(void) {
 #undef testBytes
 }
 /********************************************************/
+#if STREAM_WRITE_STREAM && STREAM_READ_STREAM
 uint32_t Test_readStream(void) {
 // for compatibility with print dump
 #define stream      out
@@ -267,6 +292,9 @@ uint32_t Test_readStream(void) {
     return 0;
 #undef stream
 }
+#endif
+/********************************************************/
+#if STREAM_WRITE_LOCK && STREAM_READ_LOCK
 uint32_t Test_readWriteArray(void) {
     #define test(TYPE, VAL_TY, L)       { \
                                             VAL_TY val[L] = {0}; \
@@ -358,7 +386,9 @@ uint32_t Test_readWriteArray(void) {
     return 0;
 #undef test
 }
-
+#endif
+/********************************************************/
+#if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
 uint32_t Test_get(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Get " #TYPE ", %ux\n", N);\
@@ -447,7 +477,9 @@ uint32_t Test_get(void) {
     return 0;
 #undef test
 }
-
+#endif
+/********************************************************/
+#if STREAM_FIND_AT_FUNCTIONS && STREAM_FIND_FUNCTIONS
 uint32_t Test_find(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Find " #TYPE ", %ux\n", N);\
@@ -536,7 +568,9 @@ uint32_t Test_find(void) {
     return 0;
 #undef test
 }
+#endif
 /********************************************************/
+#if STREAM_WRITE_FLIP && STREAM_READ_FLIP
 uint32_t Test_flip(void) {
     #define testFlipWrite(N, W, R, O)           Stream_init(&stream, streamBuff, sizeof(streamBuff));\
                                                 stream.WPos = (W);\
@@ -578,7 +612,9 @@ uint32_t Test_flip(void) {
     return 0;
 #undef testFlipWrite
 }
+#endif
 /********************************************************/
+#if STREAM_WRITE_LOCK && STREAM_READ_LOCK
 uint32_t Test_lock(void) {
     #define testLock(PAT, N)                    PRINTF("Lock R/W " #PAT " , %ux\n", N);\
                                                 for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
@@ -649,6 +685,7 @@ uint32_t Test_lock(void) {
     return 0;
 #undef testLock
 }
+#endif
 /********************************************************/
 #define ASSERT_NUM(TYPE, DTYPE)     uint32_t Assert_ ##TYPE (DTYPE num1, DTYPE num2, uint16_t line, uint8_t cycle, uint8_t index) {\
                                         if (num1 != num2) {\
