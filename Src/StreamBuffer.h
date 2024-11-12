@@ -19,7 +19,7 @@ extern "C" {
 
 #define STREAM_VER_MAJOR    0
 #define STREAM_VER_MINOR    6
-#define STREAM_VER_FIX      0
+#define STREAM_VER_FIX      1
 
 /************************************************************************/
 /*                            Configuration                             */
@@ -367,7 +367,7 @@ Stream_Result Stream_writeFloatArray(StreamBuffer* stream, float* val, Stream_Le
     Stream_Result Stream_writeInt64Array(StreamBuffer* stream, int64_t* val, Stream_LenType len);
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    Stream_Result Stream_writeDoubleArray(StreamBuffer* stream, double val, Stream_LenType len);
+    Stream_Result Stream_writeDoubleArray(StreamBuffer* stream, double* val, Stream_LenType len);
 #endif // STREAM_DOUBLE
 
 Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_LenType len);

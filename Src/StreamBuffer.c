@@ -1809,10 +1809,10 @@ Stream_Result Stream_writeInt64Array(StreamBuffer* stream, int64_t* val, Stream_
  * @param len
  * @return Stream_Result
  */
-Stream_Result Stream_writeDoubleArray(StreamBuffer* stream, double val, Stream_LenType len) {
+Stream_Result Stream_writeDoubleArray(StreamBuffer* stream, double* val, Stream_LenType len) {
     Stream_Result result = Stream_Ok;
     while (len-- > 0) {
-        if ((result = Stream_writeDouble(stream, val)) != Stream_Ok) {
+        if ((result = Stream_writeDouble(stream, *val++)) != Stream_Ok) {
             return result;
         }
     }
