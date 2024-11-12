@@ -19,7 +19,7 @@ extern "C" {
 
 #define STREAM_VER_MAJOR    0
 #define STREAM_VER_MINOR    6
-#define STREAM_VER_FIX      1
+#define STREAM_VER_FIX      2
 
 /************************************************************************/
 /*                            Configuration                             */
@@ -492,6 +492,7 @@ Stream_Result Stream_getFloatArrayAt(StreamBuffer* stream, Stream_LenType index,
     Stream_LenType Stream_findByteAt(StreamBuffer* stream, Stream_LenType offset, uint8_t val);
     Stream_LenType Stream_findPattern(StreamBuffer* stream, const uint8_t* pat, Stream_LenType patLen);
     Stream_LenType Stream_findPatternAt(StreamBuffer* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen);
+    Stream_LenType Stream_findChar(StreamBuffer* stream, char val);
     Stream_LenType Stream_findUInt8(StreamBuffer* stream, uint8_t val);
     Stream_LenType Stream_findInt8(StreamBuffer* stream, int8_t val);
     Stream_LenType Stream_findUInt16(StreamBuffer* stream, uint16_t val);
@@ -508,6 +509,7 @@ Stream_Result Stream_getFloatArrayAt(StreamBuffer* stream, Stream_LenType index,
 #endif
 
 #if STREAM_FIND_AT_FUNCTIONS
+    Stream_LenType Stream_findCharAt(StreamBuffer* stream, Stream_LenType offset, char val);
     Stream_LenType Stream_findUInt8At(StreamBuffer* stream, Stream_LenType offset, uint8_t val);
     Stream_LenType Stream_findInt8At(StreamBuffer* stream, Stream_LenType offset, int8_t val);
     Stream_LenType Stream_findUInt16At(StreamBuffer* stream, Stream_LenType offset, uint16_t val);

@@ -2296,6 +2296,9 @@ Stream_LenType Stream_readBytesUntilPatternAt(StreamBuffer* stream, Stream_LenTy
  * @param val
  * @return Stream_LenType
  */
+Stream_LenType Stream_findChar(StreamBuffer* stream, char val) {
+    return Stream_findByte(stream, val);
+}
 Stream_LenType Stream_findUInt8(StreamBuffer* stream, uint8_t val) {
     return Stream_findByte(stream, val);
 }
@@ -2340,6 +2343,9 @@ Stream_LenType Stream_findDouble(StreamBuffer* stream, double val) {
 #endif
 
 #if STREAM_FIND_AT_FUNCTIONS
+Stream_LenType Stream_findCharAt(StreamBuffer* stream, Stream_LenType offset, char val) {
+    return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
+}
 Stream_LenType Stream_findUInt8At(StreamBuffer* stream, Stream_LenType offset, uint8_t val) {
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val));
 }
