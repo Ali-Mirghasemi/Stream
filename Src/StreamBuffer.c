@@ -2447,8 +2447,8 @@ static void memrcpy(void* dest, const void* src, int len) {
     }
 }
 static void memreverse(void* arr, int len) {
-    uint8_t* pDest = (uint8_t*) arr;
-    uint8_t* pSrc = (uint8_t*) arr + len - 1;
+    uint8_t* pSrc = (uint8_t*) arr;
+    uint8_t* pDest = (uint8_t*) arr + len - 1;
     uint8_t temp;
 
     len >>= 1;
