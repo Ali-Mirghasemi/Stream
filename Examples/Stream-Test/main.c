@@ -165,7 +165,7 @@ uint32_t Test_readWrite(void) {
     testBytes(Bytes, PAT4, 3);
     testBytes(Bytes, PAT4, 5);
     testBytes(Bytes, PAT4, 7);
-
+#if STREAM_WRITE_REVERSE && STREAM_READ_REVERSE
     testBytes(BytesReverse, PAT1, 1);
     testBytes(BytesReverse, PAT1, 3);
     testBytes(BytesReverse, PAT1, 5);
@@ -185,7 +185,7 @@ uint32_t Test_readWrite(void) {
     testBytes(BytesReverse, PAT4, 3);
     testBytes(BytesReverse, PAT4, 5);
     testBytes(BytesReverse, PAT4, 7);
-
+#endif
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
     Stream_setByteOrder(&stream, order);
