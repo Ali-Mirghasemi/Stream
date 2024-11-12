@@ -6,12 +6,14 @@
 #define CYCLES_NUM      20
 
 #define PRINTF          printf
+#define PRINT_DUMP      1
 
 
 uint32_t assertResult;
 uint8_t cycles;
 uint8_t index = 0;
 // assert functions
+uint32_t Assert_Char(char num1, char num2, uint16_t line, uint8_t cycle, uint8_t index);
 uint32_t Assert_Int8(int8_t num1, int8_t num2, uint16_t line, uint8_t cycle, uint8_t index);
 uint32_t Assert_Int16(int16_t num1, int16_t num2, uint16_t line, uint8_t cycle, uint8_t index);
 uint32_t Assert_Int32(int32_t num1, int32_t num2, uint16_t line, uint8_t cycle, uint8_t index);
@@ -28,18 +30,30 @@ uint32_t Assert_Float(float num1, float num2, uint16_t line, uint8_t cycle, uint
 #endif
 uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8_t cycle, uint8_t index);
 
-#define assert(TYPE, ...)               if ((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__, cycles, index))) return assertResult;
+void Assert_dump(StreamBuffer* stream);
+
+#if PRINT_DUMP == 0
+    #define assert(TYPE, ...)               if ((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__, cycles, index))) return assertResult; Assert_dump(&stream);
+#else
+    #define assert(TYPE, ...)               if ((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__, cycles, index))) { Assert_dump(&stream); return assertResult; }
+#endif
 
 typedef uint32_t (*Test_Fn)(void);
 
 uint32_t Test_readWrite(void);
 uint32_t Test_readStream(void);
+uint32_t Test_readWriteArray(void);
+uint32_t Test_get(void);
+uint32_t Test_find(void);
 uint32_t Test_flip(void);
 uint32_t Test_lock(void);
 
 static const Test_Fn TESTS[] = {
     Test_readWrite,
     Test_readStream,
+    Test_readWriteArray,
+    Test_get,
+    Test_find,
     Test_flip,
     Test_lock,
 };
@@ -154,6 +168,11 @@ uint32_t Test_readWrite(void) {
     PRINTF("--------- Read/Write Order: %u ---------\n", order);
 #endif // STREAM_BYTE_ORDER
 
+    test(Char, 1);
+    test(Char, 3);
+    test(Char, 5);
+    test(Char, 7);
+
     test(Int8, 1);
     test(Int8, 3);
     test(Int8, 5);
@@ -210,9 +229,14 @@ uint32_t Test_readWrite(void) {
 #endif // STREAM_BYTE_ORDER
 
     return 0;
+#undef test
+#undef testBytes
 }
 /********************************************************/
 uint32_t Test_readStream(void) {
+// for compatibility with print dump
+#define stream      out
+
     const uint8_t PAT[] = {
         0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77
     };
@@ -241,6 +265,276 @@ uint32_t Test_readStream(void) {
     }
 
     return 0;
+#undef stream
+}
+uint32_t Test_readWriteArray(void) {
+    #define test(TYPE, VAL_TY, L)       { \
+                                            VAL_TY val[L] = {0}; \
+                                            VAL_TY tmp[L] = {0}; \
+                                            PRINTF("Write/Read Array " #TYPE ", %ux\n", L);\
+                                            for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
+                                                for (index = 0; index < L; index++) {\
+                                                    val[index] =  cycles * L + index;\
+                                                } \
+                                                Stream_write ##TYPE ##Array (&stream, val, L); \
+                                                Stream_read ##TYPE ##Array (&stream, tmp, L); \
+                                                for (index = 0; index < L; index++) { \
+                                                    assert(TYPE, val[index], tmp[index]); \
+                                                } \
+                                            } \
+                                        }
+
+    uint8_t streamBuff[37];
+    StreamBuffer stream;
+
+    Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+#if STREAM_BYTE_ORDER
+    for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
+    Stream_setByteOrder(&stream, order);
+    PRINTF("--------- Read/Write Array Order: %u ---------\n", order);
+#endif // STREAM_BYTE_ORDER
+
+    test(Char, char, 1);
+    test(Char, char, 3);
+    test(Char, char, 5);
+    test(Char, char, 7);
+
+    test(Int8, int8_t, 1);
+    test(Int8, int8_t, 3);
+    test(Int8, int8_t, 5);
+    test(Int8, int8_t, 7);
+
+    test(UInt8, uint8_t, 1);
+    test(UInt8, uint8_t, 3);
+    test(UInt8, uint8_t, 5);
+    test(UInt8, uint8_t, 7);
+
+    test(Int16, int16_t, 1);
+    test(Int16, int16_t, 3);
+    test(Int16, int16_t, 5);
+    test(Int16, int16_t, 7);
+
+    test(UInt16, uint16_t, 1);
+    test(UInt16, uint16_t, 3);
+    test(UInt16, uint16_t, 5);
+    test(UInt16, uint16_t, 7);
+
+    test(Int32, int32_t, 1);
+    test(Int32, int32_t, 3);
+    test(Int32, int32_t, 5);
+    test(Int32, int32_t, 7);
+
+    test(UInt32, uint32_t, 1);
+    test(UInt32, uint32_t, 3);
+    test(UInt32, uint32_t, 5);
+    test(UInt32, uint32_t, 7);
+
+#if STREAM_UINT64
+    test(Int64, int64_t, 1);
+    test(Int64, int64_t, 3);
+    test(Int64, int64_t, 4);
+
+    test(UInt64, uint64_t, 1);
+    test(UInt64, uint64_t, 3);
+    test(UInt64, uint64_t, 4);
+#endif // STREAM_UINT64
+
+    test(Float, float, 1);
+    test(Float, float, 3);
+    test(Float, float, 5);
+    test(Float, float, 7);
+
+#if STREAM_DOUBLE
+    test(Double, double, 1);
+    test(Double, double, 3);
+    test(Double, double, 4);
+#endif // STREAM_DOUBLE
+
+#if STREAM_BYTE_ORDER
+    }
+#endif // STREAM_BYTE_ORDER
+
+    return 0;
+#undef test
+}
+
+uint32_t Test_get(void) {
+    #define test(TYPE, VAL_TY, N)       { \
+                                            PRINTF("Get " #TYPE ", %ux\n", N);\
+                                            for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
+                                                for (index = 0; index < N; index++) {\
+                                                    Stream_write ##TYPE (&stream, cycles * N + index); \
+                                                } \
+                                                for (index = 0; index < N; index++) { \
+                                                    assert(TYPE, Stream_get ##TYPE ##At (&stream, index * sizeof(VAL_TY)), cycles * N + index); \
+                                                } \
+                                                Stream_resetIO(&stream); \
+                                            } \
+                                        }
+
+    uint8_t streamBuff[37];
+    StreamBuffer stream;
+
+    Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+#if STREAM_BYTE_ORDER
+    for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
+    Stream_setByteOrder(&stream, order);
+    PRINTF("--------- Read/Write Array Order: %u ---------\n", order);
+#endif // STREAM_BYTE_ORDER
+
+    test(Char, char, 1);
+    test(Char, char, 3);
+    test(Char, char, 5);
+    test(Char, char, 7);
+
+    test(Int8, int8_t, 1);
+    test(Int8, int8_t, 3);
+    test(Int8, int8_t, 5);
+    test(Int8, int8_t, 7);
+
+    test(UInt8, uint8_t, 1);
+    test(UInt8, uint8_t, 3);
+    test(UInt8, uint8_t, 5);
+    test(UInt8, uint8_t, 7);
+
+    test(Int16, int16_t, 1);
+    test(Int16, int16_t, 3);
+    test(Int16, int16_t, 5);
+    test(Int16, int16_t, 7);
+
+    test(UInt16, uint16_t, 1);
+    test(UInt16, uint16_t, 3);
+    test(UInt16, uint16_t, 5);
+    test(UInt16, uint16_t, 7);
+
+    test(Int32, int32_t, 1);
+    test(Int32, int32_t, 3);
+    test(Int32, int32_t, 5);
+    test(Int32, int32_t, 7);
+
+    test(UInt32, uint32_t, 1);
+    test(UInt32, uint32_t, 3);
+    test(UInt32, uint32_t, 5);
+    test(UInt32, uint32_t, 7);
+
+#if STREAM_UINT64
+    test(Int64, int64_t, 1);
+    test(Int64, int64_t, 3);
+    test(Int64, int64_t, 4);
+
+    test(UInt64, uint64_t, 1);
+    test(UInt64, uint64_t, 3);
+    test(UInt64, uint64_t, 4);
+#endif // STREAM_UINT64
+
+    test(Float, float, 1);
+    test(Float, float, 3);
+    test(Float, float, 5);
+    test(Float, float, 7);
+
+#if STREAM_DOUBLE
+    test(Double, double, 1);
+    test(Double, double, 3);
+    test(Double, double, 4);
+#endif // STREAM_DOUBLE
+
+#if STREAM_BYTE_ORDER
+    }
+#endif // STREAM_BYTE_ORDER
+
+    return 0;
+#undef test
+}
+
+uint32_t Test_find(void) {
+    #define test(TYPE, VAL_TY, N)       { \
+                                            PRINTF("Find " #TYPE ", %ux\n", N);\
+                                            for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
+                                                for (index = 0; index < N; index++) {\
+                                                    Stream_write ##TYPE (&stream, (VAL_TY) (cycles * N + index)); \
+                                                } \
+                                                for (index = 0; index < N; index++) { \
+                                                    assert(TYPE, Stream_find ##TYPE (&stream, (VAL_TY) (cycles * N + index)), (VAL_TY) (index * sizeof(VAL_TY))); \
+                                                } \
+                                                Stream_resetIO(&stream); \
+                                            } \
+                                        }
+
+    uint8_t streamBuff[37];
+    StreamBuffer stream;
+
+    Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+#if STREAM_BYTE_ORDER
+    for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
+    Stream_setByteOrder(&stream, order);
+    PRINTF("--------- Find Order: %u ---------\n", order);
+#endif // STREAM_BYTE_ORDER
+
+    test(Char, char, 1);
+    test(Char, char, 3);
+    test(Char, char, 5);
+    test(Char, char, 7);
+
+    test(Int8, int8_t, 1);
+    test(Int8, int8_t, 3);
+    test(Int8, int8_t, 5);
+    test(Int8, int8_t, 7);
+
+    test(UInt8, uint8_t, 1);
+    test(UInt8, uint8_t, 3);
+    test(UInt8, uint8_t, 5);
+    test(UInt8, uint8_t, 7);
+
+    test(Int16, int16_t, 1);
+    test(Int16, int16_t, 3);
+    test(Int16, int16_t, 5);
+    test(Int16, int16_t, 7);
+
+    test(UInt16, uint16_t, 1);
+    test(UInt16, uint16_t, 3);
+    test(UInt16, uint16_t, 5);
+    test(UInt16, uint16_t, 7);
+
+    test(Int32, int32_t, 1);
+    test(Int32, int32_t, 3);
+    test(Int32, int32_t, 5);
+    test(Int32, int32_t, 7);
+
+    test(UInt32, uint32_t, 1);
+    test(UInt32, uint32_t, 3);
+    test(UInt32, uint32_t, 5);
+    test(UInt32, uint32_t, 7);
+
+#if STREAM_UINT64
+    test(Int64, int64_t, 1);
+    test(Int64, int64_t, 3);
+    test(Int64, int64_t, 4);
+
+    test(UInt64, uint64_t, 1);
+    test(UInt64, uint64_t, 3);
+    test(UInt64, uint64_t, 4);
+#endif // STREAM_UINT64
+
+    test(Float, float, 1);
+    test(Float, float, 3);
+    test(Float, float, 5);
+    test(Float, float, 7);
+
+#if STREAM_DOUBLE
+    test(Double, double, 1);
+    test(Double, double, 3);
+    test(Double, double, 4);
+#endif // STREAM_DOUBLE
+
+#if STREAM_BYTE_ORDER
+    }
+#endif // STREAM_BYTE_ORDER
+
+    return 0;
+#undef test
 }
 /********************************************************/
 uint32_t Test_flip(void) {
@@ -282,6 +576,7 @@ uint32_t Test_flip(void) {
 
 
     return 0;
+#undef testFlipWrite
 }
 /********************************************************/
 uint32_t Test_lock(void) {
@@ -352,16 +647,18 @@ uint32_t Test_lock(void) {
     testLock(PAT5, 1);
 
     return 0;
+#undef testLock
 }
 /********************************************************/
 #define ASSERT_NUM(TYPE, DTYPE)     uint32_t Assert_ ##TYPE (DTYPE num1, DTYPE num2, uint16_t line, uint8_t cycle, uint8_t index) {\
                                         if (num1 != num2) {\
-                                        PRINTF("Expected: %ld, Found: %ld\n", (long int) num2, (long int) num1);\
-                                            return line << 16 | index << 8 | cycle;\
+                                            PRINTF("Expected: %ld, Found: %ld\n", (long int) num2, (long int) num1);\
+                                                return line << 16 | index << 8 | cycle;\
                                         }\
                                         return 0;\
                                     }
 
+ASSERT_NUM(Char, char)
 ASSERT_NUM(Int8, int8_t)
 ASSERT_NUM(Int16, int16_t)
 ASSERT_NUM(Int32, int32_t)
@@ -382,4 +679,17 @@ uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8
         return line << 16 | index << 8 | cycle;
     }
     return 0;
+}
+
+void Assert_dump(StreamBuffer* stream) {
+    uint8_t* ptr = stream->Data;
+    Stream_LenType len = stream->Size;
+    PRINTF("----------------------- Stream Dump -----------------------\n");
+    PRINTF("RPos: %u, WPos: %u, Size: %u, Available: %u, Space: %u, Overflow: %u\n", stream->RPos, stream->WPos, stream->Size, Stream_available(stream), Stream_space(stream), stream->Overflow);
+    PRINTF("[");
+    while (len-- > 0) {
+        PRINTF("0x%02X, ", *ptr++);
+    }
+    PRINTF("]\n");
+    PRINTF("-----------------------------------------------------------\n");
 }
