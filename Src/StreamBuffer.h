@@ -18,8 +18,8 @@ extern "C" {
 #include <stdint.h>
 
 #define STREAM_VER_MAJOR    0
-#define STREAM_VER_MINOR    6
-#define STREAM_VER_FIX      3
+#define STREAM_VER_MINOR    7
+#define STREAM_VER_FIX      0
 
 /************************************************************************/
 /*                            Configuration                             */
@@ -29,7 +29,7 @@ extern "C" {
  * @brief you can enable ByteOrder option to have r/w operation
  * on what endian you need
  */
-#define STREAM_BYTE_ORDER                   1
+#define STREAM_BYTE_ORDER                   0
 #if STREAM_BYTE_ORDER
     /**
      * @brief save system byte order in static variable for avoid calculate each time
@@ -40,19 +40,27 @@ extern "C" {
 /**
  * @brief enable set limit for write functions
  */
-#define STREAM_WRITE_LIMIT                  1
+#define STREAM_WRITE_LIMIT                  0
 /**
  * @brief enable set limit for read operations
  */
-#define STREAM_READ_LIMIT                   1
+#define STREAM_READ_LIMIT                   0
 /**
  * @brief enable write lock feature
  */
-#define STREAM_WRITE_LOCK                   1
+#define STREAM_WRITE_LOCK                   0
 /**
  * @brief enable read lock feature
  */
-#define STREAM_READ_LOCK                    1
+#define STREAM_READ_LOCK                    0
+/**
+ * @brief enable flip write feature
+ */
+#define STREAM_WRITE_FLIP                   0
+/**
+ * @brief enable flip read feature
+ */
+#define STREAM_READ_FLIP                    0
 /**
  * @brief enable cursor object for check how many bytes read or write
  */
@@ -61,32 +69,48 @@ extern "C" {
  * @brief if your platform support 64bit variables and you need it
  * you can enable this option
  */
-#define STREAM_UINT64                       1
+#define STREAM_UINT64                       0
 /**
  * @brief if you need r/w double variables and your platform support
  * you can enable this option
  */
-#define STREAM_DOUBLE                       1
+#define STREAM_DOUBLE                       0
 /**
- * @brief enable get functions
+ * @brief if you need write array apis enable this option
  */
-#define STREAM_GET_FUNCTIONS                1
+#define STREAM_WRITE_ARRAY                  0
+/**
+ * @brief if you need read array apis enable this option
+ */
+#define STREAM_READ_ARRAY                   0
+/**
+ * @brief if you need write stream apis enable this option
+ */
+#define STREAM_WRITE_STREAM                 0
+/**
+ * @brief if you need read stream apis enable this option
+ */
+#define STREAM_READ_STREAM                  0
 /**
  * @brief enable getAt functions
  */
-#define STREAM_GET_AT_FUNCTIONS             1
+#define STREAM_GET_AT_FUNCTIONS             0
 /**
- * @brief enable find functions
+ * @brief enable get functions
  */
-#define STREAM_FIND_FUNCTIONS               1
+#define STREAM_GET_FUNCTIONS                0
 /**
  * @brief enable findAt functions
  */
-#define STREAM_FIND_AT_FUNCTIONS            1
+#define STREAM_FIND_AT_FUNCTIONS            0
+/**
+ * @brief enable find functions
+ */
+#define STREAM_FIND_FUNCTIONS               0
 /**
  * @brief check len parameter in read/write functions
  */
-#define STREAM_CHECK_ZERO_LEN               1
+#define STREAM_CHECK_ZERO_LEN               0
 /* StreamBuffer Memory IO States */
 #define STREAM_MEM_IO_DEFAULT               0
 #define STREAM_MEM_IO_CUSTOM                1
@@ -100,6 +124,10 @@ extern "C" {
 #define STREAM_MEM_COPY_REVERSE             memrcpy
 #define STREAM_MEM_SET                      memset
 #define STREAM_MEM_REVERSE                  memreverse
+/**
+ * @brief Implement built in mem utils function for `memrcpy`, `memreverse
+ */
+#define STREAM_MEM_IO_BUILT_IN              1
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
@@ -239,6 +267,9 @@ void Stream_setMemIO(
 );
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
 void Stream_setMemIO(StreamBuffer* stream, const Stream_MemIO* mem);
+#else
+void memrcpy(void* dest, const void* src, int len);
+void memreverse(void* arr, int len);
 #endif
 
 /*************** General APIs *************/
@@ -291,8 +322,12 @@ Stream_LenType Stream_getReadPos(StreamBuffer* stream);
 Stream_Result Stream_moveWritePos(StreamBuffer* stream, Stream_LenType steps);
 Stream_Result Stream_moveReadPos(StreamBuffer* stream, Stream_LenType steps);
 
-void Stream_flipWrite(StreamBuffer* stream, Stream_LenType len);
-void Stream_flipRead(StreamBuffer* stream, Stream_LenType len);
+#if STREAM_WRITE_FLIP
+    void Stream_flipWrite(StreamBuffer* stream, Stream_LenType len);
+#endif // STREAM_WRITE_FLIP
+#if STREAM_READ_FLIP
+    void Stream_flipRead(StreamBuffer* stream, Stream_LenType len);
+#endif // STREAM_READ_FLIP
 
 #if STREAM_BYTE_ORDER
     ByteOrder  Stream_getSystemByteOrder(void);
@@ -334,50 +369,76 @@ void Stream_flipRead(StreamBuffer* stream, Stream_LenType len);
     Stream_LenType  Stream_lockReadLen(StreamBuffer* stream, StreamBuffer* lock);
 #endif // STREAM_READ_LOCK
 
-/**************** Write APIs **************/
+/* ------------------------------------ General Write APIs ---------------------------------- */
 Stream_Result Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_writeChar(StreamBuffer* stream, char val);
-Stream_Result Stream_writeStr(StreamBuffer* stream, const char* val);
-Stream_Result Stream_writeUInt8(StreamBuffer* stream, uint8_t val);
-Stream_Result Stream_writeInt8(StreamBuffer* stream, int8_t val);
-Stream_Result Stream_writeUInt16(StreamBuffer* stream, uint16_t val);
-Stream_Result Stream_writeInt16(StreamBuffer* stream, int16_t val);
-Stream_Result Stream_writeUInt32(StreamBuffer* stream, uint32_t val);
-Stream_Result Stream_writeInt32(StreamBuffer* stream, int32_t val);
-Stream_Result Stream_writeFloat(StreamBuffer* stream, float val);
-#if STREAM_UINT64
-    Stream_Result Stream_writeUInt64(StreamBuffer* stream, uint64_t val);
-    Stream_Result Stream_writeInt64(StreamBuffer* stream, int64_t val);
-#endif // STREAM_UINT64
-#if STREAM_DOUBLE
-    Stream_Result Stream_writeDouble(StreamBuffer* stream, double val);
-#endif // STREAM_DOUBLE
-
-Stream_Result Stream_writeCharArray(StreamBuffer* stream, char* val, Stream_LenType len);
-Stream_Result Stream_writeUInt8Array(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_writeInt8Array(StreamBuffer* stream, int8_t* val, Stream_LenType len);
-Stream_Result Stream_writeUInt16Array(StreamBuffer* stream, uint16_t* val, Stream_LenType len);
-Stream_Result Stream_writeInt16Array(StreamBuffer* stream, int16_t* val, Stream_LenType len);
-Stream_Result Stream_writeUInt32Array(StreamBuffer* stream, uint32_t* val, Stream_LenType len);
-Stream_Result Stream_writeInt32Array(StreamBuffer* stream, int32_t* val, Stream_LenType len);
-Stream_Result Stream_writeFloatArray(StreamBuffer* stream, float* val, Stream_LenType len);
-#if STREAM_UINT64
-    Stream_Result Stream_writeUInt64Array(StreamBuffer* stream, uint64_t* val, Stream_LenType len);
-    Stream_Result Stream_writeInt64Array(StreamBuffer* stream, int64_t* val, Stream_LenType len);
-#endif // STREAM_UINT64
-#if STREAM_DOUBLE
-    Stream_Result Stream_writeDoubleArray(StreamBuffer* stream, double* val, Stream_LenType len);
-#endif // STREAM_DOUBLE
-
-Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_LenType len);
-
+Stream_Result Stream_write(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenType len);
-
-/**************** Read APIs **************/
-int16_t  Stream_read(StreamBuffer* stream);
+#if STREAM_WRITE_STREAM
+    Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_LenType len);
+#endif
+/* ------------------------------------ Write Value APIs ---------------------------------- */
+//Stream_Result Stream_writeStr(StreamBuffer* stream, const char* val);
+#define Stream_writeStr(STREAM, VAL)            Stream_writeBytes((STREAM), (uint8_t*) VAL, strlen(VAL))
+#define Stream_writeChar(STREAM, VAL)           Stream_write((STREAM), (uint8_t*) &(char) { VAL }, sizeof(char))
+#define Stream_writeUInt8(STREAM, VAL)          Stream_write((STREAM), (uint8_t*) &(uint8_t) { VAL }, sizeof(uint8_t))
+#define Stream_writeInt8(STREAM, VAL)           Stream_write((STREAM), (uint8_t*) &(int8_t) { VAL }, sizeof(int8_t))
+#define Stream_writeUInt16(STREAM, VAL)         Stream_write((STREAM), (uint8_t*) &(uint16_t) { VAL }, sizeof(uint16_t))
+#define Stream_writeInt16(STREAM, VAL)          Stream_write((STREAM), (uint8_t*) &(int16_t) { VAL }, sizeof(int16_t))
+#define Stream_writeUInt32(STREAM, VAL)         Stream_write((STREAM), (uint8_t*) &(uint32_t) { VAL }, sizeof(uint32_t))
+#define Stream_writeInt32(STREAM, VAL)          Stream_write((STREAM), (uint8_t*) &(int32_t) { VAL }, sizeof(int32_t))
+#define Stream_writeFloat(STREAM, VAL)          Stream_write((STREAM), (uint8_t*) &(float) { VAL }, sizeof(float))
+#if STREAM_UINT64
+    #define Stream_writeUInt64(STREAM, VAL)     Stream_write((STREAM), (uint8_t*) &(uint64_t) { VAL }, sizeof(uint64_t))
+    #define Stream_writeInt64(STREAM, VAL)      Stream_write((STREAM), (uint8_t*) &(int64_t) { VAL }, sizeof(int64_t))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define Stream_writeDouble(STREAM, VAL)     Stream_write((STREAM), (uint8_t*) &(double) { VAL }, sizeof(double))
+#endif // STREAM_DOUBLE*
+/* ------------------------------------ Write Value Array APIs ---------------------------------- */
+#if STREAM_WRITE_ARRAY
+Stream_Result Stream_writeArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len);
+#define Stream_writeCharArray(STREAM, VAL, LEN)         Stream_writeArray((STREAM), VAL, sizeof(char), LEN)
+#define Stream_writeUInt8Array(STREAM, VAL, LEN)        Stream_writeArray((STREAM), VAL, sizeof(uint8_t), LEN)
+#define Stream_writeInt8Array(STREAM, VAL, LEN)         Stream_writeArray((STREAM), VAL, sizeof(int8_t), LEN)
+#define Stream_writeUInt16Array(STREAM, VAL, LEN)       Stream_writeArray((STREAM), VAL, sizeof(uint16_t), LEN)
+#define Stream_writeInt16Array(STREAM, VAL, LEN)        Stream_writeArray((STREAM), VAL, sizeof(int16_t), LEN)
+#define Stream_writeUInt32Array(STREAM, VAL, LEN)       Stream_writeArray((STREAM), VAL, sizeof(uint32_t), LEN)
+#define Stream_writeInt32Array(STREAM, VAL, LEN)        Stream_writeArray((STREAM), VAL, sizeof(int32_t), LEN)
+#define Stream_writeFloatArray(STREAM, VAL, LEN)        Stream_writeArray((STREAM), VAL, sizeof(float), LEN)
+#if STREAM_UINT64
+    #define Stream_writeUInt64Array(STREAM, VAL, LEN)   Stream_writeArray((STREAM), VAL, sizeof(uint64_t), LEN)
+    #define Stream_writeInt64Array(STREAM, VAL, LEN)    Stream_writeArray((STREAM), VAL, sizeof(int64_t), LEN)
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define Stream_writeDoubleArray(STREAM, VAL, LEN)   Stream_writeArray((STREAM), VAL, sizeof(double), LEN)
+#endif // STREAM_DOUBLE
+#endif // STREAM_WRITE_ARRAY
+/* ------------------------------------ General Read APIs ---------------------------------- */
 Stream_Result Stream_readBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+Stream_Result Stream_read(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+#if STREAM_READ_STREAM
+    Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenType len);
+#endif
+/* ------------------------------------ Read Value Safe APIs ---------------------------------- */
+#define Stream_readCharSafe(STREAM, VAL)               Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#define Stream_readUInt8Safe(STREAM, VAL)              Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#define Stream_readInt8Safe(STREAM, VAL)               Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#define Stream_readUInt16Safe(STREAM, VAL)             Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#define Stream_readInt16Safe(STREAM, VAL)              Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#define Stream_readUInt32Safe(STREAM, VAL)             Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#define Stream_readInt32Safe(STREAM, VAL)              Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#define Stream_readFloatSafe(STREAM, VAL)              Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+
+#if STREAM_UINT64
+    #define Stream_readUInt64Safe(STREAM, VAL)         Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define Stream_readInt64Safe(STREAM, VAL)          Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define Stream_readDoubleSafe(STREAM, VAL)         Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+#endif // STREAM_DOUBLE
+/* ------------------------------------ Read Value APIs ---------------------------------- */
 char     Stream_readChar(StreamBuffer* stream);
 uint8_t  Stream_readUInt8(StreamBuffer* stream);
 int8_t   Stream_readInt8(StreamBuffer* stream);
@@ -393,66 +454,45 @@ float    Stream_readFloat(StreamBuffer* stream);
 #if STREAM_DOUBLE
     double   Stream_readDouble(StreamBuffer* stream);
 #endif // STREAM_DOUBLE
-
-Stream_Result Stream_readCharArray(StreamBuffer* stream, char* val, Stream_LenType len);
-Stream_Result Stream_readUInt8Array(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_readInt8Array(StreamBuffer* stream, int8_t* val, Stream_LenType len);
-Stream_Result Stream_readUInt16Array(StreamBuffer* stream, uint16_t* val, Stream_LenType len);
-Stream_Result Stream_readInt16Array(StreamBuffer* stream, int16_t* val, Stream_LenType len);
-Stream_Result Stream_readUInt32Array(StreamBuffer* stream, uint32_t* val, Stream_LenType len);
-Stream_Result Stream_readInt32Array(StreamBuffer* stream, int32_t* val, Stream_LenType len);
-Stream_Result Stream_readFloatArray(StreamBuffer* stream, float* val, Stream_LenType len);
+/* ------------------------------------ Read Value Array APIs ---------------------------------- */
+Stream_Result Stream_readArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len);
+#define Stream_readCharArray(STREAM, VAL, LEN)          Stream_readArray((STREAM), VAL, sizeof(char), LEN)
+#define Stream_readUInt8Array(STREAM, VAL, LEN)         Stream_readArray((STREAM), VAL, sizeof(uint8_t), LEN)
+#define Stream_readInt8Array(STREAM, VAL, LEN)          Stream_readArray((STREAM), VAL, sizeof(int8_t), LEN)
+#define Stream_readUInt16Array(STREAM, VAL, LEN)        Stream_readArray((STREAM), VAL, sizeof(uint16_t), LEN)
+#define Stream_readInt16Array(STREAM, VAL, LEN)         Stream_readArray((STREAM), VAL, sizeof(int16_t), LEN)
+#define Stream_readUInt32Array(STREAM, VAL, LEN)        Stream_readArray((STREAM), VAL, sizeof(uint32_t), LEN)
+#define Stream_readInt32Array(STREAM, VAL, LEN)         Stream_readArray((STREAM), VAL, sizeof(int32_t), LEN)
+#define Stream_readFloatArray(STREAM, VAL, LEN)         Stream_readArray((STREAM), VAL, sizeof(float), LEN)
 #if STREAM_UINT64
-    Stream_Result Stream_readUInt64Array(StreamBuffer* stream, uint64_t* val, Stream_LenType len);
-    Stream_Result Stream_readInt64Array(StreamBuffer* stream, int64_t* val, Stream_LenType len);
+    #define Stream_readUInt64Array(STREAM, VAL, LEN)    Stream_readArray((STREAM), VAL, sizeof(uint64_t), LEN)
+    #define Stream_readInt64Array(STREAM, VAL, LEN)     Stream_readArray((STREAM), VAL, sizeof(int64_t), LEN)
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    Stream_Result Stream_readDoubleArray(StreamBuffer* stream, double* val, Stream_LenType len);
+    #define Stream_readDoubleArray(STREAM, VAL, LEN)    Stream_readArray((STREAM), VAL, sizeof(double), LEN)
 #endif // STREAM_DOUBLE
-
-Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenType len);
-
-#if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
-Stream_Result Stream_getBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_getBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-char     Stream_getChar(StreamBuffer* stream);
-uint8_t  Stream_getUInt8(StreamBuffer* stream);
-int8_t   Stream_getInt8(StreamBuffer* stream);
-uint16_t Stream_getUInt16(StreamBuffer* stream);
-int16_t  Stream_getInt16(StreamBuffer* stream);
-uint32_t Stream_getUInt32(StreamBuffer* stream);
-int32_t  Stream_getInt32(StreamBuffer* stream);
-float    Stream_getFloat(StreamBuffer* stream);
-#if STREAM_UINT64
-    uint64_t Stream_getUInt64(StreamBuffer* stream);
-    int64_t  Stream_getInt64(StreamBuffer* stream);
-#endif // STREAM_UINT64
-#if STREAM_DOUBLE
-    double   Stream_getDouble(StreamBuffer* stream);
-#endif // STREAM_DOUBLE
-
-Stream_Result Stream_getCharArray(StreamBuffer* stream, char* val, Stream_LenType len);
-Stream_Result Stream_getUInt8Array(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_getInt8Array(StreamBuffer* stream, int8_t* val, Stream_LenType len);
-Stream_Result Stream_getUInt16Array(StreamBuffer* stream, uint16_t* val, Stream_LenType len);
-Stream_Result Stream_getInt16Array(StreamBuffer* stream, int16_t* val, Stream_LenType len);
-Stream_Result Stream_getUInt32Array(StreamBuffer* stream, uint32_t* val, Stream_LenType len);
-Stream_Result Stream_getInt32Array(StreamBuffer* stream, int32_t* val, Stream_LenType len);
-Stream_Result Stream_getFloatArray(StreamBuffer* stream, float* val, Stream_LenType len);
-#if STREAM_UINT64
-    Stream_Result Stream_getUInt64Array(StreamBuffer* stream, uint64_t* val, Stream_LenType len);
-    Stream_Result Stream_getInt64Array(StreamBuffer* stream, int64_t* val, Stream_LenType len);
-#endif // STREAM_UINT64
-#if STREAM_DOUBLE
-    Stream_Result Stream_getDoubleArray(StreamBuffer* stream, double* val, Stream_LenType len);
-#endif // STREAM_DOUBLE
-
-#endif // STREAM_GET_FUNCTIONS
-
+/* ------------------------------------ General GetAt APIs ---------------------------------- */
 #if STREAM_GET_AT_FUNCTIONS
-
 Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
 Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+Stream_Result Stream_getAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+/* ------------------------------------ GetAt Value Safe APIs ---------------------------------- */
+#define       Stream_getCharAtSafe(STREAM, IDX, VAL)            Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#define       Stream_getUInt8AtSafe(STREAM, IDX, VAL)           Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#define       Stream_getInt8AtSafe(STREAM, IDX, VAL)            Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#define       Stream_getUInt16AtSafe(STREAM, IDX, VAL)          Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#define       Stream_getInt16AtSafe(STREAM, IDX, VAL)           Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#define       Stream_getUInt32AtSafe(STREAM, IDX, VAL)          Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#define       Stream_getInt32AtSafe(STREAM, IDX, VAL)           Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#define       Stream_getFloatAtSafe(STREAM, IDX, VAL)           Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#if STREAM_UINT64
+    #define   Stream_getUInt64AtSafe(STREAM, IDX, VAL)          Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+    #define   Stream_getInt64AtSafe(STREAM, IDX, VAL)           Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define   Stream_getDoubleAtSafe(STREAM, IDX, VAL)          Stream_getAt((STREAM), (IDX), (uint8_t*) &VAL, sizeof(VAL))
+#endif // STREAM_DOUBLE
+/* ------------------------------------ GetAt Value APIs ---------------------------------- */
 char     Stream_getCharAt(StreamBuffer* stream, Stream_LenType index);
 uint8_t  Stream_getUInt8At(StreamBuffer* stream, Stream_LenType index);
 int8_t   Stream_getInt8At(StreamBuffer* stream, Stream_LenType index);
@@ -468,47 +508,68 @@ float    Stream_getFloatAt(StreamBuffer* stream, Stream_LenType index);
 #if STREAM_DOUBLE
     double   Stream_getDoubleAt(StreamBuffer* stream, Stream_LenType index);
 #endif // STREAM_DOUBLE
-
-Stream_Result Stream_getCharArrayAt(StreamBuffer* stream, Stream_LenType index, char* val, Stream_LenType len);
-Stream_Result Stream_getUInt8ArrayAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_getInt8ArrayAt(StreamBuffer* stream, Stream_LenType index, int8_t* val, Stream_LenType len);
-Stream_Result Stream_getUInt16ArrayAt(StreamBuffer* stream, Stream_LenType index, uint16_t* val, Stream_LenType len);
-Stream_Result Stream_getInt16ArrayAt(StreamBuffer* stream, Stream_LenType index, int16_t* val, Stream_LenType len);
-Stream_Result Stream_getUInt32ArrayAt(StreamBuffer* stream, Stream_LenType index, uint32_t* val, Stream_LenType len);
-Stream_Result Stream_getInt32ArrayAt(StreamBuffer* stream, Stream_LenType index, int32_t* val, Stream_LenType len);
-Stream_Result Stream_getFloatArrayAt(StreamBuffer* stream, Stream_LenType index, float* val, Stream_LenType len);
+/* ------------------------------------ GetAt Value Array APIs ---------------------------------- */
+Stream_Result Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index, void* val, Stream_LenType itemLen, Stream_LenType len);
+#define Stream_getCharArrayAt(STREAM, IDX, VAL, LEN)    Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(char), (LEN))
+#define Stream_getUInt8ArrayAt(STREAM, IDX, VAL, LEN)   Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(uint8_t), (LEN))
+#define Stream_getInt8ArrayAt(STREAM, IDX, VAL, LEN)    Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(int8_t), (LEN))
+#define Stream_getUInt16ArrayAt(STREAM, IDX, VAL, LEN)  Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(uint16_t), (LEN))
+#define Stream_getInt16ArrayAt(STREAM, IDX, VAL, LEN)   Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(int16_t), (LEN))
+#define Stream_getUInt32ArrayAt(STREAM, IDX, VAL, LEN)  Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(uint32_t), (LEN))
+#define Stream_getInt32ArrayAt(STREAM, IDX, VAL, LEN)   Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(int32_t), (LEN))
+#define Stream_getFloatArrayAt(STREAM, IDX, VAL, LEN)   Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(float), (LEN))
 #if STREAM_UINT64
-    Stream_Result Stream_getUInt64ArrayAt(StreamBuffer* stream, Stream_LenType index, uint64_t* val, Stream_LenType len);
-    Stream_Result Stream_getInt64ArrayAt(StreamBuffer* stream, Stream_LenType index, int64_t* val, Stream_LenType len);
+    #define Stream_getUInt64ArrayAt(STREAM, IDX, VAL, LEN)  Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(uint64_t), (LEN))
+    #define Stream_getInt64ArrayAt(STREAM, IDX, VAL, LEN)   Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(int64_t), (LEN))
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    Stream_Result Stream_getDoubleArrayAt(StreamBuffer* stream, Stream_LenType index, double* val, Stream_LenType len);
+    #define Stream_getDoubleArrayAt(STREAM, IDX, VAL, LEN)  Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(double), (LEN))
 #endif // STREAM_DOUBLE
-
 #endif // STREAM_GET_AT_FUNCTION
-
-#if STREAM_FIND_FUNCTIONS
-    Stream_LenType Stream_findByte(StreamBuffer* stream, uint8_t val);
-    Stream_LenType Stream_findByteAt(StreamBuffer* stream, Stream_LenType offset, uint8_t val);
-    Stream_LenType Stream_findPattern(StreamBuffer* stream, const uint8_t* pat, Stream_LenType patLen);
-    Stream_LenType Stream_findPatternAt(StreamBuffer* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen);
-    Stream_LenType Stream_findChar(StreamBuffer* stream, char val);
-    Stream_LenType Stream_findUInt8(StreamBuffer* stream, uint8_t val);
-    Stream_LenType Stream_findInt8(StreamBuffer* stream, int8_t val);
-    Stream_LenType Stream_findUInt16(StreamBuffer* stream, uint16_t val);
-    Stream_LenType Stream_findInt16(StreamBuffer* stream, int16_t val);
-    Stream_LenType Stream_findUInt32(StreamBuffer* stream, uint32_t val);
-    Stream_LenType Stream_findInt32(StreamBuffer* stream, int32_t val);
+/* ------------------------------------ General Get APIs ---------------------------------- */
+#if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
+#define       Stream_getBytes(STREAM, VAL, LEN)                 Stream_getBytesAt((STREAM), 0, (VAL), (LEN))
+#define       Stream_getBytesReverse(STREAM, VAL, LEN)          Stream_getBytesReverseAt((STREAM), 0, (VAL), (LEN))
+#define       Stream_get(STREAM, VAL, LEN)                      Stream_getAt((STREAM), 0, (VAL), (LEN))
+/* ------------------------------------ Get Value APIs ---------------------------------- */
+#define       Stream_getChar(STREAM)                            Stream_getCharAt((STREAM), 0)
+#define       Stream_getUInt8(STREAM)                           Stream_getUInt8At((STREAM), 0)
+#define       Stream_getInt8(STREAM)                            Stream_getInt8At((STREAM), 0)
+#define       Stream_getUInt16(STREAM)                          Stream_getUInt16At((STREAM), 0)
+#define       Stream_getInt16(STREAM)                           Stream_getInt16At((STREAM), 0)
+#define       Stream_getUInt32(STREAM)                          Stream_getUInt32At((STREAM), 0)
+#define       Stream_getInt32(STREAM)                           Stream_getInt32At((STREAM), 0)
+#define       Stream_getFloat(STREAM)                           Stream_getFloatAt((STREAM), 0)
 #if STREAM_UINT64
-    Stream_LenType Stream_findUInt64(StreamBuffer* stream, uint64_t val);
-    Stream_LenType Stream_findInt64(StreamBuffer* stream, int64_t val);
-#endif
-    Stream_LenType Stream_findFloat(StreamBuffer* stream, float val);
+    #define   Stream_getUInt64(STREAM)                          Stream_getUInt64At((STREAM), 0)
+    #define   Stream_getInt64(STREAM)                           Stream_getInt64At((STREAM), 0)
+#endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    Stream_LenType Stream_findDouble(StreamBuffer* stream, double val);
-#endif
-
+    #define   Stream_getDouble(STREAM)                          Stream_getDoubleAt((STREAM), 0)
+#endif // STREAM_DOUBLE
+/* ------------------------------------ Get Value Array APIs ---------------------------------- */
+#define Stream_getCharArray(STREAM, VAL, LEN)                   Stream_getCharArrayAt((STREAM), 0, (VAL), (LEN))
+#define Stream_getUInt8Array(STREAM, VAL, LEN)                  Stream_getUInt8ArrayAt((STREAM), 0, (VAL), (LEN))
+#define Stream_getInt8Array(STREAM, VAL, LEN)                   Stream_getInt8ArrayAt((STREAM), 0, (VAL), (LEN))
+#define Stream_getUInt16Array(STREAM, VAL, LEN)                 Stream_getUInt16ArrayAt((STREAM), 0, (VAL), (LEN))
+#define Stream_getInt16Array(STREAM, VAL, LEN)                  Stream_getInt16ArrayAt((STREAM), 0, (VAL), (LEN))
+#define Stream_getUInt32Array(STREAM, VAL, LEN)                 Stream_getUInt32ArrayAt((STREAM), 0, (VAL), (LEN))
+#define Stream_getInt32Array(STREAM, VAL, LEN)                  Stream_getInt32ArrayAt((STREAM), 0, (VAL), (LEN))
+#define Stream_getFloatArray(STREAM, VAL, LEN)                  Stream_getFloatArrayAt((STREAM), 0, (VAL), (LEN))
+#if STREAM_UINT64
+    #define Stream_getUInt64Array(STREAM, VAL, LEN)             Stream_getUInt64ArrayAt((STREAM), 0, (VAL), (LEN))
+    #define Stream_getInt64Array(STREAM, VAL, LEN)              Stream_getInt64ArrayAt((STREAM), 0, (VAL), (LEN))
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    #define Stream_getDoubleArray(STREAM, VAL, LEN)             Stream_getDoubleArrayAt((STREAM), 0, (VAL), (LEN))
+#endif // STREAM_DOUBLE
+#endif // STREAM_GET_FUNCTIONS
+/* ------------------------------------ Find APIs ---------------------------------- */
 #if STREAM_FIND_AT_FUNCTIONS
+/* ------------------------------------ General Find At APIs ---------------------------------- */
+    Stream_LenType Stream_findByteAt(StreamBuffer* stream, Stream_LenType offset, uint8_t val);
+    Stream_LenType Stream_findPatternAt(StreamBuffer* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen);
+
     Stream_LenType Stream_findCharAt(StreamBuffer* stream, Stream_LenType offset, char val);
     Stream_LenType Stream_findUInt8At(StreamBuffer* stream, Stream_LenType offset, uint8_t val);
     Stream_LenType Stream_findInt8At(StreamBuffer* stream, Stream_LenType offset, int8_t val);
@@ -524,15 +585,35 @@ Stream_Result Stream_getFloatArrayAt(StreamBuffer* stream, Stream_LenType index,
 #if STREAM_DOUBLE
     Stream_LenType Stream_findDoubleAt(StreamBuffer* stream, Stream_LenType offset, double val);
 #endif
-#endif // STREAM_FIND_AT_FUNCTIONS
-
-    Stream_LenType Stream_readBytesUntil(StreamBuffer* stream, uint8_t end, uint8_t* val, Stream_LenType len);
-    Stream_LenType Stream_readBytesUntilPattern(StreamBuffer* stream, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
+    Stream_LenType Stream_readBytesUntilAt(StreamBuffer* stream, Stream_LenType offset, uint8_t end, uint8_t* val, Stream_LenType len);
     Stream_LenType Stream_readBytesUntilPatternAt(StreamBuffer* stream,  Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen, uint8_t* val, Stream_LenType len);
-#endif // STREAM_FIND_FUNCTIONS
+/* ------------------------------------ General Find APIs ---------------------------------- */
+#if STREAM_FIND_FUNCTIONS
+    #define Stream_findByte(STREAM, VAL)                    Stream_findByteAt((STREAM), 0, (VAL))
+    #define Stream_findPattern(STREAM, PAT, PAT_LEN)        Stream_findPatternAt((STREAM), 0, (PAT), (PAT_LEN))
 
-int8_t Stream_compare(StreamBuffer* stream, const uint8_t* val, Stream_LenType len);
-int8_t Stream_compareAt(StreamBuffer* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len);
+    #define Stream_findChar(STREAM, VAL)                    Stream_findCharAt((STREAM), 0, (VAL))
+    #define Stream_findUInt8(STREAM, VAL)                   Stream_findUInt8At((STREAM), 0, (VAL))
+    #define Stream_findInt8(STREAM, VAL)                    Stream_findInt8At((STREAM), 0, (VAL))
+    #define Stream_findUInt16(STREAM, VAL)                  Stream_findUInt16At((STREAM), 0, (VAL))
+    #define Stream_findInt16(STREAM, VAL)                   Stream_findInt16At((STREAM), 0, (VAL))
+    #define Stream_findUInt32(STREAM, VAL)                  Stream_findUInt32At((STREAM), 0, (VAL))
+    #define Stream_findInt32(STREAM, VAL)                   Stream_findInt32At((STREAM), 0, (VAL))
+#if STREAM_UINT64
+    #define Stream_findUInt64(STREAM, VAL)                  Stream_findUInt64At((STREAM), 0, (VAL))
+    #define Stream_findInt64(STREAM, VAL)                   Stream_findInt64At((STREAM), 0, (VAL))
+#endif
+    #define Stream_findFloat(STREAM, VAL)                   Stream_findFloatAt((STREAM), 0, (VAL))
+#if STREAM_DOUBLE
+    #define Stream_findDouble(STREAM, VAL)                  Stream_findDoubleAt((STREAM), 0, (VAL))
+#endif
+    #define Stream_readBytesUntil(STREAM, END, VAL, LEN)                    Stream_readBytesUntilAt((STREAM), 0, (END), (VAL), (LEN))
+    #define Stream_readBytesUntilPattern(STREAM, PAT, PAT_LEN, VAL, LEN)    Stream_readBytesUntilPatternAt((STREAM), 0, (PAT), (PAT_LEN), (VAL), (VAL_LEN))
+#endif // STREAM_FIND_FUNCTIONS
+#endif // STREAM_FIND_AT_FUNCTIONS
+/* ------------------------------------ Compare APIs ---------------------------------- */
+int8_t  Stream_compareAt(StreamBuffer* stream, Stream_LenType index, const uint8_t* val, Stream_LenType len);
+#define Stream_compare(STREAM, VAL, LEN)                    Stream_compareAt((STREAM), 0, (VAL), (LEN))
 
 #ifdef __cplusplus
 };

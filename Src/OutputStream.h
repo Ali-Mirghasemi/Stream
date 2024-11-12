@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define OSTREAM_VER_MAJOR    0
-#define OSTREAM_VER_MINOR    5
+#define OSTREAM_VER_MINOR    6
 #define OSTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -175,6 +175,7 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 
 #define OStream_writeBytes(STREAM, VAL, LEN)        Stream_writeBytes(&((STREAM)->Buffer), (VAL), (LEN))
 #define OStream_writeBytesReverse(STREAM, VAL, LEN) Stream_writeBytesReverse(&((STREAM)->Buffer), (VAL), (LEN))
+#define OStream_write(STREAM, VAL, LEN)             Stream_write(&((STREAM)->Buffer), (VAL), (LEN))
 #define OStream_writeStream(OUT, IN, LEN)           Stream_writeStream(&((OUT)->Buffer), &((IN)->Buffer), (LEN))
 #define OStream_writePadding(STREAM, VAL, LEN)      Stream_writePadding(&((STREAM)->Buffer), (VAL), (LEN))
 #define OStream_writeChar(STREAM, VAL)              Stream_writeChar(&((STREAM)->Buffer), (VAL))
@@ -209,8 +210,6 @@ Stream_LenType OStream_outgoingBytes(OStream* stream);
 #if STREAM_DOUBLE
 #define OStream_writeDoubleArray(STREAM, VAL, LEN)  Stream_writeDoubleArray(&((STREAM)->Buffer), (VAL), (LEN))
 #endif // STREAM_DOUBLE
-
-
 
 #ifdef __cplusplus
 };
