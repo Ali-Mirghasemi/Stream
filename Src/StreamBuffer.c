@@ -21,8 +21,8 @@
     #error "STREAM_MEM_IO is invalid!"
 #endif // STREAM_MEM_IO
 
-#if STREAM_BYTE_ORDER
 /* private typedef */
+#if STREAM_BYTE_ORDER && STREAM_WRITE_REVERSE && STREAM_READ_REVERSE
 typedef Stream_Result (*Stream_WriteBytesFn)(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 typedef Stream_Result (*Stream_ReadBytesFn)(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 typedef Stream_Result (*Stream_GetBytesFn)(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
@@ -55,7 +55,7 @@ static const Stream_GetBytesFn getBytesAt[2] = {
     #define __checkReverseOn(STREAM, VAL)
 #endif // STREAM_BYTE_ORDER
 
-#define __checkReverseOff(STREAM, VAL)          
+#define __checkReverseOff(STREAM, VAL)     
 
 #define __readValue(TY, VAL_TY)     \
 VAL_TY Stream_read ##TY(StreamBuffer* stream) { \
@@ -692,6 +692,7 @@ Stream_Result Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream_LenTy
 
     return Stream_Ok;
 }
+#if STREAM_WRITE_REVERSE
 /**
  * @brief write array into stream in reverse order
  *
@@ -744,6 +745,7 @@ Stream_Result Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Strea
 Stream_Result Stream_write(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
     return __writeBytes(stream, val, len);
 }
+#endif // STREAM_WRITE_REVERSE
 #if STREAM_WRITE_STREAM
 /**
  * @brief directly read from a stream and write to another
@@ -791,6 +793,7 @@ Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_Len
     return Stream_Ok;
 }
 #endif // STREAM_WRITE_STREAM 
+#if STREAM_WRITE_PADDING
 /**
  * @brief this function can use for write value multiple time into stream, can use for padding
  *
@@ -833,15 +836,18 @@ Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenT
 
     return Stream_Ok;
 }
+#endif // STREAM_WRITE_PADDING
 /* ------------------------------------ General Read APIs ---------------------------------- */
 /**
- * @brief read bytes for buffer based on byte order settngs
- *
- * @param stream
- * @return int16_t
+ * @brief read value from buffer based on byte order
+ * 
+ * @param stream 
+ * @return Stream_Value 
  */
-Stream_Result Stream_read(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
-    return __readBytes(stream, val, len);
+Stream_Value  Stream_readValue(StreamBuffer* stream, Stream_LenType len) {
+    Stream_Value val = {0};
+    __readBytes(stream, (uint8_t*) &val, len);
+    return val;
 }
 /**
  * @brief read bytes form stream, if possible
@@ -885,6 +891,7 @@ Stream_Result Stream_readBytes(StreamBuffer* stream, uint8_t* val, Stream_LenTyp
 
     return Stream_Ok;
 }
+#if STREAM_READ_REVERSE
 Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
@@ -918,6 +925,16 @@ Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream
 
     return Stream_Ok;
 }
+/**
+ * @brief read bytes for buffer based on byte order settngs
+ *
+ * @param stream
+ * @return int16_t
+ */
+Stream_Result Stream_read(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
+    return __readBytes(stream, val, len);
+}
+#endif // STREAM_READ_REVERSE
 #if STREAM_READ_STREAM
 Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
@@ -957,21 +974,7 @@ Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenT
 }
 #endif
 /* ------------------------------------ Read Value APIs ---------------------------------- */
-__readValue(Char,   char)
-__readValue(UInt8,  uint8_t)
-__readValue(Int8,   int8_t)
-__readValue(UInt16, uint16_t)
-__readValue(Int16,  int16_t)
-__readValue(UInt32, uint32_t)
-__readValue(Int32,  int32_t)
-__readValue(Float,  float)
-#if STREAM_UINT64
-    __readValue(UInt64, uint64_t)
-    __readValue(Int64,  int64_t)
-#endif // STREAM_UINT64
-#if STREAM_DOUBLE
-    __readValue(Double, double)
-#endif // STREAM_DOUBLE
+
 /* ------------------------------------ General GetAt APIs ---------------------------------- */
 #if STREAM_GET_AT_FUNCTIONS
 Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {

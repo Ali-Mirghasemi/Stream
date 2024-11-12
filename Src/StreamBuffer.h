@@ -29,7 +29,7 @@ extern "C" {
  * @brief you can enable ByteOrder option to have r/w operation
  * on what endian you need
  */
-#define STREAM_BYTE_ORDER                   0
+#define STREAM_BYTE_ORDER                   1
 #if STREAM_BYTE_ORDER
     /**
      * @brief save system byte order in static variable for avoid calculate each time
@@ -40,77 +40,89 @@ extern "C" {
 /**
  * @brief enable set limit for write functions
  */
-#define STREAM_WRITE_LIMIT                  0
+#define STREAM_WRITE_LIMIT                  1
 /**
  * @brief enable set limit for read operations
  */
-#define STREAM_READ_LIMIT                   0
+#define STREAM_READ_LIMIT                   1
 /**
  * @brief enable write lock feature
  */
-#define STREAM_WRITE_LOCK                   0
+#define STREAM_WRITE_LOCK                   1
 /**
  * @brief enable read lock feature
  */
-#define STREAM_READ_LOCK                    0
+#define STREAM_READ_LOCK                    1
 /**
  * @brief enable flip write feature
  */
-#define STREAM_WRITE_FLIP                   0
+#define STREAM_WRITE_FLIP                   1
 /**
  * @brief enable flip read feature
  */
-#define STREAM_READ_FLIP                    0
+#define STREAM_READ_FLIP                    1
+/**
+ * @brief if your platform support 64bit variables and you need it
+ * you can enable this option
+ */
+#define STREAM_UINT64                       1
+/**
+ * @brief if you need r/w double variables and your platform support
+ * you can enable this option
+ */
+#define STREAM_DOUBLE                       1
+/**
+ * @brief if you need write array apis enable this option
+ */
+#define STREAM_WRITE_ARRAY                  1
+/**
+ * @brief if you need read array apis enable this option
+ */
+#define STREAM_READ_ARRAY                   1
+/**
+ * @brief if you need write stream apis enable this option
+ */
+#define STREAM_WRITE_STREAM                 1
+/**
+ * @brief if you need read stream apis enable this option
+ */
+#define STREAM_READ_STREAM                  1
+/**
+ * @brief enable write reverse functions
+ */
+#define STREAM_WRITE_REVERSE                1
+/**
+ * @brief enable read reverse functions
+ */
+#define STREAM_READ_REVERSE                 1
+/**
+ * @brief enable write padding functions
+ */
+#define STREAM_WRITE_PADDING                1
+/**
+ * @brief enable getAt functions
+ */
+#define STREAM_GET_AT_FUNCTIONS             1
+/**
+ * @brief enable get functions
+ */
+#define STREAM_GET_FUNCTIONS                1
+/**
+ * @brief enable findAt functions
+ */
+#define STREAM_FIND_AT_FUNCTIONS            1
+/**
+ * @brief enable find functions
+ */
+#define STREAM_FIND_FUNCTIONS               1
 /**
  * @brief enable cursor object for check how many bytes read or write
  */
 #define STREAM_CURSOR                       0
 /**
- * @brief if your platform support 64bit variables and you need it
- * you can enable this option
- */
-#define STREAM_UINT64                       0
-/**
- * @brief if you need r/w double variables and your platform support
- * you can enable this option
- */
-#define STREAM_DOUBLE                       0
-/**
- * @brief if you need write array apis enable this option
- */
-#define STREAM_WRITE_ARRAY                  0
-/**
- * @brief if you need read array apis enable this option
- */
-#define STREAM_READ_ARRAY                   0
-/**
- * @brief if you need write stream apis enable this option
- */
-#define STREAM_WRITE_STREAM                 0
-/**
- * @brief if you need read stream apis enable this option
- */
-#define STREAM_READ_STREAM                  0
-/**
- * @brief enable getAt functions
- */
-#define STREAM_GET_AT_FUNCTIONS             0
-/**
- * @brief enable get functions
- */
-#define STREAM_GET_FUNCTIONS                0
-/**
- * @brief enable findAt functions
- */
-#define STREAM_FIND_AT_FUNCTIONS            0
-/**
- * @brief enable find functions
- */
-#define STREAM_FIND_FUNCTIONS               0
-/**
  * @brief check len parameter in read/write functions
  */
-#define STREAM_CHECK_ZERO_LEN               0
+#define STREAM_CHECK_ZERO_LEN               1
 /* StreamBuffer Memory IO States */
 #define STREAM_MEM_IO_DEFAULT               0
 #define STREAM_MEM_IO_CUSTOM                1
@@ -215,7 +227,26 @@ typedef struct {
     Stream_MemSetFn               set;
     Stream_MemReverseFn           reverse;
 } Stream_MemIO;
-
+/**
+ * @brief Stream Value container
+ */
+typedef union {
+    char        Char;
+    uint8_t     UInt8;
+    int8_t      Int8;
+    uint16_t    UInt16;
+    int16_t     Int16;
+    uint32_t    UInt32;
+    int32_t     Int32;
+    float       Float;
+#if STREAM_UINT64
+    uint64_t    UInt64;
+    int64_t     Int64;
+#endif // STREAM_UINT64
+#if STREAM_DOUBLE
+    double      Double;
+#endif // STREAM_DOUBLE
+} Stream_Value;
 /**
  * @brief StreamBuffer struct
  * contains everything need for handle stream
@@ -371,11 +402,17 @@ Stream_Result Stream_moveReadPos(StreamBuffer* stream, Stream_LenType steps);
 
 /* ------------------------------------ General Write APIs ---------------------------------- */
 Stream_Result Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_write(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenType len);
+#if STREAM_WRITE_REVERSE
+    Stream_Result Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+    Stream_Result Stream_write(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+#else
+    #define Stream_write(STREAM, VAL, LEN)        Stream_writeBytes((STREAM), (VAL), (LEN))
+#endif
 #if STREAM_WRITE_STREAM
     Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_LenType len);
+#endif
+#if STREAM_WRITE_PADDING
+    Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenType len);
 #endif
 /* ------------------------------------ Write Value APIs ---------------------------------- */
 //Stream_Result Stream_writeStr(StreamBuffer* stream, const char* val);
@@ -416,8 +453,13 @@ Stream_Result Stream_writeArray(StreamBuffer* stream, void* val, Stream_LenType 
 #endif // STREAM_WRITE_ARRAY
 /* ------------------------------------ General Read APIs ---------------------------------- */
 Stream_Result Stream_readBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
-Stream_Result Stream_read(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+Stream_Value  Stream_readValue(StreamBuffer* stream, Stream_LenType len);
+#if STREAM_READ_REVERSE
+    Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+    Stream_Result Stream_read(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
+#else
+    #define Stream_read(STREAM, VAL, LEN)         Stream_readBytes((STREAM), (VAL), (LEN))
+#endif
 #if STREAM_READ_STREAM
     Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenType len);
 #endif
@@ -439,20 +481,20 @@ Stream_Result Stream_read(StreamBuffer* stream, uint8_t* val, Stream_LenType len
     #define Stream_readDoubleSafe(STREAM, VAL)         Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
 #endif // STREAM_DOUBLE
 /* ------------------------------------ Read Value APIs ---------------------------------- */
-char     Stream_readChar(StreamBuffer* stream);
-uint8_t  Stream_readUInt8(StreamBuffer* stream);
-int8_t   Stream_readInt8(StreamBuffer* stream);
-uint16_t Stream_readUInt16(StreamBuffer* stream);
-int16_t  Stream_readInt16(StreamBuffer* stream);
-uint32_t Stream_readUInt32(StreamBuffer* stream);
-int32_t  Stream_readInt32(StreamBuffer* stream);
-float    Stream_readFloat(StreamBuffer* stream);
+#define Stream_readChar(STREAM)                         Stream_readValue((STREAM), sizeof(char)).Char
+#define Stream_readUInt8(STREAM)                        Stream_readValue((STREAM), sizeof(uint8_t)).UInt8
+#define Stream_readInt8(STREAM)                         Stream_readValue((STREAM), sizeof(int8_t)).Int8
+#define Stream_readUInt16(STREAM)                       Stream_readValue((STREAM), sizeof(uint16_t)).UInt16
+#define Stream_readInt16(STREAM)                        Stream_readValue((STREAM), sizeof(int16_t)).Int16
+#define Stream_readUInt32(STREAM)                       Stream_readValue((STREAM), sizeof(uint32_t)).UInt32
+#define Stream_readInt32(STREAM)                        Stream_readValue((STREAM), sizeof(int32_t)).Int32
+#define Stream_readFloat(STREAM)                        Stream_readValue((STREAM), sizeof(float)).Float
 #if STREAM_UINT64
-    uint64_t Stream_readUInt64(StreamBuffer* stream);
-    int64_t  Stream_readInt64(StreamBuffer* stream);
+    #define Stream_readUInt64(STREAM)                   Stream_readValue((STREAM), sizeof(uint64_t)).UInt64
+    #define Stream_readInt64(STREAM)                    Stream_readValue((STREAM), sizeof(int64_t)).Int64
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    double   Stream_readDouble(StreamBuffer* stream);
+    #define Stream_readDouble(STREAM)                   Stream_readValue((STREAM), sizeof(double)).Double
 #endif // STREAM_DOUBLE
 /* ------------------------------------ Read Value Array APIs ---------------------------------- */
 Stream_Result Stream_readArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len);
