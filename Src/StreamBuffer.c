@@ -59,18 +59,6 @@ static const Stream_GetBytesFn getBytesAt[2] = {
 
 #define __checkReverseOff(STREAM, VAL)     
 
-#define __getValueAt(TY, VAL_TY)    \
-VAL_TY   Stream_get ##TY ##At(StreamBuffer* stream, Stream_LenType index) { \
-    VAL_TY val = STREAM_READ_DEFAULT_VALUE; \
-    __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)); \
-    return val; \
-}
-
-#define __findValueAt(TY, VAL_TY, X)     \
-Stream_LenType Stream_find ##TY ##At(StreamBuffer* stream, Stream_LenType offset, VAL_TY val) { \
-    __checkReverse ##X (stream, val); \
-    return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val)); \
-}
 /* StreamBuffer MemIO default driver*/
 #if STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
 static const Stream_MemIO STREAM_DEFAULT_DRIVER = {
