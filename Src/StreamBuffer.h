@@ -29,7 +29,7 @@ extern "C" {
  * @brief you can enable ByteOrder option to have r/w operation
  * on what endian you need
  */
-#define STREAM_BYTE_ORDER                   0
+#define STREAM_BYTE_ORDER                   1
 #if STREAM_BYTE_ORDER
     /**
      * @brief save system byte order in static variable for avoid calculate each time
@@ -40,113 +40,113 @@ extern "C" {
 /**
  * @brief enable set limit for write functions
  */
-#define STREAM_WRITE_LIMIT                  0
+#define STREAM_WRITE_LIMIT                  1
 /**
  * @brief enable set limit for read operations
  */
-#define STREAM_READ_LIMIT                   0
+#define STREAM_READ_LIMIT                   1
 /**
  * @brief enable write lock feature
  */
-#define STREAM_WRITE_LOCK                   0
+#define STREAM_WRITE_LOCK                   1
 /**
  * @brief enable read lock feature
  */
-#define STREAM_READ_LOCK                    0
+#define STREAM_READ_LOCK                    1
 /**
  * @brief enable flip write feature
  */
-#define STREAM_WRITE_FLIP                   0
+#define STREAM_WRITE_FLIP                   1
 /**
  * @brief enable flip read feature
  */
-#define STREAM_READ_FLIP                    0
+#define STREAM_READ_FLIP                    1
 /**
  * @brief if your platform support 64bit variables and you need it
  * you can enable this option
  */
-#define STREAM_UINT64                       0
+#define STREAM_UINT64                       1
 /**
  * @brief if you need r/w double variables and your platform support
  * you can enable this option
  */
-#define STREAM_DOUBLE                       0
+#define STREAM_DOUBLE                       1
 /**
  * @brief if you need write array apis enable this option
  */
-#define STREAM_WRITE_ARRAY                  0
+#define STREAM_WRITE_ARRAY                  1
 /**
  * @brief if you need read array apis enable this option
  */
-#define STREAM_READ_ARRAY                   0
+#define STREAM_READ_ARRAY                   1
 /**
  * @brief if you need write stream apis enable this option
  */
-#define STREAM_WRITE_STREAM                 0
+#define STREAM_WRITE_STREAM                 1
 /**
  * @brief if you need read stream apis enable this option
  */
-#define STREAM_READ_STREAM                  0
+#define STREAM_READ_STREAM                  1
 /**
  * @brief enable write reverse functions
  */
-#define STREAM_WRITE_REVERSE                0
+#define STREAM_WRITE_REVERSE                1
 /**
  * @brief enable read reverse functions
  */
-#define STREAM_READ_REVERSE                 0
+#define STREAM_READ_REVERSE                 1
 /**
  * @brief enable write padding functions
  */
-#define STREAM_WRITE_PADDING                0
+#define STREAM_WRITE_PADDING                1
 /**
  * @brief enable getAt functions
  */
-#define STREAM_GET_AT_FUNCTIONS             0
+#define STREAM_GET_AT_FUNCTIONS             1
 /**
  * @brief enable getBytesReverseAt functions
  */
-#define STREAM_GET_AT_BYTES_REVERSE         0
+#define STREAM_GET_AT_BYTES_REVERSE         1
 /**
  * @brief enable getAtArray functions
  */
-#define STREAM_GET_AT_ARRAY                 0
+#define STREAM_GET_AT_ARRAY                 1
 /**
  * @brief enable get functions
  */
-#define STREAM_GET_FUNCTIONS                0
+#define STREAM_GET_FUNCTIONS                1
 /**
  * @brief enable getBytesReverse functions
  */
-#define STREAM_GET_BYTES_REVERSE            0
+#define STREAM_GET_BYTES_REVERSE            1
 /**
  * @brief enable getArray functions
  */
-#define STREAM_GET_ARRAY                    0
+#define STREAM_GET_ARRAY                    1
 /**
  * @brief enable findAt functions
  */
-#define STREAM_FIND_AT_FUNCTIONS            0
+#define STREAM_FIND_AT_FUNCTIONS            1
 /**
  * @brief enable find functions
  */
-#define STREAM_FIND_FUNCTIONS               0
+#define STREAM_FIND_FUNCTIONS               1
 /**
  * @brief enable readBytesUntilAt functions
  */
-#define STREAM_READ_UNTIL_AT                0
+#define STREAM_READ_UNTIL_AT                1
 /**
  * @brief enable readBytesUntil functions
  */
-#define STREAM_READ_UNTIL                   0
+#define STREAM_READ_UNTIL                   1
 /**
  * @brief enable cursor object for check how many bytes read or write
  */
-#define STREAM_CURSOR                       0
+#define STREAM_CURSOR                       1
 /**
  * @brief check len parameter in read/write functions
  */
-#define STREAM_CHECK_ZERO_LEN               0
+#define STREAM_CHECK_ZERO_LEN               1
 /* StreamBuffer Memory IO States */
 #define STREAM_MEM_IO_DEFAULT               0
 #define STREAM_MEM_IO_CUSTOM                1

@@ -46,23 +46,18 @@ static const Stream_GetBytesFn getBytesAt[2] = {
     #define __readBytes(STREAM, VAL, LEN)           readBytes[STREAM->OrderFn]((STREAM), (VAL), (LEN))
     #define __getBytesAt(STREAM, INDEX, VAL, LEN)   getBytesAt[STREAM->OrderFn]((STREAM), (INDEX), (VAL), (LEN))
 
-    #define __checkReverseOn(STREAM, VAL)           if (STREAM->OrderFn) {__memReverse((STREAM), &VAL, sizeof(VAL));}
+    #define __checkReverse(STREAM, VAL, LEN)        if (STREAM->OrderFn) {__memReverse((STREAM), &VAL, LEN);}
+    #define __checkReverseOn(STREAM, VAL)           __checkReverse(STREAM, VAL, sizeof(VAL))
 #else
     #define __writeBytes(STREAM, VAL, LEN)          Stream_writeBytes((STREAM), (VAL), (LEN))
     #define __readBytes(STREAM, VAL, LEN)           Stream_readBytes((STREAM), (VAL), (LEN))
     #define __getBytesAt(STREAM, INDEX, VAL, LEN)   Stream_getBytesAt((STREAM), (INDEX), (VAL), (LEN))
 
+    #define __checkReverse(STREAM, VAL, LEN)
     #define __checkReverseOn(STREAM, VAL)
 #endif // STREAM_BYTE_ORDER
 
 #define __checkReverseOff(STREAM, VAL)     
-
-#define __readValue(TY, VAL_TY)     \
-VAL_TY Stream_read ##TY(StreamBuffer* stream) { \
-    VAL_TY val = STREAM_READ_DEFAULT_VALUE; \
-    __readBytes(stream, (uint8_t*) &val, sizeof(val)); \
-    return val; \
-}
 
 #define __getValueAt(TY, VAL_TY)    \
 VAL_TY   Stream_get ##TY ##At(StreamBuffer* stream, Stream_LenType index) { \
@@ -1016,6 +1011,11 @@ Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenT
 #endif
 /* ------------------------------------ General GetAt APIs ---------------------------------- */
 #if STREAM_GET_AT_FUNCTIONS
+Stream_Value  Stream_getValueAt(StreamBuffer* stream, Stream_LenType index, Stream_LenType len) {
+    Stream_Value val = {0};
+    __getBytesAt(stream, index, (uint8_t*) &val, len);
+    return val;
+}
 Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
@@ -1042,6 +1042,7 @@ Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint
 
     return Stream_Ok;
 }
+#if STREAM_GET_AT_BYTES_REVERSE
 Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
@@ -1071,23 +1072,9 @@ Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType inde
 Stream_Result Stream_getAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
     return __getBytesAt(stream, index, val, len);
 }
+#endif // STREAM_GET_AT_BYTES_REVERSE
 /* ------------------------------------ GetAt Value Array APIs ---------------------------------- */
-__getValueAt(Char,   char)
-__getValueAt(UInt8,  uint8_t)
-__getValueAt(Int8,   int8_t)
-__getValueAt(UInt16, uint16_t)
-__getValueAt(Int16,  int16_t)
-__getValueAt(UInt32, uint32_t)
-__getValueAt(Int32,  int32_t)
-__getValueAt(Float,  float)
-#if STREAM_UINT64
-    __getValueAt(UInt64, uint64_t)
-    __getValueAt(Int64,  int64_t)
-#endif // STREAM_UINT64
-#if STREAM_DOUBLE
-    __getValueAt(Double, double)
-#endif // STREAM_DOUBLE
-/* ------------------------------------ GetAt Value Array APIs ---------------------------------- */
+#if STREAM_GET_AT_ARRAY
 Stream_Result Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index, void* val, Stream_LenType itemLen, Stream_LenType len) {
     Stream_Result result;
 #if STREAM_CHECK_ZERO_LEN
@@ -1108,6 +1095,7 @@ Stream_Result Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index, void
     }
     return Stream_Ok;
 }
+#endif // STREAM_GET_AT_ARRAY
 #endif // STREAM_GET_AT_FUNCTIONS
 /* ------------------------------------ Write Value Array APIs ---------------------------------- */
 #if STREAM_WRITE_ARRAY
@@ -1291,6 +1279,10 @@ void Stream_unlockReadIgnore(StreamBuffer* stream) {
 #endif // STREAM_READ_LOCK
 
 #if STREAM_FIND_AT_FUNCTIONS
+Stream_LenType Stream_findValueAt(StreamBuffer* stream, Stream_LenType offset, Stream_Value val, Stream_LenType len) {
+    __checkReverse(stream, val, len);
+    return Stream_findPatternAt(stream, offset, (uint8_t*) &val, len);
+}
 Stream_LenType Stream_findByteAt(StreamBuffer* stream, Stream_LenType offset, uint8_t val) {
     Stream_LenType tmpLen = 0;
     uint8_t* pStart = Stream_getReadPtrAt(stream, offset);
@@ -1357,22 +1349,6 @@ Stream_LenType Stream_readBytesUntilPatternAt(StreamBuffer* stream, Stream_LenTy
 
     return 0;
 }
-
-__findValueAt(Char,     char,     Off)
-__findValueAt(UInt8,    uint8_t,  Off)
-__findValueAt(Int8,     int8_t,   Off)
-__findValueAt(UInt16,   uint16_t, On)
-__findValueAt(Int16,    int16_t,  On)
-__findValueAt(UInt32,   uint32_t, On)
-__findValueAt(Int32,    int32_t,  On)
-__findValueAt(Float,    float,    On)
-#if STREAM_UINT64
-    __findValueAt(UInt64,   uint64_t, On)
-    __findValueAt(Int64,    int64_t, On)
-#endif // STREAM_UINT64
-#if STREAM_DOUBLE
-    __findValueAt(Double,    double, On)
-#endif // STREAM_DOUBLE
 #endif // STREAM_FIND_AT_FUNCTIONS
 /**
  * @brief compare a given bytes at index with available bytes in stream
