@@ -17,7 +17,7 @@ extern "C" {
 
 #define ISTREAM_VER_MAJOR    0
 #define ISTREAM_VER_MINOR    7
-#define ISTREAM_VER_FIX      0
+#define ISTREAM_VER_FIX      1
 
 #include "StreamBuffer.h"
 
@@ -157,20 +157,20 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_readStream(IN, OUT, LEN)                Stream_readStream(&((IN)->Buffer), &((OUT)->Buffer), (LEN))
 #endif
 /* ------------------------------------ Read Value Safe APIs ---------------------------------- */
-#define IStream_readCharSafe(STREAM)                        Stream_readCharSafe(&((STREAM)->Buffer))
-#define IStream_readUInt8Safe(STREAM)                       Stream_readUInt8Safe(&((STREAM)->Buffer))
-#define IStream_readInt8Safe(STREAM)                        Stream_readInt8Safe(&((STREAM)->Buffer))
-#define IStream_readUInt16Safe(STREAM)                      Stream_readUInt16Safe(&((STREAM)->Buffer))
-#define IStream_readInt16Safe(STREAM)                       Stream_readInt16Safe(&((STREAM)->Buffer))
-#define IStream_readUInt32Safe(STREAM)                      Stream_readUInt32Safe(&((STREAM)->Buffer))
-#define IStream_readInt32Safe(STREAM)                       Stream_readInt32Safe(&((STREAM)->Buffer))
-#define IStream_readFloatSafe(STREAM)                       Stream_readFloatSafe(&((STREAM)->Buffer))
+#define IStream_readCharSafe(STREAM, VAL)                   Stream_readCharSafe(&((STREAM)->Buffer), (VAL))
+#define IStream_readUInt8Safe(STREAM, VAL)                  Stream_readUInt8Safe(&((STREAM)->Buffer), (VAL))
+#define IStream_readInt8Safe(STREAM, VAL)                   Stream_readInt8Safe(&((STREAM)->Buffer), (VAL))
+#define IStream_readUInt16Safe(STREAM, VAL)                 Stream_readUInt16Safe(&((STREAM)->Buffer), (VAL))
+#define IStream_readInt16Safe(STREAM, VAL)                  Stream_readInt16Safe(&((STREAM)->Buffer), (VAL))
+#define IStream_readUInt32Safe(STREAM, VAL)                 Stream_readUInt32Safe(&((STREAM)->Buffer), (VAL))
+#define IStream_readInt32Safe(STREAM, VAL)                  Stream_readInt32Safe(&((STREAM)->Buffer), (VAL))
+#define IStream_readFloatSafe(STREAM, VAL)                  Stream_readFloatSafe(&((STREAM)->Buffer), (VAL))
 #if STREAM_UINT64
-    #define IStream_readUInt64Safe(STREAM)                  Stream_readUInt64Safe(&((STREAM)->Buffer))
-    #define IStream_readInt64Safe(STREAM)                   Stream_readInt64Safe(&((STREAM)->Buffer))
+    #define IStream_readUInt64Safe(STREAM, VAL)             Stream_readUInt64Safe(&((STREAM)->Buffer), (VAL))
+    #define IStream_readInt64Safe(STREAM, VAL)              Stream_readInt64Safe(&((STREAM)->Buffer), (VAL))
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    #define IStream_readDoubleSafe(STREAM)                  Stream_readDoubleSafe(&((STREAM)->Buffer))
+    #define IStream_readDoubleSafe(STREAM, VAL)             Stream_readDoubleSafe(&((STREAM)->Buffer), (VAL))
 #endif // STREAM_DOUBLE
 /* ------------------------------------ Read Value APIs ---------------------------------- */
 #define IStream_readChar(STREAM)                            Stream_readChar(&((STREAM)->Buffer))
@@ -392,4 +392,4 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 };
 #endif
 
-#endif /* _INPUT_STREAM_H_ */
+#endif // _INPUT_STREAM_H_
