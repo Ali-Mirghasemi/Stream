@@ -208,7 +208,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #endif // STREAM_DOUBLE
 #endif // STREAM_READ_ARRAY
 /* ------------------------------------ General GetAt APIs ---------------------------------- */
-#if STREAM_GET_AT_FUNCTIONS
+#if STREAM_GET_AT
 #define IStream_getValueAt(STREAM, LEN, IDX)                Stream_getValueAt(&((STREAM)->Buffer), (LEN), (IDX))
 #define IStream_getBytesAt(STREAM, IXD, VAL, LEN)           Stream_getBytesAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
 #if STREAM_GET_AT_BYTES_REVERSE
@@ -268,9 +268,9 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_getDoubleArrayAt(STREAM,IDX,VAL,LEN)    Stream_getDoubleArrayAt(&((STREAM)->Buffer), (IDX), (VAL), (LEN))
 #endif // STREAM_DOUBLE
 #endif // STREAM_GET_AT_ARRAY
-#endif // STREAM_GET_AT_FUNCTIONS
+#endif // STREAM_GET_AT
 /* ------------------------------------ General Get APIs ---------------------------------- */
-#if STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
+#if STREAM_GET_AT && STREAM_GET
 #define IStream_getValue(STREAM, LEN)                       Stream_getValue(&((STREAM)->Buffer), (LEN))
 #define IStream_getBytes(STREAM, VAL, LEN)                  Stream_getBytes((STREAM), (VAL), (LEN))
 #if STREAM_GET_BYTES_REVERSE
@@ -330,9 +330,9 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
     #define IStream_getDoubleArray(STREAM,VAL,LEN)          Stream_getDoubleArray(&((STREAM)->Buffer), (VAL), (LEN))
 #endif // STREAM_DOUBLE
 #endif // STREAM_GET_ARRAY
-#endif // STREAM_GET_AT_FUNCTIONS && STREAM_GET_FUNCTIONS
+#endif // STREAM_GET_AT && STREAM_GET
 /* ------------------------------------ General Find At APIs ---------------------------------- */
-#if STREAM_FIND_AT_FUNCTIONS
+#if STREAM_FIND_AT
     #define IStream_findValueAt(STREAM, OFFSET, VAL, LEN)           Stream_findValueAt(&((STREAM)->Buffer), (OFFSET), (VAL), (LEN))
     #define IStream_findByteAt(STREAM, OFFSET, VAL)                 Stream_findByteAt(&((STREAM)->Buffer), (OFFSET), (VAL))
     #define IStream_findPatternAt(STREAM, OFFSET, PAT, PAT_LEN)     Stream_findPatternAt(&((STREAM)->Buffer), (OFFSET), (PAT), (PAT_LEN))
@@ -352,9 +352,9 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #if STREAM_DOUBLE
     #define IStream_findDoubleAt(STREAM, OFFSET, VAL)               Stream_findDoubleAt(&((STREAM)->Buffer), (OFFSET), (VAL))
 #endif // STREAM_DOUBLE
-#endif // STREAM_FIND_AT_FUNCTIONS
+#endif // STREAM_FIND_AT
 /* ------------------------------------ General Find APIs ---------------------------------- */
-#if STREAM_FIND_FUNCTIONS && STREAM_FIND_AT_FUNCTIONS
+#if STREAM_FIND && STREAM_FIND_AT
     #define IStream_findValue(STREAM, VAL, LEN)                     Stream_findValue(&((STREAM)->Buffer), (VAL), (LEN))
     #define IStream_findByte(STREAM, VAL)                           Stream_findByte(&((STREAM)->Buffer), (VAL))
     #define IStream_findPattern(STREAM, PAT, PAT_LEN)               Stream_findPattern(&((STREAM)->Buffer), (PAT), (PAT_LEN))
@@ -373,7 +373,7 @@ Stream_LenType IStream_incomingBytes(IStream* stream);
 #if STREAM_DOUBLE
     #define IStream_findDouble(STREAM, VAL)                         Stream_findDouble(&((STREAM)->Buffer), (VAL))
 #endif // STREAM_DOUBLE
-#endif // STREAM_FIND_FUNCTIONS && STREAM_FIND_AT_FUNCTIONS
+#endif // STREAM_FIND && STREAM_FIND_AT
 /* ------------------------------------ Read Bytes Until At APIs ---------------------------------- */
 #if STREAM_READ_UNTIL_AT
 #define IStream_readBytesUntilAt(STREAM, OFFSET, END, VAL, LEN)                     Stream_readBytesUntilAt(&((STREAM)->Buffer), (OFFSET), (END), (VAL), (LEN))
