@@ -22,55 +22,65 @@
 #endif // STREAM_MEM_IO
 
 /* private typedef */
-#if STREAM_BYTE_ORDER && STREAM_WRITE_REVERSE && STREAM_READ_REVERSE
 typedef Stream_Result (*Stream_WriteBytesFn)(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 typedef Stream_Result (*Stream_ReadBytesFn)(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 typedef Stream_Result (*Stream_GetBytesFn)(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
+typedef Stream_Result (*Stream_SetBytesFn)(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len);
 /* private variables */
+#if STREAM_WRITE_REVERSE
 static const Stream_WriteBytesFn writeBytes[2] = {
     Stream_writeBytes,
     Stream_writeBytesReverse,
 };
+
+    #define __writeBytes(STREAM, VAL, LEN)          writeBytes[STREAM->OrderFn]((STREAM), (VAL), (LEN))    
+#else
+    #define __writeBytes(STREAM, VAL, LEN)          Stream_writeBytes((STREAM), (VAL), (LEN))
+#endif // STREAM_BYTE_ORDER
+
+#if STREAM_READ_REVERSE
 static const Stream_ReadBytesFn readBytes[2] = {
     Stream_readBytes,
     Stream_readBytesReverse,
 };
-#if STREAM_GET_AT_FUNCTIONS
+
+    #define __readBytes(STREAM, VAL, LEN)           readBytes[STREAM->OrderFn]((STREAM), (VAL), (LEN))
+#else
+    #define __readBytes(STREAM, VAL, LEN)           Stream_readBytes((STREAM), (VAL), (LEN))
+#endif
+
+#if STREAM_GET_AT_BYTES_REVERSE
 static const Stream_GetBytesFn getBytesAt[2] = {
     Stream_getBytesAt,
     Stream_getBytesReverseAt,
 };
-#endif // STREAM_GET_AT_FUNCTIONS
 
-    #define __writeBytes(STREAM, VAL, LEN)          writeBytes[STREAM->OrderFn]((STREAM), (VAL), (LEN))
-    #define __readBytes(STREAM, VAL, LEN)           readBytes[STREAM->OrderFn]((STREAM), (VAL), (LEN))
     #define __getBytesAt(STREAM, INDEX, VAL, LEN)   getBytesAt[STREAM->OrderFn]((STREAM), (INDEX), (VAL), (LEN))
+#else
+    #define __getBytesAt(STREAM, INDEX, VAL, LEN)   Stream_getBytesAt((STREAM), (INDEX), (VAL), (LEN))
+#endif // STREAM_GET_AT
 
+#if STREAM_SET_AT_BYTES_REVERSE
+static const Stream_SetBytesFn setBytesAt[2] = {
+    Stream_setBytesAt,
+    Stream_setBytesReverseAt,
+};
+
+    #define __setBytesAt(STREAM, INDEX, VAL, LEN)   setBytesAt[STREAM->OrderFn]((STREAM), (INDEX), (VAL), (LEN))
+#else
+    #define __setBytesAt(STREAM, INDEX, VAL, LEN)   Stream_setBytesAt((STREAM), (INDEX), (VAL), (LEN))
+#endif // STREAM_SET_AT
+
+#if STREAM_FIND_AT_VALUE
     #define __checkReverse(STREAM, VAL, LEN)        if (STREAM->OrderFn) {__memReverse((STREAM), &VAL, LEN);}
     #define __checkReverseOn(STREAM, VAL)           __checkReverse(STREAM, VAL, sizeof(VAL))
+    #define __checkReverseOff(STREAM, VAL)
 #else
-    #define __writeBytes(STREAM, VAL, LEN)          Stream_writeBytes((STREAM), (VAL), (LEN))
-    #define __readBytes(STREAM, VAL, LEN)           Stream_readBytes((STREAM), (VAL), (LEN))
-    #define __getBytesAt(STREAM, INDEX, VAL, LEN)   Stream_getBytesAt((STREAM), (INDEX), (VAL), (LEN))
-
     #define __checkReverse(STREAM, VAL, LEN)
     #define __checkReverseOn(STREAM, VAL)
-#endif // STREAM_BYTE_ORDER
+    #define __checkReverseOff(STREAM, VAL)
+#endif // STREAM_FIND_AT_VALUE
 
-#define __checkReverseOff(STREAM, VAL)     
-
-#define __getValueAt(TY, VAL_TY)    \
-VAL_TY   Stream_get ##TY ##At(StreamBuffer* stream, Stream_LenType index) { \
-    VAL_TY val = STREAM_READ_DEFAULT_VALUE; \
-    __getBytesAt(stream, index, (uint8_t*) &val, sizeof(val)); \
-    return val; \
-}
-
-#define __findValueAt(TY, VAL_TY, X)     \
-Stream_LenType Stream_find ##TY ##At(StreamBuffer* stream, Stream_LenType offset, VAL_TY val) { \
-    __checkReverse ##X (stream, val); \
-    return Stream_findPatternAt(stream, offset, (uint8_t*) &val, sizeof(val)); \
-}
 /* StreamBuffer MemIO default driver*/
 #if STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
 static const Stream_MemIO STREAM_DEFAULT_DRIVER = {
@@ -858,17 +868,6 @@ Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenT
 #endif // STREAM_WRITE_PADDING
 /* ------------------------------------ General Read APIs ---------------------------------- */
 /**
- * @brief read value from buffer based on byte order
- * 
- * @param stream 
- * @return Stream_Value 
- */
-Stream_Value  Stream_readValue(StreamBuffer* stream, Stream_LenType len) {
-    Stream_Value val = {0};
-    __readBytes(stream, (uint8_t*) &val, len);
-    return val;
-}
-/**
  * @brief read bytes form stream, if possible
  *
  * @param stream
@@ -1009,17 +1008,25 @@ Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenT
     return Stream_Ok;
 }
 #endif
-/* ------------------------------------ General GetAt APIs ---------------------------------- */
-#if STREAM_GET_AT_FUNCTIONS
-Stream_Value  Stream_getValueAt(StreamBuffer* stream, Stream_LenType index, Stream_LenType len) {
+#if STREAM_READ_VALUE
+/**
+ * @brief read value from buffer based on byte order
+ * 
+ * @param stream 
+ * @return Stream_Value 
+ */
+Stream_Value  Stream_readValue(StreamBuffer* stream, Stream_LenType len) {
     Stream_Value val = {0};
-    __getBytesAt(stream, index, (uint8_t*) &val, len);
+    __readBytes(stream, (uint8_t*) &val, len);
     return val;
 }
+#endif // STREAM_READ_VALUE
+/* ------------------------------------ General GetAt APIs ---------------------------------- */
+#if STREAM_GET_AT
 Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
     if (len == 0) {
-      return Stream_ZeroLen;
+        return Stream_ZeroLen;
     }
 #endif
     if (Stream_available(stream) - index < len) {
@@ -1035,13 +1042,19 @@ Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint
         len -= tmpLen;
         __memCopy(stream, val, &stream->Data[index], tmpLen);
         val += tmpLen;
-        index = (index + tmpLen) % stream->Size;
+        index = 0;
     }
-
-    __memCopy(stream, val, &stream->Data[index], len);
-
+#if STREAM_CHECK_ZERO_LEN
+    if (len > 0) {
+#endif
+        __memCopy(stream, val, &stream->Data[index], len);
+#if STREAM_CHECK_ZERO_LEN
+    }
+#endif
+    
     return Stream_Ok;
 }
+#endif // STREAM_GET_AT
 #if STREAM_GET_AT_BYTES_REVERSE
 Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
 #if STREAM_CHECK_ZERO_LEN
@@ -1060,12 +1073,17 @@ Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType inde
 
         tmpLen = stream->Size - index;
         len -= tmpLen;
-        __memCopyReverse(stream, val, &stream->Data[index + len], tmpLen);
-        val += tmpLen;
-        index = (index + tmpLen) % stream->Size;
+        __memCopyReverse(stream, val + len, &stream->Data[index], tmpLen);
+        index = 0;
     }
 
-    __memCopyReverse(stream, val, &stream->Data[index], len);
+#if STREAM_CHECK_ZERO_LEN
+    if (len > 0) {
+#endif
+        __memCopyReverse(stream, val, &stream->Data[index], len);
+#if STREAM_CHECK_ZERO_LEN
+    }
+#endif
 
     return Stream_Ok;
 }
@@ -1073,6 +1091,13 @@ Stream_Result Stream_getAt(StreamBuffer* stream, Stream_LenType index, uint8_t* 
     return __getBytesAt(stream, index, val, len);
 }
 #endif // STREAM_GET_AT_BYTES_REVERSE
+#if STREAM_GET_AT_VALUE
+Stream_Value  Stream_getValueAt(StreamBuffer* stream, Stream_LenType index, Stream_LenType len) {
+    Stream_Value val = {0};
+    __getBytesAt(stream, index, (uint8_t*) &val, len);
+    return val;
+}
+#endif // STREAM_GET_AT_VALUE
 /* ------------------------------------ GetAt Value Array APIs ---------------------------------- */
 #if STREAM_GET_AT_ARRAY
 Stream_Result Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index, void* val, Stream_LenType itemLen, Stream_LenType len) {
@@ -1096,7 +1121,6 @@ Stream_Result Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index, void
     return Stream_Ok;
 }
 #endif // STREAM_GET_AT_ARRAY
-#endif // STREAM_GET_AT_FUNCTIONS
 /* ------------------------------------ Write Value Array APIs ---------------------------------- */
 #if STREAM_WRITE_ARRAY
 Stream_Result Stream_writeArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len) {
@@ -1119,6 +1143,98 @@ Stream_Result Stream_writeArray(StreamBuffer* stream, void* val, Stream_LenType 
     return Stream_Ok;
 }
 #endif
+/* --------------------------------------- Set API------------------------------------------ */
+#if STREAM_SET_AT
+Stream_Result Stream_setBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+        return Stream_ZeroLen;
+    }
+#endif
+    if (Stream_available(stream) - index < len) {
+        return Stream_NoAvailable;
+    }
+
+    index = (stream->RPos + index) % stream->Size;
+
+    if (index + len >= stream->Size) {
+        Stream_LenType tmpLen;
+
+        tmpLen = stream->Size - index;
+        len -= tmpLen;
+        __memCopy(stream, &stream->Data[index], val, tmpLen);
+        val += tmpLen;
+        index = (index + tmpLen) % stream->Size;
+    }
+#if STREAM_CHECK_ZERO_LEN
+    if (len > 0) {
+#endif
+        __memCopy(stream, &stream->Data[index], val, len);
+#if STREAM_CHECK_ZERO_LEN
+    }
+#endif
+    
+    return Stream_Ok;
+}
+#if STREAM_SET_AT_BYTES_REVERSE
+Stream_Result   Stream_setBytesReverseAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+        return Stream_ZeroLen;
+    }
+#endif
+    if (Stream_available(stream) - index < len) {
+        return Stream_NoAvailable;
+    }
+
+    index = (stream->RPos + index) % stream->Size;
+
+    if (index + len >= stream->Size) {
+        Stream_LenType tmpLen;
+
+        tmpLen = stream->Size - index;
+        len -= tmpLen;
+        __memCopyReverse(stream, &stream->Data[index], val + len, tmpLen);
+        index = 0;
+    }
+#if STREAM_CHECK_ZERO_LEN
+    if (len > 0) {
+#endif
+        __memCopyReverse(stream, &stream->Data[index], val, len);
+#if STREAM_CHECK_ZERO_LEN
+    }
+#endif
+    
+    return Stream_Ok;
+}
+Stream_Result Stream_setAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
+    return __setBytesAt(stream, index, val, len);
+}
+#endif // STREAM_SET_AT_BYTES_REVERSE
+#endif // STREAM_SET_AT
+/* ------------------------------------ SetAt Value Array APIs ---------------------------------- */
+#if STREAM_SET_AT_ARRAY
+Stream_Result Stream_setArrayAt(StreamBuffer* stream, Stream_LenType index, void* val, Stream_LenType itemLen, Stream_LenType len) {
+    Stream_Result result;
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0 || itemLen == 0) {
+      return Stream_ZeroLen;
+    }
+#endif
+    if (Stream_space(stream) - index < len * itemLen) {
+        return Stream_NoSpace;
+    }
+
+    while (len-- > 0) {
+        if ((result = Stream_setAt(stream, index, (uint8_t*) val, itemLen)) != Stream_Ok) {
+            return result;
+        }
+        val = (uint8_t*) val + itemLen;
+        index += itemLen;
+    }
+    return Stream_Ok;
+}
+#endif // STREAM_SET_AT_ARRAY
 /* ------------------------------------ Read Value Array APIs ----------------------------------- */
 Stream_Result Stream_readArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len) {
     Stream_Result result;
@@ -1278,7 +1394,7 @@ void Stream_unlockReadIgnore(StreamBuffer* stream) {
 }
 #endif // STREAM_READ_LOCK
 
-#if STREAM_FIND_AT_FUNCTIONS
+#if STREAM_FIND_AT
 Stream_LenType Stream_findValueAt(StreamBuffer* stream, Stream_LenType offset, Stream_Value val, Stream_LenType len) {
     __checkReverse(stream, val, len);
     return Stream_findPatternAt(stream, offset, (uint8_t*) &val, len);
@@ -1315,6 +1431,7 @@ Stream_LenType Stream_findPatternAt(StreamBuffer* stream, Stream_LenType offset,
 
     return offset;
 }
+#if STREAM_READ_UNTIL_AT
 Stream_LenType Stream_readBytesUntilAt(StreamBuffer* stream, Stream_LenType offset, uint8_t end, uint8_t* val, Stream_LenType len) {
     Stream_LenType tmpLen;
     // find end byte
@@ -1349,7 +1466,79 @@ Stream_LenType Stream_readBytesUntilPatternAt(StreamBuffer* stream, Stream_LenTy
 
     return 0;
 }
-#endif // STREAM_FIND_AT_FUNCTIONS
+#endif // STREAM_READ_UNTIL_AT
+#endif // STREAM_FIND_AT
+/* ------------------------------------ Transpose APIs ---------------------------------- */
+#if STREAM_TRANSPOSE
+/**
+ * @brief Transpose a given bytes at index with available bytes in stream
+ * 
+ * @param stream 
+ * @param offset 
+ * @param len 
+ * @param tmpBuf 
+ * @param chunkLen 
+ * @param transpose 
+ * @param args
+ * @return Stream_Result 
+ */
+Stream_Result Stream_transposeAt(StreamBuffer* stream, Stream_LenType offset, Stream_LenType len, uint8_t* tmpBuf, Stream_LenType chunkLen, Stream_TransposeFn transpose, void* args) {
+    Stream_LenType dirLen;
+    Stream_LenType tmpLen;
+    Stream_LenType rpos;
+    Stream_Result res;
+
+#if STREAM_CHECK_ZERO_LEN
+    if (len == 0) {
+        return Stream_ZeroLen;
+    }
+#endif
+
+    if (Stream_available(stream) - offset < len) {
+        return Stream_NoAvailable;
+    }
+
+    if (chunkLen == 0) {
+        chunkLen = len;
+    }
+
+    rpos = (stream->RPos + offset) % stream->Size;
+
+    while (len > 0) {
+        dirLen = Stream_directAvailableAt(stream, offset);
+        // Check for Zero-Copy
+        if (dirLen >= chunkLen || tmpBuf == NULL) {
+            tmpLen = dirLen >= chunkLen ? chunkLen : dirLen;
+            // Use zero copy method
+            if ((res = transpose(args, &stream->Data[rpos], tmpLen)) != Stream_Ok) {
+                return res;
+            }
+        }
+        else {
+            tmpLen = len >= chunkLen ? chunkLen : len;
+            // Copy data to tmp buffer
+            if ((res = Stream_getBytesAt(stream, offset, tmpBuf, tmpLen)) != Stream_Ok) {
+                return res;
+            }
+            // Transpose data
+            if ((res = transpose(args, tmpBuf, tmpLen)) != Stream_Ok) {
+                return res;
+            }
+            // Write back to stream
+            if ((res = Stream_setBytesAt(stream, offset, tmpBuf, tmpLen)) != Stream_Ok) {
+                return res;
+            }
+        }
+
+        len -= tmpLen;
+        offset += tmpLen;
+        rpos = (rpos + tmpLen) % stream->Size;
+    }
+
+    return Stream_Ok;
+}
+#endif
+/* ------------------------------------ Compare APIs ---------------------------------- */
 /**
  * @brief compare a given bytes at index with available bytes in stream
  *
