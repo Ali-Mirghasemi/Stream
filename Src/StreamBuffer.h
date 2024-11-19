@@ -596,7 +596,7 @@ Stream_Result       Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream
     Stream_Result   Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
     Stream_Result   Stream_write(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
 #else
-    #define Stream_write(STREAM, VAL, LEN)        Stream_writeBytes((STREAM), (VAL), (LEN))
+    #define         Stream_write(STREAM, VAL, LEN)                          Stream_writeBytes((STREAM), (VAL), (LEN))
 #endif
 #if STREAM_WRITE_STREAM
     Stream_Result   Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_LenType len);
@@ -808,8 +808,8 @@ Stream_Result       Stream_setArrayAt(StreamBuffer* stream, Stream_LenType index
 #if STREAM_DOUBLE
     #define         Stream_setDoubleArray(STREAM, IDX, VAL, LEN)            Stream_setArrayAt((STREAM), 0, (VAL), sizeof(double), (LEN))
 #endif
-#endif // STREAM_SET_AT_VALUE
-#endif // STREAM_SET_AT_ARRAY
+#endif // STREAM_SET_VALUE
+#endif // STREAM_SET_ARRAY
 /* ------------------------------------ General Read APIs ---------------------------------- */
 #if STREAM_READ
 Stream_Result       Stream_readBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
