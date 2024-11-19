@@ -639,31 +639,31 @@ Stream_Result       Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream
 #if STREAM_WRITE_ARRAY
 Stream_Result       Stream_writeArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len);
 #if STREAM_WRITE_VALUE
-    #define         Stream_writeValueArray(STREAM, VAL, LEN)                Stream_writeArray((STREAM), VAL, sizeof(Stream_Value), LEN)
+    #define         Stream_writeValueArray(STREAM, VAL, LEN)                Stream_writeArray((STREAM), (VAL), sizeof(Stream_Value), LEN)
 #if STREAM_CHAR
-    #define         Stream_writeCharArray(STREAM, VAL, LEN)                 Stream_writeArray((STREAM), VAL, sizeof(char), LEN)
+    #define         Stream_writeCharArray(STREAM, VAL, LEN)                 Stream_writeBytes((STREAM), (uint8_t*) (VAL), LEN)
 #endif
 #if STREAM_UINT8
-    #define         Stream_writeUInt8Array(STREAM, VAL, LEN)                Stream_writeArray((STREAM), VAL, sizeof(uint8_t), LEN)
-    #define         Stream_writeInt8Array(STREAM, VAL, LEN)                 Stream_writeArray((STREAM), VAL, sizeof(int8_t), LEN)
+    #define         Stream_writeUInt8Array(STREAM, VAL, LEN)                Stream_writeBytes((STREAM), (uint8_t*) (VAL), LEN)
+    #define         Stream_writeInt8Array(STREAM, VAL, LEN)                 Stream_writeBytes((STREAM), (uint8_t*) (VAL), LEN)
 #endif
 #if STREAM_UINT16
-    #define         Stream_writeUInt16Array(STREAM, VAL, LEN)               Stream_writeArray((STREAM), VAL, sizeof(uint16_t), LEN)
-    #define         Stream_writeInt16Array(STREAM, VAL, LEN)                Stream_writeArray((STREAM), VAL, sizeof(int16_t), LEN)
+    #define         Stream_writeUInt16Array(STREAM, VAL, LEN)               Stream_writeArray((STREAM), (VAL), sizeof(uint16_t), LEN)
+    #define         Stream_writeInt16Array(STREAM, VAL, LEN)                Stream_writeArray((STREAM), (VAL), sizeof(int16_t), LEN)
 #endif
 #if STREAM_UINT32
-    #define         Stream_writeUInt32Array(STREAM, VAL, LEN)               Stream_writeArray((STREAM), VAL, sizeof(uint32_t), LEN)
-    #define         Stream_writeInt32Array(STREAM, VAL, LEN)                Stream_writeArray((STREAM), VAL, sizeof(int32_t), LEN)
+    #define         Stream_writeUInt32Array(STREAM, VAL, LEN)               Stream_writeArray((STREAM), (VAL), sizeof(uint32_t), LEN)
+    #define         Stream_writeInt32Array(STREAM, VAL, LEN)                Stream_writeArray((STREAM), (VAL), sizeof(int32_t), LEN)
 #endif
 #if STREAM_UINT64
-    #define         Stream_writeUInt64Array(STREAM, VAL, LEN)               Stream_writeArray((STREAM), VAL, sizeof(uint64_t), LEN)
-    #define         Stream_writeInt64Array(STREAM, VAL, LEN)                Stream_writeArray((STREAM), VAL, sizeof(int64_t), LEN)
+    #define         Stream_writeUInt64Array(STREAM, VAL, LEN)               Stream_writeArray((STREAM), (VAL), sizeof(uint64_t), LEN)
+    #define         Stream_writeInt64Array(STREAM, VAL, LEN)                Stream_writeArray((STREAM), (VAL), sizeof(int64_t), LEN)
 #endif
 #if STREAM_FLOAT
-    #define         Stream_writeFloatArray(STREAM, VAL, LEN)                Stream_writeArray((STREAM), VAL, sizeof(float), LEN)
+    #define         Stream_writeFloatArray(STREAM, VAL, LEN)                Stream_writeArray((STREAM), (VAL), sizeof(float), LEN)
 #endif
 #if STREAM_DOUBLE
-    #define         Stream_writeDoubleArray(STREAM, VAL, LEN)               Stream_writeArray((STREAM), VAL, sizeof(double), LEN)
+    #define         Stream_writeDoubleArray(STREAM, VAL, LEN)               Stream_writeArray((STREAM), (VAL), sizeof(double), LEN)
 #endif
 #endif // STREAM_WRITE_VALUE
 #endif // STREAM_WRITE_ARRAY
@@ -712,11 +712,11 @@ Stream_Result       Stream_setArrayAt(StreamBuffer* stream, Stream_LenType index
 #if STREAM_SET_AT_VALUE
     #define         Stream_setValueArrayAt(STREAM, IDX, VAL, LEN)           Stream_setArrayAt((STREAM), (IDX), (VAL), sizeof(Stream_Value), (LEN))
 #if STREAM_CHAR
-    #define         Stream_setCharArrayAt(STREAM, IDX, VAL, LEN)            Stream_setArrayAt((STREAM), (IDX), (VAL), sizeof(char), (LEN))
+    #define         Stream_setCharArrayAt(STREAM, IDX, VAL, LEN)            Stream_setBytesAt((STREAM), (IDX), (uint8_t*) (VAL), (LEN))
 #endif
 #if STREAM_UINT8
-    #define         Stream_setUInt8ArrayAt(STREAM, IDX, VAL, LEN)           Stream_setArrayAt((STREAM), (IDX), (VAL), sizeof(uint8_t), (LEN))
-    #define         Stream_setInt8ArrayAt(STREAM, IDX, VAL, LEN)            Stream_setArrayAt((STREAM), (IDX), (VAL), sizeof(int8_t), (LEN))
+    #define         Stream_setUInt8ArrayAt(STREAM, IDX, VAL, LEN)           Stream_setBytesAt((STREAM), (IDX), (uint8_t*) (VAL), (LEN))
+    #define         Stream_setInt8ArrayAt(STREAM, IDX, VAL, LEN)            Stream_setBytesAt((STREAM), (IDX), (uint8_t*) (VAL), (LEN))
 #endif
 #if STREAM_UINT16
     #define         Stream_setUInt16ArrayAt(STREAM, IDX, VAL, LEN)          Stream_setArrayAt((STREAM), (IDX), (VAL), sizeof(uint16_t), (LEN))
@@ -784,11 +784,11 @@ Stream_Result       Stream_setArrayAt(StreamBuffer* stream, Stream_LenType index
 #if STREAM_SET_AT_VALUE
     #define         Stream_setValueArray(STREAM, IDX, VAL, LEN)             Stream_setArrayAt((STREAM), 0, (VAL), sizeof(Stream_Value), (LEN))
 #if STREAM_CHAR
-    #define         Stream_setCharArray(STREAM, IDX, VAL, LEN)              Stream_setArrayAt((STREAM), 0, (VAL), sizeof(char), (LEN))
+    #define         Stream_setCharArray(STREAM, IDX, VAL, LEN)              Stream_setBytesAt((STREAM), 0, (uint8_t*) (VAL), (LEN))
 #endif
 #if STREAM_UINT8
-    #define         Stream_setUInt8Array(STREAM, IDX, VAL, LEN)             Stream_setArrayAt((STREAM), 0, (VAL), sizeof(uint8_t), (LEN))
-    #define         Stream_setInt8Array(STREAM, IDX, VAL, LEN)              Stream_setArrayAt((STREAM), 0, (VAL), sizeof(int8_t), (LEN))
+    #define         Stream_setUInt8Array(STREAM, IDX, VAL, LEN)             Stream_setBytesAt((STREAM), 0, (uint8_t*) (VAL), (LEN))
+    #define         Stream_setInt8Array(STREAM, IDX, VAL, LEN)              Stream_setBytesAt((STREAM), 0, (uint8_t*) (VAL), (LEN))
 #endif
 #if STREAM_UINT16
     #define         Stream_setUInt16Array(STREAM, IDX, VAL, LEN)            Stream_setArrayAt((STREAM), 0, (VAL), sizeof(uint16_t), (LEN))
@@ -854,31 +854,31 @@ Stream_Value        Stream_readValue(StreamBuffer* stream, Stream_LenType len);
 #endif // STREAM_READ_VALUE
 /* ------------------------------------ Read Value Safe APIs ---------------------------------- */
 #if STREAM_READ_VALUE_SAFE
-    #define Stream_readValueSafe(STREAM, VAL, LEN)                          Stream_readValue((STREAM), (uint8_t*) &VAL, LEN)
+    #define         Stream_readValueSafe(STREAM, VAL, LEN)                  Stream_readValue((STREAM), (uint8_t*) &VAL, LEN)
 #if STREAM_CHAR
-    #define         Stream_readCharSafe(STREAM, VAL)                        Stream_readBytes((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define         Stream_readCharSafe(STREAM, VAL)                        Stream_readBytes((STREAM), (uint8_t*) &VAL, sizeof(char))
 #endif
 #if STREAM_UINT8
-    #define         Stream_readUInt8Safe(STREAM, VAL)                       Stream_readBytes((STREAM), (uint8_t*) &VAL, sizeof(VAL))
-    #define         Stream_readInt8Safe(STREAM, VAL)                        Stream_readBytes((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define         Stream_readUInt8Safe(STREAM, VAL)                       Stream_readBytes((STREAM), (uint8_t*) &VAL, sizeof(uint8_t))
+    #define         Stream_readInt8Safe(STREAM, VAL)                        Stream_readBytes((STREAM), (uint8_t*) &VAL, sizeof(int8_t))
 #endif
 #if STREAM_UINT16
-    #define         Stream_readUInt16Safe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
-    #define         Stream_readInt16Safe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define         Stream_readUInt16Safe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(uint16_t))
+    #define         Stream_readInt16Safe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(int16_t))
 #endif
 #if STREAM_UINT32
-    #define         Stream_readUInt32Safe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
-    #define         Stream_readInt32Safe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define         Stream_readUInt32Safe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(uint32_t))
+    #define         Stream_readInt32Safe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(int32_t))
 #endif
 #if STREAM_UINT64
-    #define         Stream_readUInt64Safe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
-    #define         Stream_readInt64Safe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define         Stream_readUInt64Safe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(uint64_t))
+    #define         Stream_readInt64Safe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(int64_t))
 #endif
 #if STREAM_FLOAT
-    #define         Stream_readFloatSafe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define         Stream_readFloatSafe(STREAM, VAL)                       Stream_read((STREAM), (uint8_t*) &VAL, sizeof(float))
 #endif
 #if STREAM_DOUBLE
-    #define         Stream_readDoubleSafe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(VAL))
+    #define         Stream_readDoubleSafe(STREAM, VAL)                      Stream_read((STREAM), (uint8_t*) &VAL, sizeof(double))
 #endif
 #endif // STREAM_READ_VALUE_SAFE
 /* ------------------------------------ Read Value Array APIs ---------------------------------- */
@@ -887,11 +887,11 @@ Stream_Result       Stream_readArray(StreamBuffer* stream, void* val, Stream_Len
 #if STREAM_READ_VALUE
     #define         Stream_readValueArray(STREAM, VAL, LEN)                 Stream_readArray((STREAM), VAL, sizeof(Stream_Value), LEN)
 #if STREAM_CHAR
-    #define         Stream_readCharArray(STREAM, VAL, LEN)                  Stream_readArray((STREAM), VAL, sizeof(char), LEN)
+    #define         Stream_readCharArray(STREAM, VAL, LEN)                  Stream_readBytes((STREAM), (uint8_t*) VAL, LEN)
 #endif
 #if STREAM_UINT8
-    #define         Stream_readUInt8Array(STREAM, VAL, LEN)                 Stream_readArray((STREAM), VAL, sizeof(uint8_t), LEN)
-    #define         Stream_readInt8Array(STREAM, VAL, LEN)                  Stream_readArray((STREAM), VAL, sizeof(int8_t), LEN)
+    #define         Stream_readUInt8Array(STREAM, VAL, LEN)                 Stream_readBytes((STREAM), (uint8_t*) VAL, LEN)
+    #define         Stream_readInt8Array(STREAM, VAL, LEN)                  Stream_readBytes((STREAM), (uint8_t*) VAL, LEN)
 #endif
 #if STREAM_UINT16
     #define         Stream_readUInt16Array(STREAM, VAL, LEN)                Stream_readArray((STREAM), VAL, sizeof(uint16_t), LEN)
@@ -987,11 +987,11 @@ Stream_Result       Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index
 #if STREAM_GET_AT_VALUE
     #define         Stream_getValueArrayAt(STREAM, IDX, VAL, LEN)           Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(Stream_Value), (LEN))
 #if STREAM_CHAR
-    #define         Stream_getCharArrayAt(STREAM, IDX, VAL, LEN)            Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(char), (LEN))
+    #define         Stream_getCharArrayAt(STREAM, IDX, VAL, LEN)            Stream_getBytesAt((STREAM), (IDX), (uint8_t*) (VAL), (LEN))
 #endif
 #if STREAM_UINT8
-    #define         Stream_getUInt8ArrayAt(STREAM, IDX, VAL, LEN)           Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(uint8_t), (LEN))
-    #define         Stream_getInt8ArrayAt(STREAM, IDX, VAL, LEN)            Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(int8_t), (LEN))
+    #define         Stream_getUInt8ArrayAt(STREAM, IDX, VAL, LEN)           Stream_getBytesAt((STREAM), (IDX), (uint8_t*) (VAL), (LEN))
+    #define         Stream_getInt8ArrayAt(STREAM, IDX, VAL, LEN)            Stream_getBytesAt((STREAM), (IDX), (uint8_t*) (VAL), (LEN))
 #endif
 #if STREAM_UINT16
     #define         Stream_getUInt16ArrayAt(STREAM, IDX, VAL, LEN)          Stream_getArrayAt((STREAM), (IDX), (VAL), sizeof(uint16_t), (LEN))
@@ -1120,11 +1120,11 @@ Stream_LenType      Stream_findPatternAt(StreamBuffer* stream, Stream_LenType of
 #if STREAM_FIND_AT_VALUE
 Stream_LenType      Stream_findValueAt(StreamBuffer* stream, Stream_LenType offset, Stream_Value val, Stream_LenType len);
 #if STREAM_CHAR
-    #define         Stream_findCharAt(STREAM, IDX, VAL)                     Stream_findValueAt((STREAM), IDX, (Stream_Value) { .Char   = (VAL) }, sizeof(char))
+    #define         Stream_findCharAt(STREAM, IDX, VAL)                     Stream_findByteAt((STREAM), IDX, (VAL))
 #endif
 #if STREAM_UINT8
-    #define         Stream_findUInt8At(STREAM, IDX, VAL)                    Stream_findValueAt((STREAM), IDX, (Stream_Value) { .UInt8  = (VAL) }, sizeof(uint8_t))
-    #define         Stream_findInt8At(STREAM, IDX, VAL)                     Stream_findValueAt((STREAM), IDX, (Stream_Value) { .Int8   = (VAL) }, sizeof(int8_t))
+    #define         Stream_findUInt8At(STREAM, IDX, VAL)                    Stream_findByteAt((STREAM), IDX, (VAL))
+    #define         Stream_findInt8At(STREAM, IDX, VAL)                     Stream_findByteAt((STREAM), IDX, (VAL))
 #endif
 #if STREAM_UINT16
     #define         Stream_findUInt16At(STREAM, IDX, VAL)                   Stream_findValueAt((STREAM), IDX, (Stream_Value) { .UInt16 = (VAL) }, sizeof(uint16_t))
@@ -1187,7 +1187,7 @@ Stream_LenType      Stream_readBytesUntilPatternAt(StreamBuffer* stream,  Stream
 /* ------------------------------------ Read Bytes Until APIs ---------------------------------- */
 #if STREAM_READ_UNTIL
 #define             Stream_readBytesUntil(STREAM, END, VAL, LEN)            Stream_readBytesUntilAt((STREAM), 0, (END), (VAL), (LEN))
-#define             Stream_readBytesUntilPattern(STREAM, P, PLEN, VAL, LEN) Stream_readBytesUntilPatternAt((STREAM), 0, (P), (PLEN), (VAL), (VAL_LEN))
+#define             Stream_readBytesUntilPattern(STREAM, P, PLEN, VAL, LEN) Stream_readBytesUntilPatternAt((STREAM), 0, (P), (PLEN), (VAL), (LEN))
 #endif // STREAM_READ_UNTIL
 /* ------------------------------------ Transpose APIs ---------------------------------- */
 #if STREAM_TRANSPOSE_AT
