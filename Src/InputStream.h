@@ -17,7 +17,7 @@ extern "C" {
 
 #define ISTREAM_VER_MAJOR    0
 #define ISTREAM_VER_MINOR    8
-#define ISTREAM_VER_FIX      0
+#define ISTREAM_VER_FIX      1
 
 #include "StreamBuffer.h"
 
@@ -522,7 +522,13 @@ Stream_LenType      IStream_incomingBytes(IStream* stream);
 #define             IStream_readBytesUntil(STREAM, END, VAL, LEN)            Stream_readBytesUntil(&((STREAM)->Buffer), END, VAL, LEN)
 #define             IStream_readBytesUntilPattern(STREAM, P, PLEN, VAL, LEN) Stream_readBytesUntilPatternAt(&((STREAM)->Buffer), 0, (P), (PLEN), (VAL), (LEN))
 #endif // STREAM_READ_UNTIL
-
+/* ------------------------------------ Transpose APIs ---------------------------------- */
+#if STREAM_TRANSPOSE_AT
+    #define         IStream_transposeAt(STREAM, OFF, LEN, TMP, CLEN, TP, A) Stream_transposeAt(&((STREAM)->Buffer), OFF, LEN, TMP, CLEN, T, A)
+#endif
+#if STREAM_TRANSPOSE
+    #define         IStream_transpose(STREAM, LEN, BUF, CLEN, TP, ARGS)     Stream_transpose(&((STREAM)->Buffer), LEN, BUF, CLEN, TP, ARGS)
+#endif
 
 #ifdef __cplusplus
 };
