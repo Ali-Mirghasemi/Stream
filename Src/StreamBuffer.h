@@ -480,11 +480,11 @@ void Stream_deinit(StreamBuffer* stream);
 
 #if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
 void Stream_setMemIO(
-    StreamBuffer*                 stream,
-    Stream_MemCopyFn          copy,
-    Stream_MemCopyReverseFn   copyReverse,
-    Stream_MemSetFn           set,
-    Stream_MemReverseFn       reverse
+    StreamBuffer*               stream,
+    Stream_MemCopyFn            copy,
+    Stream_MemCopyReverseFn     copyReverse,
+    Stream_MemSetFn             set,
+    Stream_MemReverseFn         reverse
 );
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
 void Stream_setMemIO(StreamBuffer* stream, const Stream_MemIO* mem);
@@ -495,15 +495,15 @@ void memreverse(void* arr, int len);
 
 
 #if STREAM_WRITE_LIMIT
-    #define Stream_space(STREAM)                Stream_spaceLimit((STREAM))
+    #define         Stream_space(STREAM)                                    Stream_spaceLimit((STREAM))
 #else
-    #define Stream_space(STREAM)                Stream_spaceReal((STREAM))
+    #define         Stream_space(STREAM)                                    Stream_spaceReal((STREAM))
 #endif // STREAM_WRITE_LIMIT
 
 #if STREAM_READ_LIMIT
-    #define Stream_available(STREAM)            Stream_availableLimit((STREAM))
+    #define         Stream_available(STREAM)                                Stream_availableLimit((STREAM))
 #else
-    #define Stream_available(STREAM)            Stream_availableReal((STREAM))
+    #define         Stream_available(STREAM)                                Stream_availableReal((STREAM))
 #endif // STREAM_READ_LIMIT
 
 Stream_LenType      Stream_availableReal(StreamBuffer* stream);
