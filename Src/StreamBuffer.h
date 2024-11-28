@@ -19,7 +19,7 @@ extern "C" {
 
 #define STREAM_VER_MAJOR    0
 #define STREAM_VER_MINOR    9
-#define STREAM_VER_FIX      1
+#define STREAM_VER_FIX      2
 
 /************************************************************************/
 /*                            Configuration                             */
@@ -68,6 +68,14 @@ extern "C" {
  * @brief check len parameter in read/write functions
  */
 #define STREAM_CHECK_ZERO_LEN               1
+/**
+ * @brief enable user argument in StreamBuffer
+ */
+#define STREAM_ARGS                         1
+/**
+ * @brief If you want to use IStream/OStream you must enable this feature
+ */
+#define STREAM_PENDING_BYTES                1
 /**
  * @brief based on maximum size of buffer that you use for stream
  * you can change type of len variables
@@ -441,6 +449,9 @@ typedef union {
  * contains everything need for handle stream
  */
 typedef struct {
+#if STREAM_ARGS
+    void*                   Args;
+#endif
 #if   STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
     Stream_MemIO            Mem;                    /**< Custom io functions for interact with memory */
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
@@ -455,6 +466,9 @@ typedef struct {
 #endif // STREAM_WRITE_LIMIT
 #if STREAM_READ_LIMIT
     Stream_LenType          ReadLimit;              /**< limit for read operation */
+#endif
+#if STREAM_PENDING_BYTES
+    Stream_LenType          PendingBytes;           /**< hold pending bytes for receive or transmit */
 #endif
     uint8_t                 Overflow        : 1;    /**< overflow flag */
     uint8_t                 InReceive       : 1;    /**< stream is in receive mode */
@@ -588,6 +602,16 @@ Stream_Result       Stream_moveReadPos(StreamBuffer* stream, Stream_LenType step
     void            Stream_unlockReadIgnore(StreamBuffer* stream);
     Stream_LenType  Stream_lockReadLen(StreamBuffer* stream, StreamBuffer* lock);
 #endif // STREAM_READ_LOCK
+
+#if STREAM_ARGS
+    void            Stream_setArgs(StreamBuffer* stream, void* args);
+    void*           Stream_getArgs(StreamBuffer* stream);
+#endif // STREAM_ARGS
+
+#if STREAM_PENDING_BYTES
+    void            Stream_setPendingBytes(StreamBuffer* stream, Stream_LenType len);
+    Stream_LenType  Stream_getPendingBytes(StreamBuffer* stream);
+#endif
 
 /* ------------------------------------ General Write APIs ---------------------------------- */
 #if STREAM_WRITE
