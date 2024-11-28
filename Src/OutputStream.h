@@ -17,7 +17,7 @@ extern "C" {
 
 #define OSTREAM_VER_MAJOR    0
 #define OSTREAM_VER_MINOR    8
-#define OSTREAM_VER_FIX      0
+#define OSTREAM_VER_FIX      1
 
 #include "StreamBuffer.h"
 
@@ -28,7 +28,7 @@ extern "C" {
 /**
  * @brief enable user argument in OStream
  */
-#define OSTREAM_ARGS                1
+#define OSTREAM_ARGS                (1 && STREAM_ARGS)
 /**
  * @brief enable checkTransmit function
  */
@@ -49,6 +49,10 @@ extern "C" {
 #define OSTREAM_FLUSH_CALLBACK      1
 
 /************************************************************************/
+
+#if !STREAM_PENDING_BYTES
+    #error "For using OutputStream Library you must enable STREAM_PENDING_BYTES in StreamBuffer.h"
+#endif
 
 /**
  * @brief show stream version in string format
@@ -89,16 +93,12 @@ typedef void (*OStream_FlushCallbackFn)(OStream* stream);
 struct __OStream {
     StreamBuffer            Buffer;         /**< stream buffer */
     OStream_TransmitFn      transmit;       /**< transmit function */
-#if OSTREAM_ARGS
-    void*                   Args;           /**< user argument */
-#endif
 #if OSTREAM_CHECK_TRANSMIT
     OStream_CheckTransmitFn checkTransmit;  /**< check transmit function */
 #endif
 #if OSTREAM_FLUSH_CALLBACK
     OStream_FlushCallbackFn flushCallback;  /**< flush callback */
 #endif
-    Stream_LenType          OutgoingBytes;  /**< outgoing bytes */
 };
 
 
@@ -116,15 +116,15 @@ Stream_Result       OStream_transmitBytes(OStream* stream, Stream_LenType len);
 #define             OStream_spaceUncheck(STREAM)                            Stream_space(&(STREAM)->Buffer)
 Stream_LenType      OStream_space(OStream* stream);
 
-Stream_LenType      OStream_outgoingBytes(OStream* stream);
+#define             OStream_outgoingBytes(STREAM)                           Stream_getPendingBytes(&(STREAM)->Buffer)
 
 #define             OStream_setFlushMode(STREAM, MODE)                      Stream_setFlushMode(&(STREAM)->Buffer, (MODE))
 
 #define             OStream_inTransmit(STREAM)                              Stream_inTransmit(&(STREAM)->Buffer)
 
 #if OSTREAM_ARGS
-    void            OStream_setArgs(OStream* stream, void* args);
-    void*           OStream_getArgs(OStream* stream);
+    #define         OStream_setArgs(STREAM, ARGS)                           Stream_setArgs(&(STREAM)->Buffer, (ARGS))
+    #define         OStream_getArgs(STREAM)                                 Stream_getArgs(&(STREAM)->Buffer)
 #endif // OSTREAM_ARGS
 
 #if OSTREAM_CHECK_TRANSMIT

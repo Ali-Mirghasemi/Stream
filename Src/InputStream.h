@@ -17,7 +17,7 @@ extern "C" {
 
 #define ISTREAM_VER_MAJOR    0
 #define ISTREAM_VER_MINOR    8
-#define ISTREAM_VER_FIX      1
+#define ISTREAM_VER_FIX      2
 
 #include "StreamBuffer.h"
 
@@ -28,7 +28,7 @@ extern "C" {
 /**
  * @brief enable user argument in OStream
  */
-#define ISTREAM_ARGS                1
+#define ISTREAM_ARGS                (1 && STREAM_ARGS)
 /**
  * @brief enable checkTransmit function
  */
@@ -40,6 +40,10 @@ extern "C" {
 
 
 /************************************************************************/
+
+#if !STREAM_PENDING_BYTES
+    #error "For using InputStream Library you must enable STREAM_PENDING_BYTES in StreamBuffer.h"
+#endif
 
 /**
  * @brief show stream version in string format
@@ -75,13 +79,9 @@ typedef Stream_LenType (*IStream_CheckReceiveFn)(IStream* stream);
 struct __IStream {
     StreamBuffer            Buffer;         /**< hold stream buffer */
     IStream_ReceiveFn       receive;        /**< receive function */
-#if ISTREAM_ARGS
-    void*                   Args;           /**< hold user defined arguments */
-#endif
 #if ISTREAM_CHECK_RECEIVE
     IStream_CheckReceiveFn  checkReceive;   /**< check receive function */
 #endif
-    Stream_LenType          IncomingBytes;  /**< hold how many bytes are coming */
 };
 
 
@@ -97,14 +97,14 @@ Stream_Result       IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_L
 #define             IStream_availableUncheck(STREAM)                        Stream_available(&(STREAM)->Buffer)
 Stream_LenType      IStream_available(IStream* stream);
 
-Stream_LenType      IStream_incomingBytes(IStream* stream);
+#define             IStream_incomingBytes(STREAM)                           Stream_getPendingBytes(&(STREAM)->Buffer)
 
 #define             IStream_inReceive(STREAM)                               Stream_inReceive(&(STREAM)->Buffer)
 
 #if ISTREAM_ARGS
-    void            IStream_setArgs(IStream* stream, void* args);
-    void*           IStream_getArgs(IStream* stream);
-#endif // ISTREAM_ARGS
+    #define         IStream_setArgs(STREAM, ARGS)                           Stream_setArgs(&(STREAM)->Buffer, (ARGS))
+    #define         IStream_getArgs(STREAM)                                 Stream_getArgs(&(STREAM)->Buffer)
+#endif // OSTREAM_ARGS
 
 #if ISTREAM_CHECK_RECEIVE
     void            IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);

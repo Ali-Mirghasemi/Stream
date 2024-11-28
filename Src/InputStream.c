@@ -12,13 +12,9 @@
 void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
     stream->receive = receiveFn;
-#if ISTREAM_ARGS
-    stream->Args = (void*) 0;
-#endif
 #if ISTREAM_CHECK_RECEIVE
     stream->checkReceive = (IStream_CheckReceiveFn) 0;
 #endif
-    stream->IncomingBytes = 0;
 }
 /**
  * @brief Deinitialize InputStream
@@ -43,8 +39,8 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
 		return Stream_NoReceive;
 	}
 
-    if (stream->IncomingBytes < len) {
-        len = stream->IncomingBytes;
+    if (stream->Buffer.PendingBytes < len) {
+        len = stream->Buffer.PendingBytes;
     }
 
     stream->Buffer.InReceive = 0;
@@ -63,7 +59,7 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
 Stream_Result IStream_receive(IStream* stream) {
     if (!stream->Buffer.InReceive) {
         Stream_LenType len = Stream_directSpace(&stream->Buffer);
-        stream->IncomingBytes = len;
+        stream->Buffer.PendingBytes = len;
         if (len > 0) {
             if (stream->receive) {
                 stream->Buffer.InReceive = 1;
@@ -104,26 +100,6 @@ Stream_Result IStream_receiveByte(IStream* stream, uint8_t val) {
 Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len) {
     return Stream_writeBytes(&stream->Buffer, val, len);
 }
-#if ISTREAM_ARGS
-/**
- * @brief set args for IStream
- *
- * @param stream
- * @param args
- */
-void  IStream_setArgs(IStream* stream, void* args) {
-    stream->Args = args;
-}
-/**
- * @brief get args form IStream
- *
- * @param stream
- * @return void*
- */
-void* IStream_getArgs(IStream* stream) {
-    return stream->Args;
-}
-#endif // ISTREAM_ARGS
 /**
  * @brief return available bytes in buffer to read
  *
@@ -135,11 +111,11 @@ Stream_LenType IStream_available(IStream* stream) {
     if (stream->checkReceive) {
         Stream_LenType len = stream->checkReceive(stream);
         if (len > 0) {
-            if (stream->IncomingBytes < len) {
-                len = stream->IncomingBytes;
+            if (stream->Buffer.PendingBytes < len) {
+                len = stream->Buffer.PendingBytes;
             }
             Stream_moveWritePos(&stream->Buffer, len);
-            stream->IncomingBytes -= len;
+            stream->Buffer.PendingBytes -= len;
             if (stream->Buffer.WPos == 0) {
                 IStream_receive(stream);
             }
@@ -160,15 +136,6 @@ void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
     stream->checkReceive = fn;
 }
 #endif // ISTREAM_CHECK_RECEIVE
-/**
- * @brief return number of bytes that in receive
- *
- * @param stream
- * @return Stream_LenType
- */
-Stream_LenType IStream_incomingBytes(IStream* stream) {
-    return stream->IncomingBytes;
-}
 #if ISTREAM_LOCK
 /**
  * @brief lock input stream for fixed write

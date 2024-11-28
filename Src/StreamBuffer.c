@@ -122,6 +122,12 @@ void Stream_init(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size) {
 #if STREAM_READ_LOCK
     stream->ReadLocked = 0;
 #endif // STREAM_READ_LOCK
+#if STREAM_ARGS
+    stream->Args = (void*) 0;
+#endif // STREAM_ARGS
+#if STREAM_PENDING_BYTES
+    stream->PendingBytes = 0;
+#endif // STREAM_PENDING_BYTES
 #if   STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
     Stream_setMemIO(
         stream,
@@ -1393,6 +1399,47 @@ void Stream_unlockReadIgnore(StreamBuffer* stream) {
     }
 }
 #endif // STREAM_READ_LOCK
+
+#if STREAM_ARGS
+/**
+ * @brief set buffer user arguments
+ * 
+ * @param stream 
+ * @param args 
+ */
+void Stream_setArgs(StreamBuffer* stream, void* args) {
+    stream->Args = args;
+}
+/**
+ * @brief get buffer user arguments
+ * 
+ * @param stream 
+ * @return void* 
+ */
+void* Stream_getArgs(StreamBuffer* stream) {
+    return stream->Args;
+}
+#endif // STREAM_ARGS
+#if STREAM_PENDING_BYTES
+/**
+ * @brief Set pending bytes
+ * 
+ * @param stream 
+ * @param len 
+ */
+void Stream_setPendingBytes(StreamBuffer* stream, Stream_LenType len) {
+    stream->PendingBytes = len;
+}
+/**
+ * @brief Get pending bytes
+ * 
+ * @param stream 
+ * @return Stream_LenType 
+ */
+Stream_LenType Stream_getPendingBytes(StreamBuffer* stream) {
+    return stream->PendingBytes;
+}
+#endif
 
 #if STREAM_FIND_AT
 Stream_LenType Stream_findValueAt(StreamBuffer* stream, Stream_LenType offset, Stream_Value val, Stream_LenType len) {
