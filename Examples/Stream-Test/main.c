@@ -2,8 +2,13 @@
 #include <string.h>
 
 #include "StreamBuffer.h"
-#include "OutputStream.h"
-#include "InputStream.h"
+
+#if STREAM_WRITE && STREAM_PENDING_BYTES
+    #include "OutputStream.h"
+#endif
+#if STREAM_READ && STREAM_PENDING_BYTES
+    #include "InputStream.h"
+#endif
 
 #include <time.h>
 
