@@ -48,7 +48,7 @@ extern "C" {
 /**
  * @brief This lable shows OStream Libraty is enabled or not
  */
-#define OSTREAM                     (STREAM_READ && STREAM_PENDING_BYTES)
+#define ISTREAM                     (STREAM_READ && STREAM_PENDING_BYTES)
 
 /**
  * @brief show stream version in string format
