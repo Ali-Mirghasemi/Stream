@@ -26,17 +26,13 @@ extern "C" {
 /************************************************************************/
 
 /**
- * @brief enable user argument in OStream
- */
-#define ISTREAM_ARGS                (1 && STREAM_ARGS)
-/**
  * @brief enable checkTransmit function
  */
 #define ISTREAM_CHECK_RECEIVE       1
 /**
- * @brief enable lock read feature
+ * @brief Enable Full Callback
  */
-#define ISTREAM_LOCK                STREAM_READ_LOCK
+#define ISTREAM_FULL_CALLBACK        1
 
 
 /************************************************************************/
@@ -72,6 +68,12 @@ typedef Stream_Result (*IStream_ReceiveFn)(IStream* stream, uint8_t* buff, Strea
  * @return Stream_LenType
  */
 typedef Stream_LenType (*IStream_CheckReceiveFn)(IStream* stream);
+/**
+ * @brief when buffer got full, this function will call
+ * @param stream IStream
+ * @return Stream_LenType
+ */
+typedef void (*IStream_OnFullFn)(IStream* stream);
 
 /**
  * @brief hold InputStream properties
@@ -82,17 +84,20 @@ struct __IStream {
 #if ISTREAM_CHECK_RECEIVE
     IStream_CheckReceiveFn  checkReceive;   /**< check receive function */
 #endif
+#if ISTREAM_FULL_CALLBACK
+    IStream_OnFullFn        onFull;   /**< full callback */
+#endif
 };
 
 
 void                IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size);
-void                IStream_deinit(IStream* stream);
+#define             IStream_deinit(STREAM)                                  memset(STREAM, 0, sizeof(IStream))
 
 /* Input Bytes of IStream */
 Stream_Result       IStream_handle(IStream* stream, Stream_LenType len);
 Stream_Result       IStream_receive(IStream* stream);
-Stream_Result       IStream_receiveByte(IStream* stream, uint8_t val);
-Stream_Result       IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len);
+#define             IStream_receiveByte(STREAM, VAL)                        Stream_writeUInt8(&((STREAM)->Buffer), VAL)
+#define             IStream_receiveBytes(STREAM, VAL, LEN)                  Stream_writeBytes(&((STREAM)->Buffer), VAL, LEN)
 
 #define             IStream_availableUncheck(STREAM)                        Stream_available(&(STREAM)->Buffer)
 Stream_LenType      IStream_available(IStream* stream);
@@ -101,7 +106,7 @@ Stream_LenType      IStream_available(IStream* stream);
 
 #define             IStream_inReceive(STREAM)                               Stream_inReceive(&(STREAM)->Buffer)
 
-#if ISTREAM_ARGS
+#if STREAM_ARGS
     #define         IStream_setArgs(STREAM, ARGS)                           Stream_setArgs(&(STREAM)->Buffer, (ARGS))
     #define         IStream_getArgs(STREAM)                                 Stream_getArgs(&(STREAM)->Buffer)
 #endif // OSTREAM_ARGS
@@ -109,13 +114,16 @@ Stream_LenType      IStream_available(IStream* stream);
 #if ISTREAM_CHECK_RECEIVE
     void            IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);
 #endif // ISTREAM_CHECK_RECEIVE
+#if ISTREAM_FULL_CALLBACK
+    void            IStream_onFull(IStream* stream, IStream_OnFullFn fn);
+#endif
 
-#if ISTREAM_LOCK
-    Stream_Result   IStream_lock(IStream* stream, IStream* lock, Stream_LenType len);
+#if STREAM_READ_LOCK_CUSTOM
+    #define         IStream_lock(STREAM, LOCK, LEN)                         Stream_lockReadCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, LEN, sizeof(StreamBuffer))
     #define         IStream_unlock(STREAM, LOCK)                            Stream_unlockRead(&(STREAM)->Buffer, &(LOCK)->Buffer);
     #define         IStream_unlockIgnore(STREAM)                            Stream_unlockReadIgnore(&(STREAM)->Buffer)
     #define         IStream_lockLen(STREAM, LOCK)                           Stream_lockReadLen(&(STREAM)->Buffer, &(LOCK)->Buffer)
-#endif // ISTREAM_LOCK
+#endif // STREAM_READ_LOCK
 
 #define             IStream_getDataPtr(STREAM)                              Stream_getWritePtr(&((STREAM)->Buffer))
 #define             IStream_getBufferSize(STREAM)                           Stream_getBufferSize(&((STREAM)->Buffer))

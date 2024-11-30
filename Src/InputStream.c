@@ -15,16 +15,10 @@ void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, S
 #if ISTREAM_CHECK_RECEIVE
     stream->checkReceive = (IStream_CheckReceiveFn) 0;
 #endif
+#if ISTREAM_FULL_CALLBACK
+    stream->onFull = (IStream_OnFullFn) 0;
+#endif
 }
-/**
- * @brief Deinitialize InputStream
- *
- * @param stream InputStream to deinitialize
- */
-void IStream_deinit(IStream* stream) {
-    memset(stream, 0, sizeof(IStream));
-}
-
 /**
  * @brief call in interrupt or RxCplt callback for Async Receive
  *
@@ -47,6 +41,12 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
     if ((res = Stream_moveWritePos(&stream->Buffer, len)) != Stream_Ok) {
         return res;
     }
+
+#if ISTREAM_FULL_CALLBACK
+    if (stream->onFull && Stream_isFull(&stream->Buffer)) {
+        stream->onFull(stream);
+    }
+#endif
 
     return IStream_receive(stream);
 }
@@ -76,29 +76,6 @@ Stream_Result IStream_receive(IStream* stream) {
     else {
         return Stream_InReceive;
     }
-}
-/**
- * @brief blocking receive for 1 byte
- *
- * @param stream
- * @param val
- * @return Stream_Result
- */
-Stream_Result IStream_receiveByte(IStream* stream, uint8_t val) {
-    *IStream_getDataPtr(stream) = val;
-    return Stream_moveWritePos(&stream->Buffer, 1);
-
-}
-/**
- * @brief blocking receive for n bytes
- *
- * @param stream
- * @param val
- * @param len
- * @return Stream_Result
- */
-Stream_Result IStream_receiveBytes(IStream* stream, uint8_t* val, Stream_LenType len) {
-    return Stream_writeBytes(&stream->Buffer, val, len);
 }
 /**
  * @brief return available bytes in buffer to read
@@ -136,19 +113,8 @@ void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
     stream->checkReceive = fn;
 }
 #endif // ISTREAM_CHECK_RECEIVE
-#if ISTREAM_LOCK
-/**
- * @brief lock input stream for fixed write
- *
- * @param stream
- * @param lock
- * @return Stream_Result
- */
-Stream_Result IStream_lock(IStream* stream, IStream* lock, Stream_LenType len) {
-    Stream_Result res;
-    if ((res = Stream_lockRead(&stream->Buffer, &lock->Buffer, len)) == Stream_Ok) {
-        memcpy(&lock->receive, &stream->receive, sizeof(IStream) - sizeof(StreamBuffer));
-    }
-    return res;
+#if ISTREAM_FULL_CALLBACK
+void IStream_onFull(IStream* stream, IStream_OnFullFn fn) {
+    stream->onFull = fn;
 }
-#endif // ISTREAM_LOCK
+#endif
