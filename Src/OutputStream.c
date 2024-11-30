@@ -16,17 +16,10 @@ void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff,
 #if OSTREAM_CHECK_TRANSMIT
     stream->checkTransmit = (OStream_CheckTransmitFn) 0;
 #endif
+#if OSTREAM_FLUSH_CALLBACK
+    stream->flushCallback = (OStream_FlushCallbackFn) 0;
+#endif
 }
-/**
- * @brief Deinitialize OutputStream
- *
- * @param stream OutputStream to deinitialize
- */
-void OStream_deinit(OStream* stream) {
-    memset(stream, 0, sizeof(OStream));
-}
-
-
 /**
  * @brief call it in interrupt or TxCplt for Async Transmit
  *
@@ -205,19 +198,3 @@ Stream_LenType OStream_space(OStream* stream) {
 #endif // OSTREAM_CHECK_TRANSMIT
     return Stream_space(&stream->Buffer);
 }
-#if OSTREAM_LOCK
-/**
- * @brief lock output stream for fixed write
- *
- * @param stream
- * @param lock
- * @return Stream_Result
- */
-Stream_Result OStream_lock(OStream* stream, OStream* lock, Stream_LenType len) {
-    Stream_Result res;
-    if ((res = Stream_lockWrite(&stream->Buffer, &lock->Buffer, len)) == Stream_Ok) {
-        memcpy(&lock->transmit, &stream->transmit, sizeof(OStream) - sizeof(StreamBuffer));
-    }
-    return res;
-}
-#endif // OSTREAM_LOCK

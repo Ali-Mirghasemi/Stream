@@ -26,17 +26,9 @@ extern "C" {
 /************************************************************************/
 
 /**
- * @brief enable user argument in OStream
- */
-#define OSTREAM_ARGS                (1 && STREAM_ARGS)
-/**
  * @brief enable checkTransmit function
  */
 #define OSTREAM_CHECK_TRANSMIT      1
-/**
- * @brief enable lock write feature
- */
-#define OSTREAM_LOCK                STREAM_WRITE_LOCK
 /**
  * @brief set default flush mode
  * Stream_FlushMode_Single:     flush only pending bytes before call flush function
@@ -103,7 +95,7 @@ struct __OStream {
 
 
 void                OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size);
-void                OStream_deinit(OStream* stream);
+#define             OStream_deinit(STREAM)                                  memset(STREAM, 0, sizeof(OStream))
 
 
 /* Output Bytes of OStream */
@@ -122,7 +114,7 @@ Stream_LenType      OStream_space(OStream* stream);
 
 #define             OStream_inTransmit(STREAM)                              Stream_inTransmit(&(STREAM)->Buffer)
 
-#if OSTREAM_ARGS
+#if STREAM_ARGS
     #define         OStream_setArgs(STREAM, ARGS)                           Stream_setArgs(&(STREAM)->Buffer, (ARGS))
     #define         OStream_getArgs(STREAM)                                 Stream_getArgs(&(STREAM)->Buffer)
 #endif // OSTREAM_ARGS
@@ -135,8 +127,8 @@ Stream_LenType      OStream_space(OStream* stream);
     void            OStream_setFlushCallback(OStream* stream, OStream_FlushCallbackFn fn);
 #endif
 
-#if OSTREAM_LOCK
-    Stream_Result   OStream_lock(OStream* stream, OStream* lock, Stream_LenType len);
+#if STREAM_WRITE_LOCK_CUSTOM
+    #define         OStream_lock(STREAM, LOCK, LEN)                         Stream_lockWriteCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, (LEN), sizeof(OStream))
     #define         OStream_unlock(STREAM, LOCK)                            Stream_unlockWrite(&(STREAM)->Buffer, &(LOCK)->Buffer);
     #define         OStream_unlockIgnore(STREAM)                            Stream_unlockWriteIgnore(&(STREAM)->Buffer)
     #define         OStream_lockLen(STREAM, LOCK)                           Stream_lockWriteLen(&(STREAM)->Buffer, &(LOCK)->Buffer)
