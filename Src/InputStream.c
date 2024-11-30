@@ -1,6 +1,16 @@
 #include "InputStream.h"
 #include <string.h>
 
+#if ISTREAM
+
+#if !STREAM_READ
+    #error "For using InputStream Library you must enable STREAM_READ in StreamBuffer.h"
+#endif
+
+#if !STREAM_PENDING_BYTES
+    #error "For using InputStream Library you must enable STREAM_PENDING_BYTES in StreamBuffer.h"
+#endif
+
 /**
  * @brief Initialize InputStream
  *
@@ -118,3 +128,5 @@ void IStream_onFull(IStream* stream, IStream_OnFullFn fn) {
     stream->onFull = fn;
 }
 #endif
+
+#endif // ISTREAM

@@ -24,7 +24,10 @@ extern "C" {
 /************************************************************************/
 /*                            Configuration                             */
 /************************************************************************/
-
+/**
+ * @brief This lable shows OStream Libraty is enabled or not
+ */
+#define ISTREAM                     (1 && STREAM_READ && STREAM_PENDING_BYTES)
 /**
  * @brief enable checkTransmit function
  */
@@ -36,19 +39,6 @@ extern "C" {
 
 
 /************************************************************************/
-
-#if !STREAM_READ
-    #error "For using InputStream Library you must enable STREAM_READ in StreamBuffer.h"
-#endif
-
-#if !STREAM_PENDING_BYTES
-    #error "For using InputStream Library you must enable STREAM_PENDING_BYTES in StreamBuffer.h"
-#endif
-
-/**
- * @brief This lable shows OStream Libraty is enabled or not
- */
-#define ISTREAM                     (STREAM_READ && STREAM_PENDING_BYTES)
 
 /**
  * @brief show stream version in string format
