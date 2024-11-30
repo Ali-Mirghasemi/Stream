@@ -1,19 +1,19 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "StreamBuffer.h"
 #include "OutputStream.h"
 #include "InputStream.h"
-#include <string.h>
 
 #include <time.h>
 
-#define CYCLES_NUM              20
+#define CYCLES_NUM                          20
 // System Print log define
-#define PRINTF                  printf
-#define PRINT_DUMP              1
+#define PRINTF                              printf
+#define PRINT_DUMP                          1
 // System Caluclate time define
-#define SYSTEM_TIME_TYPE        clock_t
-#define GET_SYSTEM_TIME()       clock()
+#define SYSTEM_TIME_TYPE                    clock_t
+#define GET_SYSTEM_TIME()                   clock()
 #define START_CALCULATE_TIME()              SYSTEM_TIME_TYPE elapsed = GET_SYSTEM_TIME()
 #define CALCULATE_TIME()                    elapsed = GET_SYSTEM_TIME() - elapsed; \
                                             PRINTF("\n[Elapsed Time: %llu]\n\n", elapsed)
@@ -574,9 +574,9 @@ uint32_t Test_IO_readStream(void) {
         // write to out
         OStream_writeBytes(&out, (uint8_t*) PAT, sizeof(PAT));
         // transfer output to input
-        IStream_readStream(&out, &in, Stream_available(&out));
+        IStream_readStream(&out, &in, OStream_pendingBytes(&out));
         // read from input
-        IStream_readBytes(&in, tempBuff, Stream_available(&in));
+        IStream_readBytes(&in, tempBuff, IStream_available(&in));
         // verify
         assert(Bytes, tempBuff, (uint8_t*) PAT, sizeof(PAT));
         // clear temp
