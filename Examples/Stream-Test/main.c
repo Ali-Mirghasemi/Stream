@@ -5,11 +5,18 @@
 #include "InputStream.h"
 #include <string.h>
 
-#define CYCLES_NUM      20
+#include <time.h>
 
-#define PRINTF          printf
-#define PRINT_DUMP      1
-
+#define CYCLES_NUM              20
+// System Print log define
+#define PRINTF                  printf
+#define PRINT_DUMP              1
+// System Caluclate time define
+#define SYSTEM_TIME_TYPE        clock_t
+#define GET_SYSTEM_TIME()       clock()
+#define START_CALCULATE_TIME()              SYSTEM_TIME_TYPE elapsed = GET_SYSTEM_TIME()
+#define CALCULATE_TIME()                    elapsed = GET_SYSTEM_TIME() - elapsed; \
+                                            PRINTF("\n[Elapsed Time: %llu]\n\n", elapsed)
 
 volatile uint32_t assertResult;
 volatile uint8_t cycles;
@@ -51,70 +58,98 @@ void printHeader(const char* header, char c);
 typedef uint32_t (*Test_Fn)(void);
 
 uint32_t Test_readWrite(void);
-uint32_t Test_IO_readWrite(void);
+#if OSTREAM && ISTREAM
+    uint32_t Test_IO_readWrite(void);
+#endif
 #if STREAM_WRITE_STREAM && STREAM_READ_STREAM
     uint32_t Test_readStream(void);
+#if OSTREAM && ISTREAM
     uint32_t Test_IO_readStream(void);
+#endif
 #endif
 #if STREAM_WRITE_FLIP && STREAM_READ_FLIP
     uint32_t Test_flip(void);
 #endif
 #if STREAM_WRITE_ARRAY && STREAM_READ_ARRAY
     uint32_t Test_readWriteArray(void);
+#if OSTREAM && ISTREAM
     uint32_t Test_IO_readWriteArray(void);
+#endif
 #endif
 #if STREAM_GET_AT
     uint32_t Test_get(void);
+#if OSTREAM && ISTREAM
     uint32_t Test_IO_get(void);
+#endif
 #endif
 #if STREAM_SET_AT
     uint32_t Test_set(void);
+#if OSTREAM && ISTREAM
     uint32_t Test_IO_set(void);
+#endif
 #endif
 #if STREAM_FIND_AT && STREAM_FIND
     uint32_t Test_find(void);
+#if OSTREAM && ISTREAM
     uint32_t Test_IO_find(void);
+#endif
 #endif
 #if STREAM_WRITE_LOCK && STREAM_READ_LOCK
     uint32_t Test_lock(void);
 #endif
 #if STREAM_TRANSPOSE
     uint32_t Test_transpose(void);
+#if OSTREAM && ISTREAM
     uint32_t Test_IO_transpose(void);
+#endif
 #endif
 
 static const Test_Fn TESTS[] = {
     Test_readWrite,
+#if OSTREAM && ISTREAM
     Test_IO_readWrite,
+#endif
 #if STREAM_WRITE_STREAM && STREAM_READ_STREAM
     Test_readStream,
+#if OSTREAM && ISTREAM
     Test_IO_readStream,
+#endif
 #endif
 #if STREAM_WRITE_FLIP && STREAM_READ_FLIP
     Test_flip,
 #endif
 #if STREAM_WRITE_ARRAY && STREAM_READ_ARRAY
     Test_readWriteArray,
+#if OSTREAM && ISTREAM
     Test_IO_readWriteArray,
+#endif
 #endif
 #if STREAM_GET_AT && STREAM_GET
     Test_get,
+#if OSTREAM && ISTREAM
     Test_IO_get,
+#endif
 #endif
 #if STREAM_SET_AT
     Test_set,
+#if OSTREAM && ISTREAM
     Test_IO_set,
+#endif
 #endif
 #if STREAM_FIND_AT && STREAM_FIND
     Test_find,
+#if OSTREAM && ISTREAM
     Test_IO_find,
+#endif
 #endif
 #if STREAM_WRITE_LOCK && STREAM_READ_LOCK
     Test_lock,
 #endif
 #if STREAM_TRANSPOSE
     Test_transpose,
+#if OSTREAM && ISTREAM
     Test_IO_transpose,
+#endif
 #endif
 };
 static const uint32_t TESTES_LEN = sizeof(TESTS) / sizeof(TESTS[0]);
@@ -126,7 +161,9 @@ int main()
     int testIndex;
 
     for (testIndex = 0; testIndex < TESTES_LEN; testIndex++) {
+        START_CALCULATE_TIME();
         result = TESTS[testIndex]();
+        CALCULATE_TIME();
         if (result) {
             errorCount++;
             PRINTF("Cycle: %3u, Index: %3u, Line: %3u\n\n", result & 0xFF, (result >> 8) & 0xFF, (result >> 16) & 0xFFFF);
@@ -315,6 +352,7 @@ uint32_t Test_readWrite(void) {
 #undef testBytes
 }
 /********************************************************/
+#if OSTREAM && ISTREAM
 uint32_t Test_IO_readWrite(void) {
     #define test(TYPE, N)               PRINTF("Write/Read " #TYPE ", %ux\n", N);\
                                         for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
@@ -471,6 +509,7 @@ uint32_t Test_IO_readWrite(void) {
 #undef test
 #undef testBytes
 }
+#endif
 /********************************************************/
 #if STREAM_WRITE_STREAM && STREAM_READ_STREAM
 uint32_t Test_readStream(void) {
@@ -510,6 +549,7 @@ uint32_t Test_readStream(void) {
 #undef stream
 }
 /********************************************************/
+#if OSTREAM && ISTREAM
 uint32_t Test_IO_readStream(void) {
 // for compatibility with print dump
 #define stream      out
@@ -546,6 +586,7 @@ uint32_t Test_IO_readStream(void) {
     return 0;
 #undef stream
 }
+#endif
 #endif
 /********************************************************/
 #if STREAM_WRITE_ARRAY && STREAM_READ_ARRAY
@@ -647,6 +688,7 @@ uint32_t Test_readWriteArray(void) {
 #undef test
 }
 /********************************************************/
+#if OSTREAM && ISTREAM
 uint32_t Test_IO_readWriteArray(void) {
     #define test(TYPE, VAL_TY, L)       { \
                                             VAL_TY val[L] = {0}; \
@@ -745,6 +787,7 @@ uint32_t Test_IO_readWriteArray(void) {
 #undef test
 }
 #endif
+#endif
 /********************************************************/
 #if STREAM_GET_AT
 uint32_t Test_get(void) {
@@ -841,6 +884,7 @@ uint32_t Test_get(void) {
 #undef test
 }
 /********************************************************/
+#if OSTREAM && ISTREAM
 uint32_t Test_IO_get(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Get " #TYPE ", %ux\n", N);\
@@ -934,6 +978,7 @@ uint32_t Test_IO_get(void) {
     return 0;
 #undef test
 }
+#endif
 #endif
 /********************************************************/
 #if STREAM_SET_AT
@@ -1031,6 +1076,7 @@ uint32_t Test_set(void) {
 #undef test
 }
 /********************************************************/
+#if OSTREAM && ISTREAM
 uint32_t Test_IO_set(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Set " #TYPE ", %ux\n", N);\
@@ -1124,6 +1170,7 @@ uint32_t Test_IO_set(void) {
     return 0;
 #undef test
 }
+#endif
 #endif
 /********************************************************/
 #if STREAM_FIND_AT && STREAM_FIND
@@ -1222,6 +1269,7 @@ uint32_t Test_find(void) {
 #undef test
 }
 /********************************************************/
+#if OSTREAM && ISTREAM
 uint32_t Test_IO_find(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Find " #TYPE ", %ux\n", N);\
@@ -1316,6 +1364,7 @@ uint32_t Test_IO_find(void) {
     return 0;
 #undef test
 }
+#endif
 #endif
 /********************************************************/
 #if STREAM_WRITE_FLIP && STREAM_READ_FLIP
@@ -1557,6 +1606,7 @@ uint32_t Test_transpose(void) {
 #undef testTranspose
 }
 /********************************************************/
+#if OSTREAM && ISTREAM
 uint32_t Test_IO_transpose(void) {
     #define testTranspose(TYPE, TY_VAL, L, N)   PRINTF("Transpose " #TYPE ", %ux%u\n", L, N); \
                                                 for (cycles = 0; cycles < CYCLES_NUM; cycles++) { \
@@ -1634,6 +1684,7 @@ uint32_t Test_IO_transpose(void) {
     return 0;
 #undef testTranspose
 }
+#endif
 #endif
 /********************************************************/
 #define ASSERT_NUM(TYPE, DTYPE)     uint32_t Assert_ ##TYPE (DTYPE num1, DTYPE num2, uint16_t line, uint8_t cycle, uint8_t index) {\
