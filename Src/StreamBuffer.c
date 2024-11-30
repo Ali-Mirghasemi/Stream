@@ -1328,6 +1328,27 @@ Stream_LenType Stream_lockWriteLen(StreamBuffer* stream, StreamBuffer* lock) {
         return 0;
     }
 }
+#if STREAM_WRITE_LOCK_CUSTOM
+/**
+ * @brief Lock the stream for writing with custom payload
+ * 
+ * Note: StreamBuffer must be in first position in the struct
+ * 
+ * @param stream 
+ * @param lock 
+ * @param len 
+ * @param payload 
+ * @param payloadLen 
+ * @return Stream_Result 
+ */
+Stream_Result Stream_lockWriteCustom(void* stream, void* lock, Stream_LenType len, Stream_LenType datatypeLen) {
+    Stream_Result res;
+    if ((res = Stream_lockWrite((StreamBuffer*) stream, (StreamBuffer*) lock, len)) == Stream_Ok) {
+        memcpy((uint8_t*) lock + sizeof(StreamBuffer), (uint8_t*) stream + sizeof(StreamBuffer), datatypeLen - sizeof(StreamBuffer));
+    }
+    return res;
+}
+#endif // STREAM_WRITE_LOCK_CUSTOM
 #endif // STREAM_WRITE_LOCK
 
 #if STREAM_READ_LOCK
@@ -1398,6 +1419,24 @@ void Stream_unlockReadIgnore(StreamBuffer* stream) {
         stream->ReadLocked = 0;
     }
 }
+#if STREAM_READ_LOCK_CUSTOM
+/**
+ * @brief Lock the stream for read operation
+ * 
+ * @param stream 
+ * @param lock 
+ * @param len 
+ * @param datatypeLen 
+ * @return Stream_Result 
+ */
+Stream_Result Stream_lockReadCustom(void* stream, void* lock, Stream_LenType len, Stream_LenType datatypeLen) {
+    Stream_Result res;
+    if ((res = Stream_lockRead((StreamBuffer*) stream, (StreamBuffer*) lock, len)) == Stream_Ok) {
+        memcpy((uint8_t*) lock + sizeof(StreamBuffer), (uint8_t*) stream + sizeof(StreamBuffer), datatypeLen - sizeof(StreamBuffer));
+    }
+    return res;
+}
+#endif // STREAM_READ_LOCK_CUSTOM
 #endif // STREAM_READ_LOCK
 
 #if STREAM_ARGS

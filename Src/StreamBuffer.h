@@ -119,6 +119,10 @@ typedef int16_t Stream_LenType;
  * @brief enable write lock feature
  */
 #define STREAM_WRITE_LOCK                   (1 && STREAM_WRITE)
+/**
+ * @brief enable write lock feature for custom data types
+ */
+#define STREAM_WRITE_LOCK_CUSTOM            (1 && STREAM_WRITE_LOCK)
 
 // ---------------------------- Read APIs -------------------------------
 /**
@@ -157,6 +161,10 @@ typedef int16_t Stream_LenType;
  * @brief enable read lock feature
  */
 #define STREAM_READ_LOCK                    (1 && STREAM_READ)
+/**
+ * @brief enable read lock feature for custom data types
+ */
+#define STREAM_READ_LOCK_CUSTOM             (1 && STREAM_READ_LOCK)
 
 // ----------------------------- Set APIs -------------------------------
 /**
@@ -594,6 +602,9 @@ Stream_Result       Stream_moveReadPos(StreamBuffer* stream, Stream_LenType step
     void            Stream_unlockWrite(StreamBuffer* stream, StreamBuffer* lock);
     void            Stream_unlockWriteIgnore(StreamBuffer* stream);
     Stream_LenType  Stream_lockWriteLen(StreamBuffer* stream, StreamBuffer* lock);
+#if STREAM_WRITE_LOCK_CUSTOM
+    Stream_Result   Stream_lockWriteCustom(void* stream, void* lock, Stream_LenType len, Stream_LenType datatypeLen);
+#endif // STREAM_WRITE_LOCK_CUSTOM
 #endif // STREAM_WRITE_LOCK
 
 #if STREAM_READ_LOCK
@@ -601,6 +612,9 @@ Stream_Result       Stream_moveReadPos(StreamBuffer* stream, Stream_LenType step
     void            Stream_unlockRead(StreamBuffer* stream, StreamBuffer* lock);
     void            Stream_unlockReadIgnore(StreamBuffer* stream);
     Stream_LenType  Stream_lockReadLen(StreamBuffer* stream, StreamBuffer* lock);
+#if STREAM_READ_LOCK_CUSTOM
+    Stream_Result   Stream_lockReadCustom(void* stream, void* lock, Stream_LenType len, Stream_LenType datatypeLen);
+#endif // STREAM_READ_LOCK_CUSTOM
 #endif // STREAM_READ_LOCK
 
 #if STREAM_ARGS
