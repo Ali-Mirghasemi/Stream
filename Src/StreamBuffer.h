@@ -286,7 +286,7 @@ typedef int16_t Stream_LenType;
  * @brief you can enable ByteOrder option to have r/w operation
  * on what endian you need
  */
-#define STREAM_BYTE_ORDER                   (1 && (STREAM_WRITE_REVERSE || STREAM_READ_REVERSE))
+#define STREAM_BYTE_ORDER                   (1 && STREAM_WRITE_REVERSE && STREAM_READ_REVERSE)
 /**
  * @brief save system byte order in static variable for avoid calculate each time
  * run Stream_getSystemByteOrder function
