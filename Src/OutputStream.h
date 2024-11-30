@@ -42,9 +42,18 @@ extern "C" {
 
 /************************************************************************/
 
+#if !STREAM_WRITE
+    #error "For using OutputStream Library you must enable STREAM_WRITE in StreamBuffer.h"
+#endif
+
 #if !STREAM_PENDING_BYTES
     #error "For using OutputStream Library you must enable STREAM_PENDING_BYTES in StreamBuffer.h"
 #endif
+
+/**
+ * @brief This lable shows OStream Libraty is enabled or not
+ */
+#define OSTREAM                     (STREAM_WRITE && STREAM_PENDING_BYTES)
 
 /**
  * @brief show stream version in string format
