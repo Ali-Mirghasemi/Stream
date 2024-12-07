@@ -1457,7 +1457,7 @@ uint32_t Test_lock(void) {
     const uint8_t PAT4[] = {0x2A, 0x2B,};
     const uint8_t PAT5[36] = {0};
 
-    uint8_t tempBuff[12];
+    uint8_t tempBuff[36];
     uint8_t streamBuff[36];
     StreamBuffer stream;
     StreamBuffer lock;
