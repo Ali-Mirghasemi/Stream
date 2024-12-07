@@ -7,3 +7,4 @@
 *.hci
 *.c~
 *.exe
+build/
