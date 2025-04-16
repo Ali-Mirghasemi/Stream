@@ -17,7 +17,7 @@ extern "C" {
 
 #define ISTREAM_VER_MAJOR    0
 #define ISTREAM_VER_MINOR    8
-#define ISTREAM_VER_FIX      2
+#define ISTREAM_VER_FIX      3
 
 #include "StreamBuffer.h"
 
@@ -118,7 +118,7 @@ Stream_LenType      IStream_available(IStream* stream);
 #endif
 
 #if STREAM_READ_LOCK_CUSTOM
-    #define         IStream_lock(STREAM, LOCK, LEN)                         Stream_lockReadCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, LEN, sizeof(StreamBuffer))
+    #define         IStream_lock(STREAM, LOCK, LEN)                         Stream_lockReadCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, LEN, sizeof(IStream))
     #define         IStream_unlock(STREAM, LOCK)                            Stream_unlockRead(&(STREAM)->Buffer, &(LOCK)->Buffer);
     #define         IStream_unlockIgnore(STREAM)                            Stream_unlockReadIgnore(&(STREAM)->Buffer)
     #define         IStream_lockLen(STREAM, LOCK)                           Stream_lockReadLen(&(STREAM)->Buffer, &(LOCK)->Buffer)
