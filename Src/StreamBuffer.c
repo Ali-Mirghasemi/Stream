@@ -1010,6 +1010,7 @@ Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenT
 #if STREAM_CHECK_ZERO_LEN
     }
 #endif
+    in->RPos = rpos;
 
     return Stream_Ok;
 }

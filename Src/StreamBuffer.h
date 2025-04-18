@@ -19,7 +19,7 @@ extern "C" {
 
 #define STREAM_VER_MAJOR    0
 #define STREAM_VER_MINOR    9
-#define STREAM_VER_FIX      2
+#define STREAM_VER_FIX      3
 
 /************************************************************************/
 /*                            Configuration                             */
