@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 set(LIB_NAME "Stream")
 string(TOUPPER "${LIB_NAME}" LIB_NAME_UPPER)
 
-project(${LIB_NAME} VERSION 0.9.2 LANGUAGES C)
+project(${LIB_NAME} VERSION 0.9.4 LANGUAGES C)
 
 # === Global Options (can be set via environment variables) ===
 option(${LIB_NAME_UPPER}_BUILD_STATIC_LIB "Build static library" OFF)
