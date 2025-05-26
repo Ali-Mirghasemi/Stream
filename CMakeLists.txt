@@ -45,7 +45,7 @@ endif()
 # === Directories ===
 set(LIBRARY_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Src)
 set(EXAMPLES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Examples)
-set(EXAMPLES_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Examples)
+set(EXAMPLES_OUTPUT_DIR ${CMAKE_BINARY_DIR}/Examples)
 
 file(GLOB_RECURSE LIBRARY_SOURCES ${LIBRARY_SRC_DIR}/*.c)
 file(GLOB_RECURSE LIBRARY_HEADERS ${LIBRARY_SRC_DIR}/*.h)
@@ -69,16 +69,25 @@ math(EXPR LIB_COUNT "${BUILD_STATIC_LIB_NUM} + ${BUILD_SHARED_LIB_NUM}")
 # --- Shared Library ---
 if (${LIB_NAME_UPPER}_BUILD_SHARED_LIB)
     if (LIB_COUNT EQUAL 1)
-        add_library(${PROJECT_NAME} SHARED ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
-        set(SHARED_TARGET ${PROJECT_NAME})
+        add_library(${LIB_NAME} SHARED ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+        set(SHARED_TARGET ${LIB_NAME})
     else()
-        add_library(${PROJECT_NAME}-Shared SHARED ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
-        set(SHARED_TARGET ${PROJECT_NAME}-Shared)
+        add_library(${LIB_NAME}-Shared SHARED ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+        set(SHARED_TARGET ${LIB_NAME}-Shared)
     endif()
-    add_library(${PROJECT_NAME}::Shared ALIAS ${SHARED_TARGET})
-    target_include_directories(${SHARED_TARGET} PUBLIC ${LIBRARY_SRC_DIR})
+    add_library(${LIB_NAME}::Shared ALIAS ${SHARED_TARGET})
+    target_include_directories(${SHARED_TARGET} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Src>
+        $<INSTALL_INTERFACE:include>
+    )
     target_compile_definitions(${SHARED_TARGET} PRIVATE ${LIB_NAME_UPPER}_EXPORTS)
     target_compile_features(${SHARED_TARGET} PUBLIC c_std_99)
+    set_target_properties(${SHARED_TARGET} PROPERTIES
+        PUBLIC_HEADER "${LIBRARY_HEADERS}"
+    )
+    install(TARGETS ${SHARED_TARGET}
+        PUBLIC_HEADER DESTINATION include
+    )
     # Enable automatic symbol export on Windows
     if(WIN32)
         set_target_properties(${SHARED_TARGET} PROPERTIES
@@ -91,14 +100,21 @@ endif()
 # --- Static Library ---
 if (${LIB_NAME_UPPER}_BUILD_STATIC_LIB)
     if (LIB_COUNT EQUAL 1)
-        add_library(${PROJECT_NAME} STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
-        set(STATIC_TARGET ${PROJECT_NAME})
+        add_library(${LIB_NAME} STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+        set(STATIC_TARGET ${LIB_NAME})
     else()
-        add_library(${PROJECT_NAME}-Static STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
-        set(STATIC_TARGET ${PROJECT_NAME}-Static)
+        add_library(${LIB_NAME}-Static STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+        set(STATIC_TARGET ${LIB_NAME}-Static)
     endif()
+    add_library(${LIB_NAME}::Static ALIAS ${STATIC_TARGET})
     target_include_directories(${STATIC_TARGET} PUBLIC ${LIBRARY_SRC_DIR})
     target_compile_features(${STATIC_TARGET} PUBLIC c_std_99)
+    set_target_properties(${STATIC_TARGET} PROPERTIES
+        PUBLIC_HEADER "${LIBRARY_HEADERS}"
+    )
+    install(TARGETS ${STATIC_TARGET}
+        PUBLIC_HEADER DESTINATION include
+    )
 endif()
 
 # === Examples ===
@@ -156,21 +172,49 @@ if (${LIB_NAME_UPPER}_BUILD_EXAMPLES)
     endforeach()
 endif()
 
-# === Installation ===
-if (${LIB_NAME_UPPER}_BUILD_STATIC_LIB)
-    install(TARGETS ${STATIC_TARGET}
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin)
-endif()
-
-if (${LIB_NAME_UPPER}_BUILD_SHARED_LIB)
-    install(TARGETS ${SHARED_TARGET}
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin)
-endif()
-
 install(DIRECTORY ${LIBRARY_SRC_DIR}/
     DESTINATION include
     FILES_MATCHING PATTERN "*.h")
+
+# === Export Targets ===
+install(
+    TARGETS ${SHARED_TARGET} ${STATIC_TARGET}
+    EXPORT ${LIB_NAME}Targets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+# === Generate StreamConfig.cmake.in Content ===
+include(CMakePackageConfigHelpers)
+set(CONFIG_IN_CONTENT [=[
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/${LIB_NAME}Targets.cmake")
+
+# Optional: Add version compatibility
+check_required_components(${LIB_NAME})
+]=])
+
+# Write the content to a temporary .in file in the build directory
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}Config.cmake.in" "${CONFIG_IN_CONTENT}")
+
+# === Generate Config Files ===
+configure_package_config_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}Config.cmake.in  # Use generated file
+    ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}Config.cmake
+    INSTALL_DESTINATION lib/cmake/${LIB_NAME}
+)
+
+install(
+    EXPORT ${LIB_NAME}Targets
+    FILE ${LIB_NAME}Targets.cmake
+    NAMESPACE ${LIB_NAME}::
+    DESTINATION lib/cmake/${LIB_NAME}
+)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}Config.cmake
+    DESTINATION lib/cmake/${LIB_NAME}
+)
