@@ -186,7 +186,7 @@ install(
     INCLUDES DESTINATION include
 )
 
-# === Generate StreamConfig.cmake.in Content ===
+# === Generate ${LIB_NAME}Config.cmake.in Content ===
 include(CMakePackageConfigHelpers)
 set(CONFIG_IN_CONTENT [=[
 @PACKAGE_INIT@
