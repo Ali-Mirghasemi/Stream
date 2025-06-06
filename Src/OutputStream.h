@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 #define OSTREAM_VER_MAJOR    0
-#define OSTREAM_VER_MINOR    8
-#define OSTREAM_VER_FIX      1
+#define OSTREAM_VER_MINOR    9
+#define OSTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
 
@@ -25,7 +25,7 @@ extern "C" {
 /*                            Configuration                             */
 /************************************************************************/
 /**
- * @brief This lable shows OStream Libraty is enabled or not
+ * @brief This lable shows StreamOut Library is enabled or not
  */
 #define OSTREAM                     (1 && STREAM_WRITE && STREAM_PENDING_BYTES)
 /**
@@ -55,33 +55,38 @@ extern "C" {
 #define OSTREAM_VER                         ((OSTREAM_VER_MAJOR * 10000UL) + (OSTREAM_VER_MINOR * 100UL) + (OSTREAM_VER_FIX))
 
 /* Pre-defined variables */
-struct __OStream;
-typedef struct __OStream OStream;
+struct __StreamOut;
+typedef struct __StreamOut StreamOut;
 
+/* Add compatibility with older libraries */
+#if !defined(OStream) && (!defined(_WIN32) && !defined(_WIN64))
+    #define __OStream           __StreamOut
+    #define OStream             StreamOut
+#endif
 /**
  * @brief transmit function, this function allow stream to work with hardware
- * @param stream OStream
+ * @param stream StreamOut
  * @param buff uint8_t*
  * @param len Stream_LenType
  */
-typedef Stream_Result (*OStream_TransmitFn)(OStream* stream, uint8_t* buff, Stream_LenType len);
+typedef Stream_Result (*OStream_TransmitFn)(StreamOut* stream, uint8_t* buff, Stream_LenType len);
 /**
  * @brief check how many bytes transmitted, this functions allow stream to check 
  * how many bytes transmitted over hardware, it's good for work with DMA 
- * @param stream OStream
+ * @param stream StreamOut
  * @return Stream_LenType return how many bytes transmitted
  */
-typedef Stream_LenType (*OStream_CheckTransmitFn)(OStream* stream);
+typedef Stream_LenType (*OStream_CheckTransmitFn)(StreamOut* stream);
 /**
  * @brief flush callback, call after flush completed
  * 
  */
-typedef void (*OStream_FlushCallbackFn)(OStream* stream);
+typedef void (*OStream_FlushCallbackFn)(StreamOut* stream);
 
 /**
- * @brief hold OutputStream properties
+ * @brief hold StreamOut properties
  */
-struct __OStream {
+struct __StreamOut {
     StreamBuffer            Buffer;         /**< stream buffer */
     OStream_TransmitFn      transmit;       /**< transmit function */
 #if OSTREAM_CHECK_TRANSMIT
@@ -93,19 +98,19 @@ struct __OStream {
 };
 
 
-void                OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size);
-#define             OStream_deinit(STREAM)                                  memset(STREAM, 0, sizeof(OStream))
+void                OStream_init(StreamOut* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size);
+void                OStream_deinit(StreamOut* stream);
 
 
-/* Output Bytes of OStream */
-Stream_Result       OStream_handle(OStream* stream, Stream_LenType len);
-Stream_Result       OStream_flush(OStream* stream);
-Stream_Result       OStream_flushBlocking(OStream* stream);
-Stream_Result       OStream_transmitByte(OStream* stream);
-Stream_Result       OStream_transmitBytes(OStream* stream, Stream_LenType len);
+/* Output Bytes of StreamOut */
+Stream_Result       OStream_handle(StreamOut* stream, Stream_LenType len);
+Stream_Result       OStream_flush(StreamOut* stream);
+Stream_Result       OStream_flushBlocking(StreamOut* stream);
+Stream_Result       OStream_transmitByte(StreamOut* stream);
+Stream_Result       OStream_transmitBytes(StreamOut* stream, Stream_LenType len);
 
 #define             OStream_spaceUncheck(STREAM)                            Stream_space(&(STREAM)->Buffer)
-Stream_LenType      OStream_space(OStream* stream);
+Stream_LenType      OStream_space(StreamOut* stream);
 
 #define             OStream_outgoingBytes(STREAM)                           Stream_getPendingBytes(&(STREAM)->Buffer)
 
@@ -119,19 +124,41 @@ Stream_LenType      OStream_space(OStream* stream);
 #endif // OSTREAM_ARGS
 
 #if OSTREAM_CHECK_TRANSMIT
-    void            OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn);
+    void            OStream_setCheckTransmit(StreamOut* stream, OStream_CheckTransmitFn fn);
 #endif // OSTREAM_CHECK_TRANSMIT
 
 #if OSTREAM_FLUSH_CALLBACK
-    void            OStream_setFlushCallback(OStream* stream, OStream_FlushCallbackFn fn);
+    void            OStream_setFlushCallback(StreamOut* stream, OStream_FlushCallbackFn fn);
 #endif
 
 #if STREAM_WRITE_LOCK_CUSTOM
-    #define         OStream_lock(STREAM, LOCK, LEN)                         Stream_lockWriteCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, (LEN), sizeof(OStream))
+    #define         OStream_lock(STREAM, LOCK, LEN)                         Stream_lockWriteCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, (LEN), sizeof(StreamOut))
     #define         OStream_unlock(STREAM, LOCK)                            Stream_unlockWrite(&(STREAM)->Buffer, &(LOCK)->Buffer);
     #define         OStream_unlockIgnore(STREAM)                            Stream_unlockWriteIgnore(&(STREAM)->Buffer)
     #define         OStream_lockLen(STREAM, LOCK)                           Stream_lockWriteLen(&(STREAM)->Buffer, &(LOCK)->Buffer)
 #endif // OSTREAM_LOCK
+
+#if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+    #define         OStream_setMemIO(STREAM, COPY, COPYR, SET, REVERSE)     Stream_setMemIO(&(STREAM)->Buffer, (COPY), (COPYR), (SET), (REVERSE))
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+    #define         OStream_setMemIO(STREAM, MEM)                           Stream_setMemIO(&(STREAM)->Buffer, (MEM))
+#elif STREAM_MEM_IO == STREAM_MEM_IO_GLOBAL_DRIVER
+    #define         OStream_setMemIO(MEM)                                   Stream_setMemIO((MEM))
+#endif
+
+#if STREAM_MUTEX
+#if STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+    #define         OStream_setMutex(STREAM, INIT, LOCK, UNLOCK, DEINIT)    Stream_setMutex(&(STREAM)->Buffer, (INIT), (LOCK), (UNLOCK), (DEINIT))
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+    #define         OStream_setMutex(STREAM, DRIVER)                        Stream_setMutex(&(STREAM)->Buffer, (DRIVER))
+#elif STREAM_MUTEX == STREAM_MUTEX_GLOBAL_DRIVER
+    #define         OStream_setMutex(DRIVER)                                Stream_setMutex((DRIVER))
+#endif
+    #define         OStream_mutexInit(STREAM)                               Stream_mutexInit(&(STREAM)->Buffer)
+    #define         OStream_mutexLock(STREAM)                               Stream_mutexLock(&(STREAM)->Buffer)
+    #define         OStream_mutexUnlock(STREAM)                             Stream_mutexUnlock(&(STREAM)->Buffer)
+    #define         OStream_mutexDeInit(STREAM)                             Stream_mutexDeInit(&(STREAM)->Buffer)
+#endif
 
 /**
  * @brief return number of bytes waiting for transmit 

@@ -12,14 +12,14 @@
 #endif
 
 /**
- * @brief Initialize OutputStream
+ * @brief Initialize StreamOut
  *
- * @param stream OutputStream to initialize
+ * @param stream StreamOut to initialize
  * @param transmitFn Function to transmit data
  * @param buff Buffer to hold data
  * @param size Size of buffer
  */
-void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size) {
+void OStream_init(StreamOut* stream, OStream_TransmitFn transmitFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
     stream->Buffer.FlushMode = OSTREAM_FLUSH_MODE;
     stream->transmit = transmitFn;
@@ -31,13 +31,22 @@ void OStream_init(OStream* stream, OStream_TransmitFn transmitFn, uint8_t* buff,
 #endif
 }
 /**
+ * @brief De-Initialize output stream
+ * 
+ * @param stream 
+ */
+void OStream_deinit(StreamOut* stream) {
+    Stream_deinit(&stream->Buffer);
+    memset(stream, 0, sizeof(StreamOut));
+}
+/**
  * @brief call it in interrupt or TxCplt for Async Transmit
  *
  * @param stream
  * @param len
  * @return Stream_Result
  */
-Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
+Stream_Result OStream_handle(StreamOut* stream, Stream_LenType len) {
     Stream_Result res;
 	if (!stream->Buffer.InTransmit) {
 		return Stream_NoTransmit;
@@ -68,7 +77,7 @@ Stream_Result OStream_handle(OStream* stream, Stream_LenType len) {
  * @param stream
  * @return Stream_Result
  */
-Stream_Result OStream_flush(OStream* stream) {
+Stream_Result OStream_flush(StreamOut* stream) {
     if (!stream->Buffer.InTransmit) {
         Stream_LenType len = Stream_directAvailable(&stream->Buffer);
         stream->Buffer.PendingBytes = len;
@@ -95,7 +104,7 @@ Stream_Result OStream_flush(OStream* stream) {
  * @param stream 
  * @return Stream_Result 
  */
-Stream_Result OStream_flushBlocking(OStream* stream) {
+Stream_Result OStream_flushBlocking(StreamOut* stream) {
     Stream_Result res;
 
     while (OStream_pendingBytes(stream) == 0) {
@@ -112,7 +121,7 @@ Stream_Result OStream_flushBlocking(OStream* stream) {
  * @param stream
  * @return Stream_Result
  */
-Stream_Result OStream_transmitByte(OStream* stream) {
+Stream_Result OStream_transmitByte(StreamOut* stream) {
     Stream_LenType len = Stream_directAvailable(&stream->Buffer);
     if (len > 0) {
         if (stream->transmit) {
@@ -133,7 +142,7 @@ Stream_Result OStream_transmitByte(OStream* stream) {
  * @param stream
  * @return Stream_Result
  */
-Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len) {
+Stream_Result OStream_transmitBytes(StreamOut* stream, Stream_LenType len) {
     Stream_LenType dirLen = OStream_pendingBytes(stream);
     Stream_Result res;
     if (dirLen < len) {
@@ -164,12 +173,12 @@ Stream_Result OStream_transmitBytes(OStream* stream, Stream_LenType len) {
 }
 #if OSTREAM_CHECK_TRANSMIT
 /**
- * @brief set check transmit function for OStream
+ * @brief set check transmit function for StreamOut
  *
  * @param stream
  * @param checkTransmit
  */
-void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn) {
+void OStream_setCheckTransmit(StreamOut* stream, OStream_CheckTransmitFn fn) {
     stream->checkTransmit = fn;
 }
 #endif // OSTREAM_CHECK_TRANSMIT
@@ -180,7 +189,7 @@ void OStream_setCheckTransmit(OStream* stream, OStream_CheckTransmitFn fn) {
  * @param stream 
  * @param fn 
  */
-void OStream_setFlushCallback(OStream* stream, OStream_FlushCallbackFn fn) {
+void OStream_setFlushCallback(StreamOut* stream, OStream_FlushCallbackFn fn) {
     stream->flushCallback = fn;
 }
 #endif
@@ -190,7 +199,7 @@ void OStream_setFlushCallback(OStream* stream, OStream_FlushCallbackFn fn) {
  * @param stream
  * @return OStream_CheckTransmitFn
  */
-Stream_LenType OStream_space(OStream* stream) {
+Stream_LenType OStream_space(StreamOut* stream) {
 #if OSTREAM_CHECK_TRANSMIT
     if (stream->checkTransmit) {
         Stream_LenType len = stream->checkTransmit(stream);
