@@ -18,8 +18,8 @@ extern "C" {
 #include <stdint.h>
 
 #define STREAM_VER_MAJOR    0
-#define STREAM_VER_MINOR    9
-#define STREAM_VER_FIX      4
+#define STREAM_VER_MINOR    10
+#define STREAM_VER_FIX      0
 
 /************************************************************************/
 /*                            Configuration                             */
@@ -304,6 +304,7 @@ typedef int16_t Stream_LenType;
 #define STREAM_MEM_IO_DEFAULT               0
 #define STREAM_MEM_IO_CUSTOM                1
 #define STREAM_MEM_IO_DRIVER                2
+#define STREAM_MEM_IO_GLOBAL_DRIVER         3
 /**
  * @brief This features help you to override memcpy, memrcpy, memset and etc with your custom functions
  */
@@ -318,7 +319,37 @@ typedef int16_t Stream_LenType;
  */
 #define STREAM_MEM_IO_BUILT_IN              (1 && (STREAM_MEM_IO == STREAM_MEM_IO_DEFAULT))
 
+// ---------------------------- Mutex APIs ------------------------------
+#define STREAM_MUTEX_NONE                   0
+#define STREAM_MUTEX_CUSTOM                 1
+#define STREAM_MUTEX_DRIVER                 2
+#define STREAM_MUTEX_GLOBAL_DRIVER          3
+/**
+ * @brief If you want mutex for thread safety
+ */
+#define STREAM_MUTEX                        STREAM_MUTEX_DRIVER
+#if STREAM_MUTEX
+    /**
+     * @brief Mutex check result for every functions
+     */
+    #define STREAM_MUTEX_CHECK_RESULT       0
+    /**
+     * @brief Mutex result type
+     */
+    typedef int32_t Stream_MutexResult;
+    /**
+     * @brief Stream Mutex object
+     */
+    typedef void* Stream_Mutex;
+    /**
+     * @brief mutex function not exists
+     */
+    #define STREAM_MUTEX_NO_Function        ((Stream_MutexResult) -1)
+#endif
+
 /************************************************************************/
+
+#include "StreamBufferMacro.h"
 
 #define __STREAM_VER_STR(major, minor, fix)     #major "." #minor "." #fix
 #define _STREAM_VER_STR(major, minor, fix)      __STREAM_VER_STR(major, minor, fix)
@@ -341,7 +372,11 @@ typedef int16_t Stream_LenType;
  */
 #define STREAM_READ_DEFAULT_VALUE           0
 
-/**
+/* Pre-Define Types */
+struct __StreamBuffer;
+typedef struct __StreamBuffer StreamBuffer;
+
+/**__StreamBuffer
  * @brief you can choose what ByteOrder can use for r/w operations
  */
 typedef enum {
@@ -366,6 +401,7 @@ typedef enum {
     Stream_ZeroLen          = 10,       /**< len parameter is zero */
     Stream_ReceiveFailed    = 11,       /**< failed in receive */
     Stream_TransmitFailed   = 12,       /**< failed in transmit */
+    Stream_MutexError       = 0x40,     /**< mutex error */
     Stream_CustomError      = 0x80,     /**< can be used for custom errors */
 } Stream_Result;
 /**
@@ -415,6 +451,50 @@ typedef Stream_LenType (*Stream_MemSetFn)(void* src, uint8_t val, Stream_LenType
  */
 typedef Stream_LenType (*Stream_MemReverseFn)(void* src, Stream_LenType len);
 
+#if STREAM_MUTEX
+/**
+ * @brief Initialize mutex object for stream
+ * 
+ * @param stream stream buffer
+ * @param mutex mutex object
+ * @return return mutex result
+ */
+typedef Stream_MutexResult (*Stream_Mutex_InitFn)(StreamBuffer* stream, Stream_Mutex* mutex);
+/**
+ * @brief Lock on mutex
+ * 
+ * @param stream stream buffer
+ * @param mutex mutex object
+ * @return return mutex result
+ */
+typedef Stream_MutexResult (*Stream_Mutex_LockFn)(StreamBuffer* stream, Stream_Mutex* mutex);
+/**
+ * @brief Unlock mutex object
+ * 
+ * @param stream stream buffer
+ * @param mutex mutex object
+ * @return return mutex result
+ */
+typedef Stream_MutexResult (*Stream_Mutex_UnlockFn)(StreamBuffer* stream, Stream_Mutex* mutex);
+/**
+ * @brief DeInit mutex
+ * 
+ * @param stream stream buffer
+ * @param mutex mutex object
+ * @return return mutex result
+ */
+typedef Stream_MutexResult (*Stream_Mutex_DeInitFn)(StreamBuffer* stream, Stream_Mutex* mutex);
+/**
+ * @brief Stream mutex driver
+ */
+typedef struct {
+    Stream_Mutex_InitFn             init;
+    Stream_Mutex_LockFn             lock;
+    Stream_Mutex_UnlockFn           unlock;
+    Stream_Mutex_DeInitFn           deinit;
+} Stream_MutexDriver;
+#endif // STREAM_MUTEX
+
 typedef struct {
     Stream_MemCopyFn              copy;
     Stream_MemCopyReverseFn       copyReverse;
@@ -456,37 +536,45 @@ typedef union {
  * @brief StreamBuffer struct
  * contains everything need for handle stream
  */
-typedef struct {
+struct __StreamBuffer {
 #if STREAM_ARGS
-    void*                   Args;
+    void*                       Args;                   /**< user arguments for stream */
 #endif
 #if   STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
-    Stream_MemIO            Mem;                    /**< Custom io functions for interact with memory */
+    Stream_MemIO                Mem;                    /**< Custom io functions for interact with memory */
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
-    const Stream_MemIO*     Mem;                    /**< Custom io functions for interact with memory in driver mode */
+    const Stream_MemIO*         Mem;                    /**< Custom io functions for interact with memory in driver mode */
 #endif
-    uint8_t*                Data;                   /**< pointer to buffer */
-    Stream_LenType          Size;                   /**< size of buffer */
-    Stream_LenType          WPos;                   /**< write position */
-    Stream_LenType          RPos;                   /**< read position */
+#if   STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+    Stream_MutexDriver          MutexDriver;            /**< Custom mutex driver */
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+    const Stream_MutexDriver*   MutexDriver;            /**< Mutex driver for stream */
+#endif
+#if   STREAM_MUTEX
+    Stream_Mutex                Mutex;                  /**< Mutex object for stream */
+#endif
+    uint8_t*                    Data;                   /**< pointer to buffer */
+    Stream_LenType              Size;                   /**< size of buffer */
+    Stream_LenType              WPos;                   /**< write position */
+    Stream_LenType              RPos;                   /**< read position */
 #if STREAM_WRITE_LIMIT
-    Stream_LenType          WriteLimit;             /**< limit for write operation */
+    Stream_LenType              WriteLimit;             /**< limit for write operation */
 #endif // STREAM_WRITE_LIMIT
 #if STREAM_READ_LIMIT
-    Stream_LenType          ReadLimit;              /**< limit for read operation */
+    Stream_LenType              ReadLimit;              /**< limit for read operation */
 #endif
 #if STREAM_PENDING_BYTES
-    Stream_LenType          PendingBytes;           /**< hold pending bytes for receive or transmit */
+    Stream_LenType              PendingBytes;           /**< hold pending bytes for receive or transmit */
 #endif
-    uint8_t                 Overflow        : 1;    /**< overflow flag */
-    uint8_t                 InReceive       : 1;    /**< stream is in receive mode */
-    uint8_t                 InTransmit      : 1;    /**< stream is in transmit mode */
-    uint8_t                 Order           : 1;    /**< byte order */
-    uint8_t                 OrderFn         : 1;    /**< byte order function */
-    uint8_t                 WriteLocked     : 1;    /**< stream write locked */
-    uint8_t                 ReadLocked      : 1;    /**< stream write locked */
-    uint8_t                 FlushMode       : 1;    /**< flush mode */
-} StreamBuffer;
+    uint8_t                     Overflow        : 1;    /**< overflow flag */
+    uint8_t                     InReceive       : 1;    /**< stream is in receive mode */
+    uint8_t                     InTransmit      : 1;    /**< stream is in transmit mode */
+    uint8_t                     Order           : 1;    /**< byte order */
+    uint8_t                     OrderFn         : 1;    /**< byte order function */
+    uint8_t                     WriteLocked     : 1;    /**< stream write locked */
+    uint8_t                     ReadLocked      : 1;    /**< stream write locked */
+    uint8_t                     FlushMode       : 1;    /**< flush mode */
+};
 /**
  * @brief hold properties of cursor over stream
  */
@@ -500,22 +588,6 @@ void Stream_init(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size);
 void Stream_fromBuff(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size, Stream_LenType len);
 void Stream_deinit(StreamBuffer* stream);
 
-#if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
-void Stream_setMemIO(
-    StreamBuffer*               stream,
-    Stream_MemCopyFn            copy,
-    Stream_MemCopyReverseFn     copyReverse,
-    Stream_MemSetFn             set,
-    Stream_MemReverseFn         reverse
-);
-#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
-void Stream_setMemIO(StreamBuffer* stream, const Stream_MemIO* mem);
-#elif STREAM_MEM_IO_BUILT_IN
-void memrcpy(void* dest, const void* src, int len);
-void memreverse(void* arr, int len);
-#endif
-
-
 #if STREAM_WRITE_LIMIT
     #define         Stream_space(STREAM)                                    Stream_spaceLimit((STREAM))
 #else
@@ -527,6 +599,43 @@ void memreverse(void* arr, int len);
 #else
     #define         Stream_available(STREAM)                                Stream_availableReal((STREAM))
 #endif // STREAM_READ_LIMIT
+
+#if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+    void Stream_setMemIO(
+        StreamBuffer*               stream,
+        Stream_MemCopyFn            copy,
+        Stream_MemCopyReverseFn     copyReverse,
+        Stream_MemSetFn             set,
+        Stream_MemReverseFn         reverse
+    );
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+    void Stream_setMemIO(StreamBuffer* stream, const Stream_MemIO* mem);
+#elif STREAM_MEM_IO == STREAM_MEM_IO_GLOBAL_DRIVER
+    void Stream_setMemIO(const Stream_MemIO* mem);
+#elif STREAM_MEM_IO_BUILT_IN
+    void memrcpy(void* dest, const void* src, int len);
+    void memreverse(void* arr, int len);
+#endif
+
+#if STREAM_MUTEX
+#if STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+    void Stream_setMutex(
+        StreamBuffer*               stream,
+        Stream_Mutex_InitFn         init,
+        Stream_Mutex_LockFn         lock,
+        Stream_Mutex_UnlockFn       unlock,
+        Stream_Mutex_DeInitFn       deinit
+    );
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+    void Stream_setMutex(StreamBuffer* stream, const Stream_MutexDriver* driver);
+#elif STREAM_MUTEX == STREAM_MUTEX_GLOBAL_DRIVER
+    void Stream_setMutex(const Stream_MutexDriver* driver);
+#endif
+    Stream_MutexResult Stream_mutexInit(StreamBuffer* stream);
+    Stream_MutexResult Stream_mutexLock(StreamBuffer* stream);
+    Stream_MutexResult Stream_mutexUnlock(StreamBuffer* stream);
+    Stream_MutexResult Stream_mutexDeInit(StreamBuffer* stream);
+#endif
 
 Stream_LenType      Stream_availableReal(StreamBuffer* stream);
 Stream_LenType      Stream_spaceReal(StreamBuffer* stream);
@@ -987,7 +1096,7 @@ Stream_Value        Stream_getValueAt(StreamBuffer* stream, Stream_LenType index
     #define         Stream_getFloatAt(STREAM, IDX)                          Stream_getValueAt((STREAM), (IDX), sizeof(float)).Float
 #endif
 #if STREAM_DOUBLE
-    #define         Stream_getDoubleAt(STREAM, IDX)                         Stream_getValueAt((STREAM), (IDX), sizeof(double)).Double 
+    #define         Stream_getDoubleAt(STREAM, IDX)                         Stream_getValueAt((STREAM), (IDX), sizeof(double)).Double
 #endif
 #endif // STREAM_GET_AT_VALUE
 /* ------------------------------------ GetAt Value Safe APIs ---------------------------------- */

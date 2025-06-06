@@ -3,23 +3,53 @@
 
 /* Memory IO Macros */
 #if   STREAM_MEM_IO == STREAM_MEM_IO_DEFAULT
-    #define __memCopy(S, DEST, SRC, LEN)             STREAM_MEM_COPY((DEST), (SRC), (LEN))
-    #define __memCopyReverse(S, DEST, SRC, LEN)      STREAM_MEM_COPY_REVERSE((DEST), (SRC), (LEN))
-    #define __memSet(S, SRC, VAL, LEN)               STREAM_MEM_SET((SRC), (VAL), (LEN))
-    #define __memReverse(S, SRC, LEN)                STREAM_MEM_REVERSE((SRC), (LEN))
+    #define __memCopy(S, DEST, SRC, LEN)            STREAM_MEM_COPY((DEST), (SRC), (LEN))
+    #define __memCopyReverse(S, DEST, SRC, LEN)     STREAM_MEM_COPY_REVERSE((DEST), (SRC), (LEN))
+    #define __memSet(S, SRC, VAL, LEN)              STREAM_MEM_SET((SRC), (VAL), (LEN))
+    #define __memReverse(S, SRC, LEN)               STREAM_MEM_REVERSE((SRC), (LEN))
 #elif STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
-    #define __memCopy(S, DEST, SRC, LEN)             (S)->Mem.copy((DEST), (SRC), (LEN))
-    #define __memCopyReverse(S, DEST, SRC, LEN)      (S)->Mem.copyReverse((DEST), (SRC), (LEN))
-    #define __memSet(S, SRC, VAL, LEN)               (S)->Mem.set((SRC), (VAL), (LEN))
-    #define __memReverse(S, SRC, LEN)                (S)->Mem.reverse((SRC), (LEN))
+    #define __memCopy(S, DEST, SRC, LEN)            (S)->Mem.copy((DEST), (SRC), (LEN))
+    #define __memCopyReverse(S, DEST, SRC, LEN)     (S)->Mem.copyReverse((DEST), (SRC), (LEN))
+    #define __memSet(S, SRC, VAL, LEN)              (S)->Mem.set((SRC), (VAL), (LEN))
+    #define __memReverse(S, SRC, LEN)               (S)->Mem.reverse((SRC), (LEN))
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
-    #define __memCopy(S, DEST, SRC, LEN)             (S)->Mem->copy((DEST), (SRC), (LEN))
-    #define __memCopyReverse(S, DEST, SRC, LEN)      (S)->Mem->copyReverse((DEST), (SRC), (LEN))
-    #define __memSet(S, SRC, VAL, LEN)               (S)->Mem->set((SRC), (VAL), (LEN))
-    #define __memReverse(S, SRC, LEN)                (S)->Mem->reverse((SRC), (LEN))
+    #define __memCopy(S, DEST, SRC, LEN)            (S)->Mem->copy((DEST), (SRC), (LEN))
+    #define __memCopyReverse(S, DEST, SRC, LEN)     (S)->Mem->copyReverse((DEST), (SRC), (LEN))
+    #define __memSet(S, SRC, VAL, LEN)              (S)->Mem->set((SRC), (VAL), (LEN))
+    #define __memReverse(S, SRC, LEN)               (S)->Mem->reverse((SRC), (LEN))
+#elif STREAM_MEM_IO == STREAM_MEM_IO_GLOBAL_DRIVER
+    #define __memCopy(S, DEST, SRC, LEN)            __streamMemDriver->copy((DEST), (SRC), (LEN))
+    #define __memCopyReverse(S, DEST, SRC, LEN)     __streamMemDriver->copyReverse((DEST), (SRC), (LEN))
+    #define __memSet(S, SRC, VAL, LEN)              __streamMemDriver->set((SRC), (VAL), (LEN))
+    #define __memReverse(S, SRC, LEN)               __streamMemDriver->reverse((SRC), (LEN))
 #else
     #error "STREAM_MEM_IO is invalid!"
 #endif // STREAM_MEM_IO
+
+/* Mutex Macros */
+#if   STREAM_MUTEX == STREAM_MUTEX_DEFAULT
+    #define __IMPL_MUTEX_INIT(S)                    
+    #define __IMPL_MUTEX_LOCK(S)
+    #define __IMPL_MUTEX_UNLOCK(S)
+    #define __IMPL_MUTEX_DEINIT(S)
+#elif STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+    #define __IMPL_MUTEX_INIT(S)                    (S)->MutexDriver.init ? (S)->MutexDriver.init((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_LOCK(S)                    (S)->MutexDriver.lock ? (S)->MutexDriver.lock((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_UNLOCK(S)                  (S)->MutexDriver.unlock ? (S)->MutexDriver.unlock((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_DEINIT(S)                  (S)->MutexDriver.deinit ? (S)->MutexDriver.deinit((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+    #define __IMPL_MUTEX_INIT(S)                    (S)->MutexDriver && (S)->MutexDriver->init ? (S)->MutexDriver->init((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_LOCK(S)                    (S)->MutexDriver && (S)->MutexDriver->lock ? (S)->MutexDriver->lock((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_UNLOCK(S)                  (S)->MutexDriver && (S)->MutexDriver->unlock ? (S)->MutexDriver->unlock((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_DEINIT(S)                  (S)->MutexDriver && (S)->MutexDriver->deinit ? (S)->MutexDriver->deinit((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+#elif STREAM_MUTEX == STREAM_MUTEX_GLOBAL_DRIVER
+    #define __IMPL_MUTEX_INIT(S)                    __streamMutexDriver && __streamMutexDriver->init ? __streamMutexDriver->init((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_LOCK(S)                    __streamMutexDriver && __streamMutexDriver->lock ? __streamMutexDriver->lock((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_UNLOCK(S)                  __streamMutexDriver && __streamMutexDriver->unlock ? __streamMutexDriver->unlock((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+    #define __IMPL_MUTEX_DEINIT(S)                  __streamMutexDriver && __streamMutexDriver->deinit ? __streamMutexDriver->deinit((S), &(S)->Mutex) : STREAM_MUTEX_NO_Function
+#else
+    #error "STREAM_MUTEX is invalid!"
+#endif // STREAM_MUTEX
 
 /* private typedef */
 typedef Stream_Result (*Stream_WriteBytesFn)(StreamBuffer* stream, uint8_t* val, Stream_LenType len);
@@ -82,14 +112,66 @@ static const Stream_SetBytesFn setBytesAt[2] = {
 #endif // STREAM_FIND_AT_VALUE
 
 /* StreamBuffer MemIO default driver*/
-#if STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+#if STREAM_MEM_IO == STREAM_MEM_IO_DRIVER || STREAM_MEM_IO == STREAM_MEM_IO_GLOBAL_DRIVER
 static const Stream_MemIO STREAM_DEFAULT_DRIVER = {
     (Stream_MemCopyFn) STREAM_MEM_COPY,
     (Stream_MemCopyReverseFn) STREAM_MEM_COPY_REVERSE,
     (Stream_MemSetFn) STREAM_MEM_SET,
     (Stream_MemReverseFn) STREAM_MEM_REVERSE,
 };
+#if STREAM_MEM_IO == STREAM_MEM_IO_GLOBAL_DRIVER
+static const Stream_MemIO* __streamMemDriver = (Stream_MemIO*) &STREAM_DEFAULT_DRIVER;
 #endif
+#endif
+
+#if STREAM_MUTEX == STREAM_MUTEX_GLOBAL_DRIVER
+static const Stream_MutexDriver* __streamMutexDriver = (Stream_MutexDriver*) 0;
+#endif
+
+#if STREAM_MUTEX
+#if STREAM_MUTEX_CHECK_RESULT
+    #define __mutexVarInit()                        Stream_MutexResult mutexError
+    #define __mutexInit(S)                          if ((mutexError = Stream_mutexInit((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexLock(S)                          if ((mutexError = Stream_mutexLock((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexUnlock(S)                        if ((mutexError = Stream_mutexUnlock((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexDeInit(S)                        if ((mutexError = Stream_mutexDeInit((S)))) { return Stream_MutexError | mutexError; }
+#else
+    #define __mutexVarInit()
+    #define __mutexInit(S)                          Stream_mutexInit((S))
+    #define __mutexLock(S)                          Stream_mutexLock((S))
+    #define __mutexUnlock(S)                        Stream_mutexUnlock((S))
+    #define __mutexDeInit(S)                        Stream_mutexDeInit((S))
+#endif
+#else
+    #define __mutexVarInit()
+    #define __mutexInit(S)
+    #define __mutexLock(S)
+    #define __mutexUnlock(S)
+    #define __mutexDeInit(S)
+#endif
+
+#if   STREAM_CHECK_ZERO_LEN
+    #define __checkZeroLen(S, LEN)                  if ((LEN) == 0) { return Stream_ZeroLen; }
+    #define __checkZeroLenArray(S, LEN, ILEN)       if ((LEN) == 0 || (ILEN) == 0) { return Stream_ZeroLen; }
+#else
+    #define __checkZeroLen(S, LEN)
+    #define __checkZeroLenArray(S, LEN, ILEN)
+#endif
+
+#if STREAM_WRITE_LIMIT
+    #define __writeLimit(S, LEN)                    if (Stream_isWriteLimited((S))) { (S)->WriteLimit -= (LEN); }
+#else
+    #define __writeLimit(S, LEN)
+#endif
+
+#if STREAM_READ_LIMIT
+    #define __readLimit(S, LEN)                     if (Stream_isReadLimited((S))) { (S)->ReadLimit -= (LEN); }
+#else
+    #define __readLimit(S, LEN)
+#endif
+
+#define __checkSpace(S, LEN)                        if (Stream_space((S)) < (LEN)) { return Stream_NoSpace; }
+#define __checkAvailable(S, LEN)                    if (Stream_available((S)) < (LEN)) { return Stream_NoAvailable; }
 
 /**
  * @brief initialize stream
@@ -139,6 +221,17 @@ void Stream_init(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size) {
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
     Stream_setMemIO(stream, &STREAM_DEFAULT_DRIVER);
 #endif
+#if STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+    Stream_setMutex(
+        stream,
+        (Stream_Mutex_InitFn) 0,
+        (Stream_Mutex_LockFn) 0,
+        (Stream_Mutex_UnlockFn) 0,
+        (Stream_Mutex_DeInitFn) 0
+    );
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+    Stream_setMutex(stream, (Stream_MutexDriver*) 0);
+#endif
 }
 /**
  * @brief initialize stream with a buffer that already have data in it
@@ -157,6 +250,8 @@ void Stream_fromBuff(StreamBuffer* stream, uint8_t* buffer, Stream_LenType size,
  * @param stream address of stream
  */
 void Stream_deinit(StreamBuffer* stream) {
+    __mutexVarInit();
+    __mutexDeInit(stream);
     __memSet(stream, stream, 0, sizeof(StreamBuffer));
 }
 #if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
@@ -177,10 +272,13 @@ void Stream_setMemIO(
     Stream_MemSetFn           set,
     Stream_MemReverseFn       reverse
 ) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->Mem.copy = copy ? copy : (Stream_MemCopyFn) STREAM_MEM_COPY;
     stream->Mem.copyReverse = copyReverse ? copyReverse : (Stream_MemCopyReverseFn) STREAM_MEM_COPY_REVERSE;
     stream->Mem.set = set ? set : (Stream_MemSetFn) STREAM_MEM_SET;
     stream->Mem.reverse = reverse ? reverse : (Stream_MemReverseFn) STREAM_MEM_REVERSE;
+    __mutexUnlock(stream);
 }
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
 /**
@@ -191,10 +289,85 @@ void Stream_setMemIO(
  * @param mem
  */
 void Stream_setMemIO(StreamBuffer* stream, const Stream_MemIO* mem) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->Mem = mem ? mem : &STREAM_DEFAULT_DRIVER;
+    __mutexUnlock(stream);
+}
+#elif STREAM_MEM_IO == STREAM_MEM_IO_GLOBAL_DRIVER
+/**
+ * @brief Set memory io driver
+ * if input is null use default driver. all function must exists
+ *
+ * @param stream
+ * @param mem
+ */
+void Stream_setMemIO(const Stream_MemIO* mem) {
+    __streamMemDriver = mem ? mem : &STREAM_DEFAULT_DRIVER;
 }
 #endif
-
+#if STREAM_MUTEX
+#if STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+/**
+ * @brief Set custom mutex driver
+ * 
+ * @param stream 
+ * @param init 
+ * @param lock 
+ * @param unlock 
+ * @param deinit 
+ */
+void Stream_setMutex(
+    StreamBuffer*               stream,
+    Stream_Mutex_InitFn         init,
+    Stream_Mutex_LockFn         lock,
+    Stream_Mutex_UnlockFn       unlock,
+    Stream_Mutex_DeInitFn       deinit
+) {
+    stream->MutexDriver.init = init;
+    stream->MutexDriver.lock = lock;
+    stream->MutexDriver.unlock = unlock;
+    stream->MutexDriver.deinit = deinit;
+}
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+/**
+ * @brief Set mutex driver
+ * 
+ * @param stream 
+ * @param driver 
+ */
+void Stream_setMutex(StreamBuffer* stream, const Stream_MutexDriver* driver) {
+    stream->MutexDriver = driver;
+}
+#elif STREAM_MUTEX == STREAM_MUTEX_GLOBAL_DRIVER
+/**
+ * @brief Set global mutex driver
+ * 
+ * @param driver 
+ */
+void Stream_setMutex(const Stream_MutexDriver* driver) {
+    __streamMutexDriver = driver;
+}
+#endif
+/**
+ * @brief Initialize mutex for stream
+ * 
+ * @param stream 
+ * @return Stream_MutexResult 
+ */
+Stream_MutexResult Stream_mutexInit(StreamBuffer* stream) {
+    return __IMPL_MUTEX_INIT(stream);
+}
+Stream_MutexResult Stream_mutexLock(StreamBuffer* stream) {
+    return __IMPL_MUTEX_LOCK(stream);
+}
+Stream_MutexResult Stream_mutexUnlock(StreamBuffer* stream) {
+    return __IMPL_MUTEX_UNLOCK(stream);
+}
+Stream_MutexResult Stream_mutexDeInit(StreamBuffer* stream) {
+    return __IMPL_MUTEX_DEINIT(stream);
+}
+#endif
 /**
  * @brief return available bytes to read
  *
@@ -202,7 +375,11 @@ void Stream_setMemIO(StreamBuffer* stream, const Stream_MemIO* mem) {
  * @return Stream_LenType available bytes
  */
 Stream_LenType Stream_availableReal(StreamBuffer* stream) {
-    return stream->Size * stream->Overflow + stream->WPos - stream->RPos;
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = stream->Size * stream->Overflow + stream->WPos - stream->RPos;
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief return buffer space for write bytes
@@ -211,7 +388,11 @@ Stream_LenType Stream_availableReal(StreamBuffer* stream) {
  * @return Stream_LenType space for write
  */
 Stream_LenType Stream_spaceReal(StreamBuffer* stream) {
-    return stream->Size * !stream->Overflow + stream->RPos - stream->WPos;
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = stream->Size * !stream->Overflow + stream->RPos - stream->WPos;
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief check stream is empty
@@ -220,7 +401,11 @@ Stream_LenType Stream_spaceReal(StreamBuffer* stream) {
  * @return uint8_t 0 -> Not Empty, 1-> it's empty
  */
 uint8_t Stream_isEmpty(StreamBuffer* stream) {
-    return stream->RPos == stream->WPos && !stream->Overflow;
+    __mutexVarInit();
+    __mutexLock(stream);
+    uint8_t res = stream->RPos == stream->WPos && !stream->Overflow;
+    __mutexUnlock(stream);
+    return res;
 }
 /**
  * @brief check stream it's full
@@ -230,7 +415,11 @@ uint8_t Stream_isEmpty(StreamBuffer* stream) {
  * @return uint8_t 0 -> Not Full, 1-> it's Full
  */
 uint8_t Stream_isFull(StreamBuffer* stream) {
-    return stream->RPos == stream->WPos && stream->Overflow;
+    __mutexVarInit();
+    __mutexLock(stream);
+    uint8_t res = stream->RPos == stream->WPos && stream->Overflow;
+    __mutexUnlock(stream);
+    return res;
 }
 /**
  * @brief reset stream
@@ -238,9 +427,12 @@ uint8_t Stream_isFull(StreamBuffer* stream) {
  * @param stream
  */
 void Stream_reset(StreamBuffer* stream) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->RPos = 0;
     stream->WPos = 0;
     stream->Overflow = 0;
+    __mutexUnlock(stream);
 }
 /**
  * @brief reset stream and ignore receive and transmit operations
@@ -248,11 +440,14 @@ void Stream_reset(StreamBuffer* stream) {
  * @param stream
  */
 void Stream_resetIO(StreamBuffer* stream) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->RPos = 0;
     stream->WPos = 0;
     stream->Overflow = 0;
     stream->InReceive = 0;
     stream->InTransmit = 0;
+    __mutexUnlock(stream);
 }
 /**
  * @brief clear buffer and reset stream
@@ -260,8 +455,11 @@ void Stream_resetIO(StreamBuffer* stream) {
  * @param stream
  */
 void Stream_clear(StreamBuffer* stream) {
-    Stream_reset(stream);
+    Stream_resetIO(stream);
+    __mutexVarInit();
+    __mutexLock(stream);
     __memSet(stream, stream->Data, 0, stream->Size);
+    __mutexUnlock(stream);
 }
 /**
  * @brief
@@ -270,7 +468,10 @@ void Stream_clear(StreamBuffer* stream) {
  * @param mode
  */
 void Stream_setFlushMode(StreamBuffer* stream, Stream_FlushMode mode) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->FlushMode = mode;
+    __mutexUnlock(stream);
 }
 /**
  * @brief return in receive flag
@@ -316,8 +517,12 @@ Stream_LenType Stream_getReadPos(StreamBuffer* stream) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_directAvailable(StreamBuffer* stream) {
-    return stream->Overflow ? stream->Size - stream->RPos :
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = stream->Overflow ? stream->Size - stream->RPos :
                                 stream->WPos - stream->RPos;
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief return number of bytes it's in row in the ram
@@ -327,8 +532,12 @@ Stream_LenType Stream_directAvailable(StreamBuffer* stream) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_directSpace(StreamBuffer* stream) {
-    return stream->Overflow ? stream->RPos - stream->WPos :
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = stream->Overflow ? stream->RPos - stream->WPos :
                                 stream->Size - stream->WPos;
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief return number of bytes that it's in row in the ram
@@ -339,15 +548,19 @@ Stream_LenType Stream_directSpace(StreamBuffer* stream) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_directAvailableAt(StreamBuffer* stream, Stream_LenType index) {
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType len = Stream_availableReal(stream);
     Stream_LenType dirLen = Stream_directAvailable(stream);
     if (len == dirLen) {
-        return len - index;
+        len = len - index;
     }
     else {
-        return dirLen > index ? dirLen - index :
+        len = dirLen > index ? dirLen - index :
                                 stream->WPos - (index - dirLen);
     }
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief return number of bytes it's in row in the ram
@@ -358,15 +571,19 @@ Stream_LenType Stream_directAvailableAt(StreamBuffer* stream, Stream_LenType ind
  * @return Stream_LenType
  */
 Stream_LenType Stream_directSpaceAt(StreamBuffer* stream, Stream_LenType index) {
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType len = Stream_spaceReal(stream);
     Stream_LenType dirLen = Stream_directSpace(stream);
     if (len == dirLen) {
-        return len - index;
+        len = len - index;
     }
     else {
-        return dirLen > index ? dirLen - index :
+        len = dirLen > index ? dirLen - index :
                                 stream->RPos - (index - dirLen);
     }
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief get ptr to start of WPos in ram
@@ -387,21 +604,27 @@ uint8_t* Stream_getReadPtr(StreamBuffer* stream) {
     return &stream->Data[stream->RPos];
 }
 uint8_t* Stream_getWritePtrAt(StreamBuffer* stream, Stream_LenType index) {
+    __mutexVarInit();
+    __mutexLock(stream);
     index += stream->WPos;
 
     if (index >= stream->Size) {
         index %= stream->Size;
     }
 
+    __mutexUnlock(stream);
     return &stream->Data[index];
 }
 uint8_t* Stream_getReadPtrAt(StreamBuffer* stream, Stream_LenType index) {
+    __mutexVarInit();
+    __mutexLock(stream);
     index += stream->RPos;
 
     if (index >= stream->Size) {
         index %= stream->Size;
     }
 
+    __mutexUnlock(stream);
     return &stream->Data[index];
 }
 /**
@@ -438,9 +661,9 @@ Stream_LenType Stream_getBufferSize(StreamBuffer* stream) {
  * @return Stream_Result
  */
 Stream_Result Stream_moveWritePos(StreamBuffer* stream, Stream_LenType steps) {
-    if (Stream_space(stream) < steps) {
-        return Stream_NoSpace;
-    }
+    __checkSpace(stream, steps);
+    __mutexVarInit();
+    __mutexLock(stream);
 
     stream->WPos += steps;
     if (stream->WPos >= stream->Size) {
@@ -448,6 +671,7 @@ Stream_Result Stream_moveWritePos(StreamBuffer* stream, Stream_LenType steps) {
         stream->Overflow = 1;
     }
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 /**
@@ -458,9 +682,9 @@ Stream_Result Stream_moveWritePos(StreamBuffer* stream, Stream_LenType steps) {
  * @return Stream_Result
  */
 Stream_Result Stream_moveReadPos(StreamBuffer* stream, Stream_LenType steps) {
-    if (Stream_available(stream) < steps) {
-        return Stream_NoAvailable;
-    }
+    __checkAvailable(stream, steps);
+    __mutexVarInit();
+    __mutexLock(stream);
 
     stream->RPos += steps;
     if (stream->RPos >= stream->Size) {
@@ -468,6 +692,7 @@ Stream_Result Stream_moveReadPos(StreamBuffer* stream, Stream_LenType steps) {
         stream->Overflow = 0;
     }
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 #if STREAM_WRITE_FLIP
@@ -478,6 +703,8 @@ Stream_Result Stream_moveReadPos(StreamBuffer* stream, Stream_LenType steps) {
  * @param len
  */
 void Stream_flipWrite(StreamBuffer* stream, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->RPos = stream->WPos + len;
     if (stream->RPos >= stream->Size) {
         stream->RPos %= stream->Size;
@@ -486,6 +713,7 @@ void Stream_flipWrite(StreamBuffer* stream, Stream_LenType len) {
     else {
         stream->Overflow = 1;
     }
+    __mutexUnlock(stream);
 }
 #endif
 #if STREAM_READ_FLIP
@@ -496,6 +724,8 @@ void Stream_flipWrite(StreamBuffer* stream, Stream_LenType len) {
  * @param len
  */
 void Stream_flipRead(StreamBuffer* stream, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->WPos = stream->RPos + len;
     if (stream->WPos >= stream->Size) {
         stream->WPos %= stream->Size;
@@ -504,6 +734,7 @@ void Stream_flipRead(StreamBuffer* stream, Stream_LenType len) {
     else {
         stream->Overflow = 0;
     }
+    __mutexUnlock(stream);
 }
 #endif
 #if STREAM_BYTE_ORDER
@@ -533,10 +764,13 @@ ByteOrder Stream_getSystemByteOrder(void) {
  * @param stream
  * @param order
  */
-void       Stream_setByteOrder(StreamBuffer* stream, ByteOrder order) {
+void Stream_setByteOrder(StreamBuffer* stream, ByteOrder order) {
+    __mutexVarInit();
+    __mutexLock(stream);
     ByteOrder osOrder = Stream_getSystemByteOrder();
     stream->Order = order;
     stream->OrderFn = osOrder != order;
+    __mutexUnlock(stream);
 }
 /**
  * @brief return stream byte order
@@ -555,12 +789,15 @@ ByteOrder  Stream_getByteOrder(StreamBuffer* stream) {
  * @param stream
  * @param len
  */
-void       Stream_setWriteLimit(StreamBuffer* stream, Stream_LenType len) {
+void Stream_setWriteLimit(StreamBuffer* stream, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType space = Stream_spaceReal(stream);
     if (space < len) {
         len = space;
     }
     stream->WriteLimit = len;
+    __mutexUnlock(stream);
 }
 /**
  * @brief return write operation is limited or not
@@ -592,11 +829,14 @@ Stream_LenType Stream_getWriteLimit(StreamBuffer* stream) {
  * @param len
  */
 void Stream_setReadLimit(StreamBuffer* stream, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType available = Stream_availableReal(stream);
     if (available < len) {
         len = available;
     }
     stream->ReadLimit = len;
+    __mutexUnlock(stream);
 }
 /**
  * @brief return read operations is limited or not
@@ -634,8 +874,11 @@ Stream_LenType Stream_getReadLimit(StreamBuffer* stream) {
  * @param cursor
  */
 void Stream_getCursor(StreamBuffer* stream, Stream_Cursor* cursor) {
+    __mutexVarInit();
+    __mutexLock(stream);
     cursor->WPos = stream->WPos;
     cursor->RPos = stream->RPos;
+    __mutexUnlock(stream);
 }
 /**
  * @brief return read len from cursor pos
@@ -645,8 +888,12 @@ void Stream_getCursor(StreamBuffer* stream, Stream_Cursor* cursor) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_getReadLen(StreamBuffer* stream, Stream_Cursor* cursor) {
-    return cursor->RPos >= stream->RPos ? cursor->RPos - stream->RPos :
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = cursor->RPos >= stream->RPos ? cursor->RPos - stream->RPos :
                                             (stream->Size - cursor->RPos) + stream->RPos;
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief return write len from cursor pos
@@ -656,8 +903,12 @@ Stream_LenType Stream_getReadLen(StreamBuffer* stream, Stream_Cursor* cursor) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_getWriteLen(StreamBuffer* stream, Stream_Cursor* cursor) {
-    return cursor->WPos >= stream->WPos ? cursor->WPos - stream->WPos :
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = cursor->WPos >= stream->WPos ? cursor->WPos - stream->WPos :
                                             (stream->Size - cursor->WPos) + stream->WPos;
+    __mutexUnlock(stream);
+    return len;
 }
 #endif // STREAM_CURSOR
 /* ------------------------------------ General Write APIs ---------------------------------- */
@@ -670,19 +921,11 @@ Stream_LenType Stream_getWriteLen(StreamBuffer* stream, Stream_Cursor* cursor) {
  * @return Stream_Result
  */
 Stream_Result Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_space(stream) < len) {
-        return Stream_NoSpace;
-    }
-#if STREAM_WRITE_LIMIT
-    if (Stream_isWriteLimited(stream)) {
-        stream->WriteLimit -= len;
-    }
-#endif
+    __checkZeroLen(stream, len);
+    __checkSpace(stream, len);
+    __writeLimit(stream, len);
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType wpos = stream->WPos;
 
     if (wpos + len >= stream->Size) {
@@ -707,6 +950,7 @@ Stream_Result Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream_LenTy
 #endif
     stream->WPos = wpos;
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 #if STREAM_WRITE_REVERSE
@@ -719,19 +963,11 @@ Stream_Result Stream_writeBytes(StreamBuffer* stream, uint8_t* val, Stream_LenTy
  * @return Stream_Result
  */
 Stream_Result Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_space(stream) < len) {
-        return Stream_NoSpace;
-    }
-#if STREAM_WRITE_LIMIT
-    if (Stream_isWriteLimited(stream)) {
-        stream->WriteLimit -= len;
-    }
-#endif
+    __checkZeroLen(stream, len);
+    __checkSpace(stream, len);
+    __writeLimit(stream, len);
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType wpos = stream->WPos;
 
     if (wpos + len >= stream->Size) {
@@ -755,6 +991,7 @@ Stream_Result Stream_writeBytesReverse(StreamBuffer* stream, uint8_t* val, Strea
 #endif
     stream->WPos = wpos;
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 /**
@@ -780,23 +1017,12 @@ Stream_Result Stream_write(StreamBuffer* stream, uint8_t* val, Stream_LenType le
  */
 Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_LenType len) {
     // check available space for write
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_space(out) < len) {
-        return Stream_NoSpace;
-    }
-    // check available bytes for read
-    if (Stream_available(in) < len) {
-        return Stream_NoAvailable;
-    }
-#if STREAM_WRITE_LIMIT
-    if (Stream_isWriteLimited(out)) {
-        out->WriteLimit -= len;
-    }
-#endif
+    __checkZeroLen(out, len);
+    __checkSpace(out, len);
+    __checkAvailable(in, len);
+    __writeLimit(out, len);
+    __mutexVarInit();
+    __mutexLock(out);
     Stream_LenType wpos = out->WPos;
 
     if (wpos + len >= out->Size) {
@@ -819,6 +1045,7 @@ Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_Len
 #endif
     out->WPos = wpos;
 
+    __mutexUnlock(out);
     return Stream_Ok;
 }
 #endif // STREAM_WRITE_STREAM 
@@ -832,19 +1059,11 @@ Stream_Result Stream_writeStream(StreamBuffer* out, StreamBuffer* in, Stream_Len
  * @return Stream_Result
  */
 Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_space(stream) < len) {
-        return Stream_NoSpace;
-    }
-#if STREAM_WRITE_LIMIT
-    if (Stream_isWriteLimited(stream)) {
-        stream->WriteLimit -= len;
-    }
-#endif
+    __checkZeroLen(stream, len);
+    __checkSpace(stream, len);
+    __writeLimit(stream, len);
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType wpos = stream->WPos;
 
     if (wpos + len >= stream->Size) {
@@ -869,6 +1088,7 @@ Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenT
 #endif
     stream->WPos = wpos;
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 #endif // STREAM_WRITE_PADDING
@@ -882,19 +1102,11 @@ Stream_Result Stream_writePadding(StreamBuffer* stream, uint8_t val, Stream_LenT
  * @return Stream_Result
  */
 Stream_Result Stream_readBytes(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) < len) {
-        return Stream_NoAvailable;
-    }
-#if STREAM_READ_LIMIT
-    if (Stream_isReadLimited(stream)) {
-        stream->ReadLimit -= len;
-    }
-#endif
+    __checkZeroLen(stream, len);
+    __checkAvailable(stream, len);
+    __readLimit(stream, len);
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType rpos = stream->RPos;
 
     if (rpos + len >= stream->Size) {
@@ -919,23 +1131,16 @@ Stream_Result Stream_readBytes(StreamBuffer* stream, uint8_t* val, Stream_LenTyp
 #endif
     stream->RPos = rpos;
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 #if STREAM_READ_REVERSE
 Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) < len) {
-        return Stream_NoAvailable;
-    }
-#if STREAM_READ_LIMIT
-    if (Stream_isReadLimited(stream)) {
-        stream->ReadLimit -= len;
-    }
-#endif
+    __checkZeroLen(stream, len);
+    __checkAvailable(stream, len);
+    __readLimit(stream, len);
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType rpos = stream->RPos;
 
     if (rpos + len >= stream->Size) {
@@ -959,6 +1164,7 @@ Stream_Result Stream_readBytesReverse(StreamBuffer* stream, uint8_t* val, Stream
 #endif
     stream->RPos = rpos;
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 /**
@@ -973,22 +1179,12 @@ Stream_Result Stream_read(StreamBuffer* stream, uint8_t* val, Stream_LenType len
 #endif // STREAM_READ_REVERSE
 #if STREAM_READ_STREAM
 Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(in) < len) {
-        return Stream_NoAvailable;
-    }
-    if (Stream_space(out) < len) {
-        return Stream_NoSpace;
-    }
-#if STREAM_READ_LIMIT
-    if (Stream_isReadLimited(in)) {
-        in->ReadLimit -= len;
-    }
-#endif
+    __checkZeroLen(in, len);
+    __checkAvailable(in, len);
+    __checkSpace(out, len);
+    __readLimit(in, len);
+    __mutexVarInit();
+    __mutexLock(in);
     Stream_LenType rpos = in->RPos;
 
     if (rpos + len >= in->Size) {
@@ -1012,6 +1208,7 @@ Stream_Result Stream_readStream(StreamBuffer* in, StreamBuffer* out, Stream_LenT
 #endif
     in->RPos = rpos;
 
+    __mutexUnlock(in);
     return Stream_Ok;
 }
 #endif
@@ -1031,14 +1228,10 @@ Stream_Value  Stream_readValue(StreamBuffer* stream, Stream_LenType len) {
 /* ------------------------------------ General GetAt APIs ---------------------------------- */
 #if STREAM_GET_AT
 Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-        return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) - index < len) {
-        return Stream_NoAvailable;
-    }
+    __checkZeroLen(stream, len);
+    __checkAvailable(stream, len + index);
+    __mutexVarInit();
+    __mutexLock(stream);
 
     index = (stream->RPos + index) % stream->Size;
 
@@ -1059,19 +1252,16 @@ Stream_Result Stream_getBytesAt(StreamBuffer* stream, Stream_LenType index, uint
     }
 #endif
     
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 #endif // STREAM_GET_AT
 #if STREAM_GET_AT_BYTES_REVERSE
 Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) - index < len) {
-        return Stream_NoAvailable;
-    }
+    __checkZeroLen(stream, len);
+    __checkAvailable(stream, len + index);
+    __mutexVarInit();
+    __mutexLock(stream);
 
     index = (stream->RPos + index) % stream->Size;
 
@@ -1092,6 +1282,7 @@ Stream_Result Stream_getBytesReverseAt(StreamBuffer* stream, Stream_LenType inde
     }
 #endif
 
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 Stream_Result Stream_getAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
@@ -1109,14 +1300,8 @@ Stream_Value  Stream_getValueAt(StreamBuffer* stream, Stream_LenType index, Stre
 #if STREAM_GET_AT_ARRAY
 Stream_Result Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index, void* val, Stream_LenType itemLen, Stream_LenType len) {
     Stream_Result result;
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0 || itemLen == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) - index < len * itemLen) {
-        return Stream_NoAvailable;
-    }
+    __checkZeroLenArray(stream, len, itemLen);
+    __checkAvailable(stream, len * itemLen + index);
 
     while (len-- > 0) {
         if ((result = Stream_getAt(stream, index, (uint8_t*) val, itemLen)) != Stream_Ok) {
@@ -1132,14 +1317,8 @@ Stream_Result Stream_getArrayAt(StreamBuffer* stream, Stream_LenType index, void
 #if STREAM_WRITE_ARRAY
 Stream_Result Stream_writeArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len) {
     Stream_Result result;
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0 || itemLen == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_space(stream) < len * itemLen) {
-        return Stream_NoSpace;
-    }
+    __checkZeroLenArray(stream, len, itemLen);
+    __checkSpace(stream, len * itemLen);
 
     while (len-- > 0) {
         if ((result = Stream_write(stream, (uint8_t*) val, itemLen)) != Stream_Ok) {
@@ -1153,14 +1332,10 @@ Stream_Result Stream_writeArray(StreamBuffer* stream, void* val, Stream_LenType 
 /* --------------------------------------- Set API------------------------------------------ */
 #if STREAM_SET_AT
 Stream_Result Stream_setBytesAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-        return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) - index < len) {
-        return Stream_NoAvailable;
-    }
+    __checkZeroLen(stream, len);
+    __checkAvailable(stream, len + index);
+    __mutexVarInit();
+    __mutexLock(stream);
 
     index = (stream->RPos + index) % stream->Size;
 
@@ -1180,19 +1355,16 @@ Stream_Result Stream_setBytesAt(StreamBuffer* stream, Stream_LenType index, uint
 #if STREAM_CHECK_ZERO_LEN
     }
 #endif
-    
+
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 #if STREAM_SET_AT_BYTES_REVERSE
 Stream_Result   Stream_setBytesReverseAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-        return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) - index < len) {
-        return Stream_NoAvailable;
-    }
+    __checkZeroLen(stream, len);
+    __checkAvailable(stream, len + index);
+    __mutexVarInit();
+    __mutexLock(stream);
 
     index = (stream->RPos + index) % stream->Size;
 
@@ -1212,6 +1384,7 @@ Stream_Result   Stream_setBytesReverseAt(StreamBuffer* stream, Stream_LenType in
     }
 #endif
     
+    __mutexUnlock(stream);
     return Stream_Ok;
 }
 Stream_Result Stream_setAt(StreamBuffer* stream, Stream_LenType index, uint8_t* val, Stream_LenType len) {
@@ -1223,14 +1396,8 @@ Stream_Result Stream_setAt(StreamBuffer* stream, Stream_LenType index, uint8_t* 
 #if STREAM_SET_AT_ARRAY
 Stream_Result Stream_setArrayAt(StreamBuffer* stream, Stream_LenType index, void* val, Stream_LenType itemLen, Stream_LenType len) {
     Stream_Result result;
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0 || itemLen == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_space(stream) - index < len * itemLen) {
-        return Stream_NoSpace;
-    }
+    __checkZeroLenArray(stream, len, itemLen);
+    __checkSpace(stream, len * itemLen + index);
 
     while (len-- > 0) {
         if ((result = Stream_setAt(stream, index, (uint8_t*) val, itemLen)) != Stream_Ok) {
@@ -1245,14 +1412,8 @@ Stream_Result Stream_setArrayAt(StreamBuffer* stream, Stream_LenType index, void
 /* ------------------------------------ Read Value Array APIs ----------------------------------- */
 Stream_Result Stream_readArray(StreamBuffer* stream, void* val, Stream_LenType itemLen, Stream_LenType len) {
     Stream_Result result;
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0 || itemLen == 0) {
-      return Stream_ZeroLen;
-    }
-#endif
-    if (Stream_available(stream) < len * itemLen) {
-        return Stream_NoAvailable;
-    }
+    __checkZeroLenArray(stream, len, itemLen);
+    __checkAvailable(stream, len * itemLen);
 
     while (len-- > 0) {
         if ((result = Stream_read(stream, (uint8_t*) val, itemLen)) != Stream_Ok) {
@@ -1270,14 +1431,18 @@ Stream_Result Stream_readArray(StreamBuffer* stream, void* val, Stream_LenType i
  * @return Stream_Result
  */
 Stream_Result Stream_lockWrite(StreamBuffer* stream, StreamBuffer* lock, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType space = Stream_space(stream);
     if (space >= len && !stream->WriteLocked) {
         __memCopy(stream, lock, stream, sizeof(StreamBuffer));
         Stream_flipWrite(lock, len);
         stream->WriteLocked = 1;
+        __mutexUnlock(stream);
         return Stream_Ok;
     }
     else {
+        __mutexUnlock(stream);
         return Stream_NoSpace;
     }
 }
@@ -1310,24 +1475,27 @@ void Stream_unlockWriteIgnore(StreamBuffer* stream) {
  * @param lock
  */
 Stream_LenType Stream_lockWriteLen(StreamBuffer* stream, StreamBuffer* lock) {
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = 0;
     if (stream->WPos != lock->WPos) {
         // some data wrote
         if (stream->WPos < lock->WPos) {
-            return  lock->WPos - stream->WPos;
+            len = lock->WPos - stream->WPos;
         }
         else {
-            return (stream->Size - stream->WPos) + lock->WPos;
+            len = (stream->Size - stream->WPos) + lock->WPos;
         }
     }
     else if (stream->RPos == lock->RPos &&
         stream->Overflow == 0 &&
         lock->Overflow) {
 
-        return stream->Size;
+        len = stream->Size;
     }
-    else {
-        return 0;
-    }
+
+    __mutexUnlock(stream);
+    return len;
 }
 #if STREAM_WRITE_LOCK_CUSTOM
 /**
@@ -1360,14 +1528,18 @@ Stream_Result Stream_lockWriteCustom(void* stream, void* lock, Stream_LenType le
  * @return Stream_Result
  */
 Stream_Result Stream_lockRead(StreamBuffer* stream, StreamBuffer* lock, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
     Stream_LenType available = Stream_available(stream);
     if (available >= len && !stream->ReadLocked) {
         __memCopy(stream, lock, stream, sizeof(StreamBuffer));
         Stream_flipRead(lock, len);
         stream->ReadLocked = 1;
+        __mutexUnlock(stream);
         return Stream_Ok;
     }
     else {
+        __mutexUnlock(stream);
         return Stream_NoAvailable;
     }
 }
@@ -1391,24 +1563,27 @@ void Stream_unlockRead(StreamBuffer* stream, StreamBuffer* lock) {
  * @return Stream_LenType
  */
 Stream_LenType Stream_lockReadLen(StreamBuffer* stream, StreamBuffer* lock) {
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_LenType len = 0;
     if (stream->RPos != lock->RPos) {
         // some data read
         if (stream->RPos < lock->RPos) {
-            return lock->RPos - stream->RPos;
+            len =  lock->RPos - stream->RPos;
         }
         else {
-            return (stream->Size - stream->RPos) + lock->RPos;
+            len = (stream->Size - stream->RPos) + lock->RPos;
         }
     }
     else if (stream->WPos == lock->WPos &&
         stream->Overflow != 0 &&
         !lock->Overflow) {
 
-        return stream->Size;
+        len = stream->Size;
     }
-    else {
-        return 0;
-    }
+    
+    __mutexUnlock(stream);
+    return len;
 }
 /**
  * @brief unlock stream for read with ignore changes
@@ -1448,7 +1623,10 @@ Stream_Result Stream_lockReadCustom(void* stream, void* lock, Stream_LenType len
  * @param args 
  */
 void Stream_setArgs(StreamBuffer* stream, void* args) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->Args = args;
+    __mutexUnlock(stream);
 }
 /**
  * @brief get buffer user arguments
@@ -1468,7 +1646,10 @@ void* Stream_getArgs(StreamBuffer* stream) {
  * @param len 
  */
 void Stream_setPendingBytes(StreamBuffer* stream, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->PendingBytes = len;
+    __mutexUnlock(stream);
 }
 /**
  * @brief Get pending bytes
@@ -1495,6 +1676,9 @@ Stream_LenType Stream_findByteAt(StreamBuffer* stream, Stream_LenType offset, ui
         return -1;
     }
 
+    __mutexVarInit();
+    __mutexLock(stream);
+
     tmpLen = Stream_directAvailableAt(stream, offset);
     pEnd = memchr(pStart, val, tmpLen);
     if (!pEnd && (tmpLen + offset) < Stream_available(stream)) {
@@ -1502,6 +1686,7 @@ Stream_LenType Stream_findByteAt(StreamBuffer* stream, Stream_LenType offset, ui
         pEnd = memchr(pStart, val, stream->WPos);
     }
 
+    __mutexUnlock(stream);
     return pEnd != NULL ? (Stream_LenType)(pEnd - pStart) + offset : -1;
 }
 Stream_LenType Stream_findPatternAt(StreamBuffer* stream, Stream_LenType offset, const uint8_t* pat, Stream_LenType patLen)  {
@@ -1573,17 +1758,12 @@ Stream_Result Stream_transposeAt(StreamBuffer* stream, Stream_LenType offset, St
     Stream_LenType dirLen;
     Stream_LenType tmpLen;
     Stream_LenType rpos;
-    Stream_Result res;
+    Stream_Result res = Stream_Ok;;
 
-#if STREAM_CHECK_ZERO_LEN
-    if (len == 0) {
-        return Stream_ZeroLen;
-    }
-#endif
-
-    if (Stream_available(stream) - offset < len) {
-        return Stream_NoAvailable;
-    }
+    __checkZeroLen(stream, len);
+    __checkAvailable(stream, len + offset);
+    __mutexVarInit();
+    __mutexLock(stream);
 
     if (chunkLen == 0) {
         chunkLen = len;
@@ -1598,22 +1778,22 @@ Stream_Result Stream_transposeAt(StreamBuffer* stream, Stream_LenType offset, St
             tmpLen = dirLen >= chunkLen ? chunkLen : dirLen;
             // Use zero copy method
             if ((res = transpose(args, &stream->Data[rpos], tmpLen)) != Stream_Ok) {
-                return res;
+                break;
             }
         }
         else {
             tmpLen = len >= chunkLen ? chunkLen : len;
             // Copy data to tmp buffer
             if ((res = Stream_getBytesAt(stream, offset, tmpBuf, tmpLen)) != Stream_Ok) {
-                return res;
+                break;
             }
             // Transpose data
             if ((res = transpose(args, tmpBuf, tmpLen)) != Stream_Ok) {
-                return res;
+                break;
             }
             // Write back to stream
             if ((res = Stream_setBytesAt(stream, offset, tmpBuf, tmpLen)) != Stream_Ok) {
-                return res;
+                break;
             }
         }
 
@@ -1622,7 +1802,8 @@ Stream_Result Stream_transposeAt(StreamBuffer* stream, Stream_LenType offset, St
         rpos = (rpos + tmpLen) % stream->Size;
     }
 
-    return Stream_Ok;
+    __mutexUnlock(stream);
+    return res;
 }
 #endif
 /* ------------------------------------ Compare APIs ---------------------------------- */
@@ -1647,6 +1828,9 @@ int8_t Stream_compareAt(StreamBuffer* stream, Stream_LenType index, const uint8_
         return -2;
     }
 
+    __mutexVarInit();
+    __mutexLock(stream);
+
     tmpLen = Stream_directAvailableAt(stream, index);
     if (tmpLen < len) {
         if ((result = (int8_t) memcmp(Stream_getReadPtrAt(stream, index), val, tmpLen)) != 0) {
@@ -1658,6 +1842,7 @@ int8_t Stream_compareAt(StreamBuffer* stream, Stream_LenType index, const uint8_
         len -= tmpLen;
     }
 
+    __mutexUnlock(stream);
     return (int8_t) memcmp(Stream_getReadPtrAt(stream, index), val, len);
 }
 // TODO: need to implement with more performance
