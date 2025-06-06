@@ -54,7 +54,7 @@ struct __StreamIn;
 typedef struct __StreamIn StreamIn;
 
 /* Add compatibility with older libraries */
-#if !defined(IStream) || (!defined(_WIN32) && !defined(_WIN64))
+#if !defined(IStream) && (!defined(_WIN32) && !defined(_WIN64))
     #define __IStream           __StreamIn
     #define IStream             StreamIn
 #endif
