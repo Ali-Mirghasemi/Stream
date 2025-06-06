@@ -27,7 +27,7 @@ int main()
     printf("-----------------------------------\n");
     printf("TXT: %s", TEMPLATE_2);
     Stream_writeBytes(&stream, (uint8_t*) TEMPLATE_2, sizeof(TEMPLATE_2) - 1);
-    showParts(&stream, CRLF, sizeof(CRLF));
+    showParts(&stream, (uint8_t*) CRLF, sizeof(CRLF));
 
 }
 

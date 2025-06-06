@@ -21,28 +21,28 @@
 #define GET_SYSTEM_TIME()                   clock()
 #define START_CALCULATE_TIME()              SYSTEM_TIME_TYPE elapsed = GET_SYSTEM_TIME()
 #define CALCULATE_TIME()                    elapsed = GET_SYSTEM_TIME() - elapsed; \
-                                            PRINTF("\n[Elapsed Time: %llu]\n\n", elapsed)
+                                            PRINTF("\n[Elapsed Time: %lu]\n\n", elapsed)
 
 volatile uint32_t assertResult;
 volatile uint8_t cycles;
-volatile uint8_t index = 0;
+volatile uint8_t assertIndex = 0;
 // assert functions
-uint32_t Assert_Char(char num1, char num2, uint16_t line, uint8_t cycle, uint8_t index);
-uint32_t Assert_Int8(int8_t num1, int8_t num2, uint16_t line, uint8_t cycle, uint8_t index);
-uint32_t Assert_Int16(int16_t num1, int16_t num2, uint16_t line, uint8_t cycle, uint8_t index);
-uint32_t Assert_Int32(int32_t num1, int32_t num2, uint16_t line, uint8_t cycle, uint8_t index);
-uint32_t Assert_UInt8(uint8_t num1, uint8_t num2, uint16_t line, uint8_t cycle, uint8_t index);
-uint32_t Assert_UInt16(uint16_t num1, uint16_t num2, uint16_t line, uint8_t cycle, uint8_t index);
-uint32_t Assert_UInt32(uint32_t num1, uint32_t num2, uint16_t line, uint8_t cycle, uint8_t index);
-uint32_t Assert_Float(float num1, float num2, uint16_t line, uint8_t cycle, uint8_t index);
+uint32_t Assert_Char(char num1, char num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+uint32_t Assert_Int8(int8_t num1, int8_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+uint32_t Assert_Int16(int16_t num1, int16_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+uint32_t Assert_Int32(int32_t num1, int32_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+uint32_t Assert_UInt8(uint8_t num1, uint8_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+uint32_t Assert_UInt16(uint16_t num1, uint16_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+uint32_t Assert_UInt32(uint32_t num1, uint32_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+uint32_t Assert_Float(float num1, float num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
 #if STREAM_UINT64
-    uint32_t Assert_Int64(int64_t num1, int64_t num2, uint16_t line, uint8_t cycle, uint8_t index);
-    uint32_t Assert_UInt64(uint64_t num1, uint64_t num2, uint16_t line, uint8_t cycle, uint8_t index);
+    uint32_t Assert_Int64(int64_t num1, int64_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
+    uint32_t Assert_UInt64(uint64_t num1, uint64_t num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
 #endif // STREAM_UINT64
 #if STREAM_DOUBLE
-    uint32_t Assert_Double(double num1, double num2, uint16_t line, uint8_t cycle, uint8_t index);
+    uint32_t Assert_Double(double num1, double num2, uint16_t line, uint8_t cycle, uint8_t assertIndex);
 #endif
-uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8_t cycle, uint8_t index);
+uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8_t cycle, uint8_t assertIndex);
 
 #define Assert_Result(...)                  __VA_ARGS__
 #define Assert_Byte(...)                    Assert_UInt8(__VA_ARGS__)
@@ -53,14 +53,48 @@ uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8
 void Assert_dump(StreamBuffer* stream);
 
 #if PRINT_DUMP == 0
-    #define assert(TYPE, ...)               if ((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__, cycles, index)) != Stream_Ok) return assertResult;
+    #define assert(TYPE, ...)               if ((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__, cycles, assertIndex)) != Stream_Ok) return assertResult;
 #else
-    #define assert(TYPE, ...)               if ((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__, cycles, index)) != Stream_Ok) { Assert_dump((StreamBuffer*) &stream); return assertResult; }
+    #define assert(TYPE, ...)               if ((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__, cycles, assertIndex)) != Stream_Ok) { Assert_dump((StreamBuffer*) &stream); return assertResult; }
 #endif
 
 void printHeader(const char* header, char c);
 
 typedef uint32_t (*Test_Fn)(void);
+
+#if STREAM_MUTEX
+Stream_MutexResult TestStream_mutexInit(StreamBuffer* stream, Stream_Mutex* mutex);
+Stream_MutexResult TestStream_mutexLock(StreamBuffer* stream, Stream_Mutex* mutex);
+Stream_MutexResult TestStream_mutexUnlock(StreamBuffer* stream, Stream_Mutex* mutex);
+Stream_MutexResult TestStream_mutexDeInit(StreamBuffer* stream, Stream_Mutex* mutex);
+
+#if   STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+    #define __setMutexDriver(S)         Stream_setMutex((S), TestStream_mutexInit, TestStream_mutexLock, TestStream_mutexUnlock, TestStream_mutexDeInit); \
+                                        Stream_mutexInit((S))
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+    static const Stream_MutexDriver TestStream_MutexDriver = {
+        .init = TestStream_mutexInit,
+        .lock = TestStream_mutexLock,
+        .unlock = TestStream_mutexUnlock,
+        .deinit = TestStream_mutexDeInit
+    };
+
+    #define __setMutexDriver(S)         Stream_setMutex((S), &TestStream_MutexDriver); \
+                                        Stream_mutexInit((S))
+#elif STREAM_MUTEX == STREAM_MUTEX_GLOBAL_DRIVER
+    static const Stream_MutexDriver TestStream_MutexDriver = {
+        .init = TestStream_mutexInit,
+        .lock = TestStream_mutexLock,
+        .unlock = TestStream_mutexUnlock,
+        .deinit = TestStream_mutexDeInit
+    };
+
+    #define __setMutexDriver(S)         Stream_setMutex(&TestStream_MutexDriver); \
+                                        Stream_mutexInit((S))
+#endif
+#else
+    #define __setMutexDriver(S)
+#endif
 
 uint32_t Test_readWrite(void);
 #if OSTREAM && ISTREAM
@@ -203,20 +237,20 @@ void printHeader(const char* header, char c) {
 uint32_t Test_readWrite(void) {
     #define test(TYPE, N)               PRINTF("Write/Read " #TYPE ", %ux\n", N);\
                                         for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                            for (index = 0; index < N; index++) {\
-                                                Stream_write ##TYPE (&stream, cycles * N + index);\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                Stream_write ##TYPE (&stream, cycles * N + assertIndex);\
                                             }\
-                                            for (index = 0; index < N; index++) {\
-                                                assert(TYPE, Stream_read ##TYPE (&stream), cycles * N + index);\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                assert(TYPE, Stream_read ##TYPE (&stream), cycles * N + assertIndex);\
                                             }\
                                         }
 
     #define testBytes(TYPE, PAT, N)     PRINTF("Write/Read " #TYPE ", %ux\n", N);\
                                         for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                            for (index = 0; index < N; index++) {\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
                                                 Stream_write ##TYPE (&stream, (uint8_t*) PAT, sizeof(PAT));\
                                             }\
-                                            for (index = 0; index < N; index++) {\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
                                                 Stream_read ##TYPE (&stream, tempBuff, sizeof(PAT));\
                                                 assert(Bytes, tempBuff, (uint8_t*) PAT, sizeof(PAT));\
                                             }\
@@ -241,6 +275,8 @@ uint32_t Test_readWrite(void) {
     StreamBuffer stream;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream);
 
     testBytes(Bytes, PAT1, 1);
     testBytes(Bytes, PAT1, 3);
@@ -361,20 +397,20 @@ uint32_t Test_readWrite(void) {
 uint32_t Test_IO_readWrite(void) {
     #define test(TYPE, N)               PRINTF("Write/Read " #TYPE ", %ux\n", N);\
                                         for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                            for (index = 0; index < N; index++) {\
-                                                OStream_write ##TYPE (&stream, cycles * N + index);\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                OStream_write ##TYPE (&stream, cycles * N + assertIndex);\
                                             }\
-                                            for (index = 0; index < N; index++) {\
-                                                assert(TYPE, IStream_read ##TYPE (&stream), cycles * N + index);\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                assert(TYPE, IStream_read ##TYPE (&stream), cycles * N + assertIndex);\
                                             }\
                                         }
 
     #define testBytes(TYPE, PAT, N)     PRINTF("Write/Read " #TYPE ", %ux\n", N);\
                                         for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                            for (index = 0; index < N; index++) {\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
                                                 OStream_write ##TYPE (&stream, (uint8_t*) PAT, sizeof(PAT));\
                                             }\
-                                            for (index = 0; index < N; index++) {\
+                                            for (assertIndex = 0; assertIndex < N; assertIndex++) {\
                                                 IStream_read ##TYPE (&stream, tempBuff, sizeof(PAT));\
                                                 assert(Bytes, tempBuff, (uint8_t*) PAT, sizeof(PAT));\
                                             }\
@@ -396,9 +432,11 @@ uint32_t Test_IO_readWrite(void) {
     };
     uint8_t tempBuff[20];
     uint8_t streamBuff[37];
-    OStream stream;
+    StreamOut stream;
 
     OStream_init(&stream, NULL, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream.Buffer);
 
     testBytes(Bytes, PAT1, 1);
     testBytes(Bytes, PAT1, 3);
@@ -537,6 +575,9 @@ uint32_t Test_readStream(void) {
     Stream_init(&in, inBuff, sizeof(inBuff));
     Stream_init(&out, outBuff, sizeof(outBuff));
 
+    __setMutexDriver(&out);
+    __setMutexDriver(&in);
+
     for (cycles = 0; cycles < CYCLES_NUM; cycles++) {
         // write to out
         Stream_writeBytes(&out, (uint8_t*) PAT, sizeof(PAT));
@@ -568,12 +609,15 @@ uint32_t Test_IO_readStream(void) {
     uint8_t tempBuff[40];
     uint8_t inBuff[40];
     uint8_t outBuff[40];
-    IStream in;
-    OStream out;
+    StreamIn in;
+    StreamOut out;
     int cycles;
 
     IStream_init(&in, NULL, inBuff, sizeof(inBuff));
     OStream_init(&out, NULL, outBuff, sizeof(outBuff));
+
+    __setMutexDriver(&out.Buffer);
+    __setMutexDriver(&in.Buffer);
 
     for (cycles = 0; cycles < CYCLES_NUM; cycles++) {
         // write to out
@@ -601,13 +645,13 @@ uint32_t Test_readWriteArray(void) {
                                             VAL_TY tmp[L] = {0}; \
                                             PRINTF("Write/Read Array " #TYPE ", %ux\n", L);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                                for (index = 0; index < L; index++) {\
-                                                    val[index] =  cycles * L + index;\
+                                                for (assertIndex = 0; assertIndex < L; assertIndex++) {\
+                                                    val[assertIndex] =  cycles * L + assertIndex;\
                                                 } \
                                                 Stream_write ##TYPE ##Array (&stream, val, L); \
                                                 Stream_read ##TYPE ##Array (&stream, tmp, L); \
-                                                for (index = 0; index < L; index++) { \
-                                                    assert(TYPE, tmp[index], val[index]); \
+                                                for (assertIndex = 0; assertIndex < L; assertIndex++) { \
+                                                    assert(TYPE, tmp[assertIndex], val[assertIndex]); \
                                                 } \
                                             } \
                                         }
@@ -618,6 +662,8 @@ uint32_t Test_readWriteArray(void) {
     StreamBuffer stream;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -700,13 +746,13 @@ uint32_t Test_IO_readWriteArray(void) {
                                             VAL_TY tmp[L] = {0}; \
                                             PRINTF("Write/Read Array " #TYPE ", %ux\n", L);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                                for (index = 0; index < L; index++) {\
-                                                    val[index] =  cycles * L + index;\
+                                                for (assertIndex = 0; assertIndex < L; assertIndex++) {\
+                                                    val[assertIndex] =  cycles * L + assertIndex;\
                                                 } \
                                                 OStream_write ##TYPE ##Array (&stream, val, L); \
                                                 IStream_read ##TYPE ##Array (&stream, tmp, L); \
-                                                for (index = 0; index < L; index++) { \
-                                                    assert(TYPE, tmp[index], val[index]); \
+                                                for (assertIndex = 0; assertIndex < L; assertIndex++) { \
+                                                    assert(TYPE, tmp[assertIndex], val[assertIndex]); \
                                                 } \
                                             } \
                                         }
@@ -714,9 +760,11 @@ uint32_t Test_IO_readWriteArray(void) {
     printHeader("IO Read/Write Array", '#');
 
     uint8_t streamBuff[37];
-    OStream stream;
+    StreamOut stream;
 
     OStream_init(&stream, NULL, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream.Buffer);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -799,11 +847,11 @@ uint32_t Test_get(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Get " #TYPE ", %ux\n", N);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                                for (index = 0; index < N; index++) {\
-                                                    Stream_write ##TYPE (&stream, cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                    Stream_write ##TYPE (&stream, cycles * N + assertIndex); \
                                                 } \
-                                                for (index = 0; index < N; index++) { \
-                                                    assert(TYPE, Stream_get ##TYPE ##At (&stream, index * sizeof(VAL_TY)), cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    assert(TYPE, Stream_get ##TYPE ##At (&stream, assertIndex * sizeof(VAL_TY)), cycles * N + assertIndex); \
                                                 } \
                                                 Stream_moveReadPos(&stream, N * sizeof(VAL_TY)); \
                                             } \
@@ -815,6 +863,8 @@ uint32_t Test_get(void) {
     StreamBuffer stream;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -894,11 +944,11 @@ uint32_t Test_IO_get(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Get " #TYPE ", %ux\n", N);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                                for (index = 0; index < N; index++) {\
-                                                    OStream_write ##TYPE (&stream, cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                    OStream_write ##TYPE (&stream, cycles * N + assertIndex); \
                                                 } \
-                                                for (index = 0; index < N; index++) { \
-                                                    assert(TYPE, IStream_get ##TYPE ##At (&stream, index * sizeof(VAL_TY)), cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    assert(TYPE, IStream_get ##TYPE ##At (&stream, assertIndex * sizeof(VAL_TY)), cycles * N + assertIndex); \
                                                 } \
                                                 IStream_ignore(&stream, N * sizeof(VAL_TY)); \
                                             } \
@@ -907,9 +957,11 @@ uint32_t Test_IO_get(void) {
     printHeader("IO Get", '#');
 
     uint8_t streamBuff[37];
-    IStream stream;
+    StreamIn stream;
 
     IStream_init(&stream, NULL, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream.Buffer);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -992,11 +1044,11 @@ uint32_t Test_set(void) {
                                             PRINTF("Set " #TYPE ", %ux\n", N);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
                                                 Stream_moveWritePos(&stream, N * sizeof(VAL_TY)); \
-                                                for (index = 0; index < N; index++) { \
-                                                    Stream_set ##TYPE ##At (&stream, index * sizeof(VAL_TY), cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    Stream_set ##TYPE ##At (&stream, assertIndex * sizeof(VAL_TY), cycles * N + assertIndex); \
                                                 } \
-                                                for (index = 0; index < N; index++) { \
-                                                    assert(TYPE, Stream_read ##TYPE (&stream), cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    assert(TYPE, Stream_read ##TYPE (&stream), cycles * N + assertIndex); \
                                                 } \
                                             } \
                                         }
@@ -1007,6 +1059,8 @@ uint32_t Test_set(void) {
     StreamBuffer stream;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -1087,11 +1141,11 @@ uint32_t Test_IO_set(void) {
                                             PRINTF("Set " #TYPE ", %ux\n", N);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
                                                 OStream_ignore(&stream, N * sizeof(VAL_TY)); \
-                                                for (index = 0; index < N; index++) { \
-                                                    OStream_set ##TYPE ##At (&stream, index * sizeof(VAL_TY), cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    OStream_set ##TYPE ##At (&stream, assertIndex * sizeof(VAL_TY), cycles * N + assertIndex); \
                                                 } \
-                                                for (index = 0; index < N; index++) { \
-                                                    assert(TYPE, IStream_read ##TYPE (&stream), cycles * N + index); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    assert(TYPE, IStream_read ##TYPE (&stream), cycles * N + assertIndex); \
                                                 } \
                                             } \
                                         }
@@ -1099,9 +1153,11 @@ uint32_t Test_IO_set(void) {
     printHeader("IO Set", '#');
 
     uint8_t streamBuff[37];
-    OStream stream;
+    StreamOut stream;
 
     OStream_init(&stream, NULL, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream.Buffer);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -1183,11 +1239,11 @@ uint32_t Test_find(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Find " #TYPE ", %ux\n", N);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                                for (index = 0; index < N; index++) {\
-                                                    Stream_write ##TYPE (&stream, (VAL_TY) (cycles * N + index)); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                    Stream_write ##TYPE (&stream, (VAL_TY) (cycles * N + assertIndex)); \
                                                 } \
-                                                for (index = 0; index < N; index++) { \
-                                                    assert(TYPE, Stream_find ##TYPE (&stream, (VAL_TY) (cycles * N + index)), (VAL_TY) (index * sizeof(VAL_TY))); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    assert(TYPE, Stream_find ##TYPE (&stream, (VAL_TY) (cycles * N + assertIndex)), (VAL_TY) (assertIndex * sizeof(VAL_TY))); \
                                                 } \
                                                 Stream_resetIO(&stream); \
                                             } \
@@ -1199,6 +1255,8 @@ uint32_t Test_find(void) {
     StreamBuffer stream;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -1279,11 +1337,11 @@ uint32_t Test_IO_find(void) {
     #define test(TYPE, VAL_TY, N)       { \
                                             PRINTF("Find " #TYPE ", %ux\n", N);\
                                             for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                                for (index = 0; index < N; index++) {\
-                                                    OStream_write ##TYPE (&stream, (VAL_TY) (cycles * N + index)); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                    OStream_write ##TYPE (&stream, (VAL_TY) (cycles * N + assertIndex)); \
                                                 } \
-                                                for (index = 0; index < N; index++) { \
-                                                    assert(TYPE, IStream_find ##TYPE (&stream, (VAL_TY) (cycles * N + index)), (VAL_TY) (index * sizeof(VAL_TY))); \
+                                                for (assertIndex = 0; assertIndex < N; assertIndex++) { \
+                                                    assert(TYPE, IStream_find ##TYPE (&stream, (VAL_TY) (cycles * N + assertIndex)), (VAL_TY) (assertIndex * sizeof(VAL_TY))); \
                                                 } \
                                                 IStream_resetIO(&stream); \
                                             } \
@@ -1292,9 +1350,11 @@ uint32_t Test_IO_find(void) {
     printHeader("IO Find", '#');
 
     uint8_t streamBuff[37];
-    IStream stream;
+    StreamIn stream;
 
     IStream_init(&stream, NULL, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream.Buffer);
 
 #if STREAM_BYTE_ORDER
     for (ByteOrder order = ByteOrder_LittleEndian; order <= ByteOrder_BigEndian; order++) {
@@ -1375,6 +1435,7 @@ uint32_t Test_IO_find(void) {
 #if STREAM_WRITE_FLIP && STREAM_READ_FLIP
 uint32_t Test_flip(void) {
     #define testFlipWrite(N, W, R, O)           Stream_init(&stream, streamBuff, sizeof(streamBuff));\
+                                                __setMutexDriver(&stream); \
                                                 stream.WPos = (W);\
                                                 stream.RPos = (R);\
                                                 stream.Overflow = (O);\
@@ -1382,6 +1443,7 @@ uint32_t Test_flip(void) {
                                                 assert(UInt32, Stream_space(&stream), (N));
 
     #define testFlipRead(N, W, R, O)            Stream_init(&stream, streamBuff, sizeof(streamBuff));\
+                                                __setMutexDriver(&stream); \
                                                 stream.WPos = (W);\
                                                 stream.RPos = (R);\
                                                 stream.Overflow = (O);\
@@ -1422,24 +1484,24 @@ uint32_t Test_flip(void) {
 uint32_t Test_lock(void) {
     #define testLock(PAT, N)                    PRINTF("Lock R/W " #PAT " , %ux\n", N);\
                                                 for (cycles = 0; cycles < CYCLES_NUM; cycles++) {\
-                                                    for (index = 0; index < N; index++) {\
-                                                        assert(UInt32, Stream_space(&stream), stream.Size - index * sizeof(PAT));\
+                                                    for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                        assert(UInt32, Stream_space(&stream), stream.Size - assertIndex * sizeof(PAT));\
                                                         Stream_lockWrite(&stream, &lock, sizeof(PAT));\
                                                         assert(UInt32, Stream_space(&lock), sizeof(PAT));\
                                                         Stream_unlockWrite(&stream, &lock);\
-                                                        assert(UInt32, Stream_space(&stream), stream.Size - index * sizeof(PAT));\
+                                                        assert(UInt32, Stream_space(&stream), stream.Size - assertIndex * sizeof(PAT));\
                                                         Stream_lockWrite(&stream, &lock, sizeof(PAT));\
                                                         assert(UInt32, Stream_space(&lock), sizeof(PAT));\
                                                         Stream_writeBytes(&lock, (uint8_t*) PAT, sizeof(PAT));\
                                                         assert(UInt32, Stream_space(&lock), 0);\
                                                         Stream_unlockWrite(&stream, &lock);\
                                                     }\
-                                                    for (index = 0; index < N; index++) {\
-                                                        assert(UInt32, Stream_available(&stream), sizeof(PAT) * (N - index));\
+                                                    for (assertIndex = 0; assertIndex < N; assertIndex++) {\
+                                                        assert(UInt32, Stream_available(&stream), sizeof(PAT) * (N - assertIndex));\
                                                         Stream_lockRead(&stream, &lock, sizeof(PAT));\
                                                         assert(UInt32, Stream_available(&lock), sizeof(PAT));\
                                                         Stream_unlockRead(&stream, &lock);\
-                                                        assert(UInt32, Stream_available(&stream), sizeof(PAT) * (N - index));\
+                                                        assert(UInt32, Stream_available(&stream), sizeof(PAT) * (N - assertIndex));\
                                                         Stream_lockRead(&stream, &lock, sizeof(PAT));\
                                                         assert(UInt32, Stream_available(&lock), sizeof(PAT));\
                                                         Stream_readBytes(&lock, tempBuff, sizeof(PAT));\
@@ -1463,6 +1525,8 @@ uint32_t Test_lock(void) {
     StreamBuffer lock;
 
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream);
 
     testLock(PAT1, 1);
     testLock(PAT1, 3);
@@ -1538,9 +1602,9 @@ uint32_t Test_transpose(void) {
                                                 for (cycles = 0; cycles < CYCLES_NUM; cycles++) { \
                                                     Stream_moveWritePos(&stream, L * N); \
                                                     Stream_transpose(&stream, N * L, tmpBuf, L, Test_Transpose_ ##TYPE, NULL); \
-                                                    for (index = 0; index < N; index++) { \
+                                                    for (assertIndex = 0; assertIndex < N; assertIndex++) { \
                                                         for (uint32_t i = 0; i < L / sizeof(TY_VAL); i++) { \
-                                                            assert(TYPE, Stream_get ##TYPE ##At(&stream, index * L + i * sizeof(TY_VAL)), i); \
+                                                            assert(TYPE, Stream_get ##TYPE ##At(&stream, assertIndex * L + i * sizeof(TY_VAL)), i); \
                                                         } \
                                                     } \
                                                     Stream_moveReadPos(&stream, N * L); \
@@ -1553,6 +1617,9 @@ uint32_t Test_transpose(void) {
 
     StreamBuffer stream;
     Stream_init(&stream, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream);
+
 #if STREAM_UINT8
     testTranspose(UInt8, uint8_t, 1, 1);
     testTranspose(UInt8, uint8_t, 1, 3);
@@ -1610,6 +1677,115 @@ uint32_t Test_transpose(void) {
     return 0;
 #undef testTranspose
 }
+// ------------------------------------------ Mutex Implementation ------------------------------------------
+#if STREAM_MUTEX
+#include <stdlib.h>
+#include <errno.h>
+
+// Platform detection
+#if defined(_WIN32) || defined(_WIN64)
+    #include <windows.h>
+    #define STREAM_MUTEX_TYPE CRITICAL_SECTION
+#else
+    #include <pthread.h>
+    #define STREAM_MUTEX_TYPE pthread_mutex_t
+#endif
+
+Stream_MutexResult TestStream_mutexInit(StreamBuffer* stream, Stream_Mutex* mutex) {
+    if (!stream) {
+        return (Stream_MutexResult) EINVAL;
+    }
+
+#if defined(_WIN32) || defined(_WIN64)
+    // Windows implementation
+    CRITICAL_SECTION* cs = malloc(sizeof(CRITICAL_SECTION));
+    if (!cs) {
+        return (Stream_MutexResult) ENOMEM;
+    }
+    InitializeCriticalSection(cs);
+    stream->Mutex = (void*)cs;
+#else
+    // Linux/POSIX implementation
+    pthread_mutex_t* new_mutex = malloc(sizeof(pthread_mutex_t));
+    if (!new_mutex) {
+        return (Stream_MutexResult) ENOMEM;
+    }
+
+    pthread_mutexattr_t attr;
+    int ret = pthread_mutexattr_init(&attr);
+    if (ret != 0) {
+        free(new_mutex);
+        return (Stream_MutexResult) ret;
+    }
+
+    ret = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    if (ret != 0) {
+        pthread_mutexattr_destroy(&attr);
+        free(new_mutex);
+        return (Stream_MutexResult) ret;
+    }
+
+    ret = pthread_mutex_init(new_mutex, &attr);
+    pthread_mutexattr_destroy(&attr);
+    if (ret != 0) {
+        free(new_mutex);
+        return (Stream_MutexResult) ret;
+    }
+
+    stream->Mutex = (void*)new_mutex;
+#endif
+
+    return Stream_Ok;
+}
+
+Stream_MutexResult TestStream_mutexLock(StreamBuffer* stream, Stream_Mutex* mutex) {
+    if (!stream || !stream->Mutex) {
+        return (Stream_MutexResult) EINVAL;
+    }
+
+#if defined(_WIN32) || defined(_WIN64)
+    EnterCriticalSection((CRITICAL_SECTION*)stream->Mutex);
+    return Stream_Ok;
+#else
+    return (Stream_MutexResult) pthread_mutex_lock((pthread_mutex_t*)stream->Mutex);
+#endif
+}
+
+Stream_MutexResult TestStream_mutexUnlock(StreamBuffer* stream, Stream_Mutex* mutex) {
+    if (!stream || !stream->Mutex) {
+        return (Stream_MutexResult) EINVAL;
+    }
+
+#if defined(_WIN32) || defined(_WIN64)
+    LeaveCriticalSection((CRITICAL_SECTION*)stream->Mutex);
+    return Stream_Ok;
+#else
+    return (Stream_MutexResult) pthread_mutex_unlock((pthread_mutex_t*)stream->Mutex);
+#endif
+}
+
+Stream_MutexResult TestStream_mutexDeInit(StreamBuffer* stream, Stream_Mutex* mutex) {
+    if (!stream || !stream->Mutex) {
+        return (Stream_MutexResult) EINVAL;
+    }
+
+#if defined(_WIN32) || defined(_WIN64)
+    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)stream->Mutex;
+    DeleteCriticalSection(cs);
+    free(cs);
+#else
+    pthread_mutex_t* mutex_ptr = (pthread_mutex_t*)stream->Mutex;
+    int ret = pthread_mutex_destroy(mutex_ptr);
+    free(mutex_ptr);
+    if (ret != 0) {
+        return (Stream_MutexResult) ret;
+    }
+#endif
+
+    stream->Mutex = NULL;
+    return Stream_Ok;
+}
+#endif
 /********************************************************/
 #if OSTREAM && ISTREAM
 uint32_t Test_IO_transpose(void) {
@@ -1617,9 +1793,9 @@ uint32_t Test_IO_transpose(void) {
                                                 for (cycles = 0; cycles < CYCLES_NUM; cycles++) { \
                                                     OStream_ignore(&stream, L * N); \
                                                     OStream_transpose(&stream, N * L, tmpBuf, L, Test_Transpose_ ##TYPE, NULL); \
-                                                    for (index = 0; index < N; index++) { \
+                                                    for (assertIndex = 0; assertIndex < N; assertIndex++) { \
                                                         for (uint32_t i = 0; i < L / sizeof(TY_VAL); i++) { \
-                                                            assert(TYPE, IStream_get ##TYPE ##At(&stream, index * L + i * sizeof(TY_VAL)), i); \
+                                                            assert(TYPE, IStream_get ##TYPE ##At(&stream, assertIndex * L + i * sizeof(TY_VAL)), i); \
                                                         } \
                                                     } \
                                                     OStream_pop(&stream, N * L); \
@@ -1630,8 +1806,11 @@ uint32_t Test_IO_transpose(void) {
     uint8_t tmpBuf[127];
     uint8_t streamBuff[255];
 
-    OStream stream;
+    StreamOut stream;
     OStream_init(&stream, NULL, streamBuff, sizeof(streamBuff));
+
+    __setMutexDriver(&stream.Buffer);
+
 #if STREAM_UINT8
     testTranspose(UInt8, uint8_t, 1, 1);
     testTranspose(UInt8, uint8_t, 1, 3);
@@ -1692,10 +1871,10 @@ uint32_t Test_IO_transpose(void) {
 #endif
 #endif
 /********************************************************/
-#define ASSERT_NUM(TYPE, DTYPE)     uint32_t Assert_ ##TYPE (DTYPE num1, DTYPE num2, uint16_t line, uint8_t cycle, uint8_t index) {\
+#define ASSERT_NUM(TYPE, DTYPE)     uint32_t Assert_ ##TYPE (DTYPE num1, DTYPE num2, uint16_t line, uint8_t cycle, uint8_t assertIndex) {\
                                         if (num1 != num2) {\
                                             PRINTF("Expected: %ld, Found: %ld\n", (long int) num2, (long int) num1);\
-                                                return line << 16 | index << 8 | cycle;\
+                                                return line << 16 | assertIndex << 8 | cycle;\
                                         }\
                                         return 0;\
                                     }
@@ -1716,9 +1895,9 @@ ASSERT_NUM(Float, float)
     ASSERT_NUM(Double, double)
 #endif // STREAM_DOUBLE
 
-uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8_t cycle, uint8_t index) {
+uint32_t Assert_Bytes(uint8_t* a, uint8_t* b, uint32_t len, uint16_t line, uint8_t cycle, uint8_t assertIndex) {
     if (memcmp(a, b, len) != 0) {
-        return line << 16 | index << 8 | cycle;
+        return line << 16 | assertIndex << 8 | cycle;
     }
     return 0;
 }

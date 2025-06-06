@@ -17,7 +17,7 @@ void printArray(uint8_t* buff, int len) {
     putchar('\n');
 }
 
-Stream_Result MyStream_receive(IStream* stream, uint8_t* buff, Stream_LenType len) {
+Stream_Result MyStream_receive(StreamIn* stream, uint8_t* buff, Stream_LenType len) {
 	Stream_LenType available = Stream_available(&mediaStream);
 
 	if (available < len) {
@@ -33,7 +33,7 @@ Stream_Result MyStream_receive(IStream* stream, uint8_t* buff, Stream_LenType le
 	return Stream_Ok;
 }
 
-Stream_Result MyStream_transmit(OStream* stream, uint8_t* buff, Stream_LenType len) {
+Stream_Result MyStream_transmit(StreamOut* stream, uint8_t* buff, Stream_LenType len) {
 	Stream_writeBytes(&mediaStream, buff, len);
 	// call transmit completed
 	return OStream_handle(stream, len);
@@ -43,13 +43,13 @@ int main()
 {
     uint8_t rxBuff[50] = {0};
     uint8_t txBuff[50] = {0};
-    IStream inStream;
-    OStream outStream;
+    StreamIn inStream;
+    StreamOut outStream;
 
     puts("--------------------------------------");
     printf("StreamBuffer Ver: %s\n", STREAM_VER_STR);
-    printf("OutputStream Ver: %s\n", OSTREAM_VER_STR);
-    printf("InputStream  Ver: %s\n", ISTREAM_VER_STR);
+    printf("StreamOut Ver: %s\n", OSTREAM_VER_STR);
+    printf("StreamIn  Ver: %s\n", ISTREAM_VER_STR);
     puts("--------------------------------------\n");
 
     Stream_init(&mediaStream, mediaBuff, sizeof(mediaBuff));
