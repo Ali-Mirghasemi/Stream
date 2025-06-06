@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 #define ISTREAM_VER_MAJOR    0
-#define ISTREAM_VER_MINOR    8
-#define ISTREAM_VER_FIX      3
+#define ISTREAM_VER_MINOR    9
+#define ISTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
 
@@ -50,34 +50,40 @@ extern "C" {
 #define ISTREAM_VER                         ((ISTREAM_VER_MAJOR * 10000UL) + (ISTREAM_VER_MINOR * 100UL) + (ISTREAM_VER_FIX))
 
 /* Pre-defined variables */
-struct __IStream;
-typedef struct __IStream IStream;
+struct __StreamIn;
+typedef struct __StreamIn StreamIn;
+
+/* Add compatibility with older libraries */
+#if !defined(IStream) || (!defined(_WIN32) && !defined(_WIN64))
+    #define __IStream           __StreamIn
+    #define IStream             StreamIn
+#endif
 /**
  * @brief receive function, OStream_space
- * @param stream IStream 
+ * @param stream StreamIn 
  * @param buff uint8_t*
  * @param len Stream_LenType
  * @return Stream_Result 
  */
-typedef Stream_Result (*IStream_ReceiveFn)(IStream* stream, uint8_t* buff, Stream_LenType len);
+typedef Stream_Result (*IStream_ReceiveFn)(StreamIn* stream, uint8_t* buff, Stream_LenType len);
 /**
  * @brief check how many bytes received, this functions allows to check 
  * how many bytes received in available function, it's good to work with DMA
- * @param stream IStream
+ * @param stream StreamIn
  * @return Stream_LenType
  */
-typedef Stream_LenType (*IStream_CheckReceiveFn)(IStream* stream);
+typedef Stream_LenType (*IStream_CheckReceiveFn)(StreamIn* stream);
 /**
  * @brief when buffer got full, this function will call
- * @param stream IStream
+ * @param stream StreamIn
  * @return Stream_LenType
  */
-typedef void (*IStream_OnFullFn)(IStream* stream);
+typedef void (*IStream_OnFullFn)(StreamIn* stream);
 
 /**
- * @brief hold InputStream properties
+ * @brief hold StreamIn properties
  */
-struct __IStream {
+struct __StreamIn {
     StreamBuffer            Buffer;         /**< hold stream buffer */
     IStream_ReceiveFn       receive;        /**< receive function */
 #if ISTREAM_CHECK_RECEIVE
@@ -89,17 +95,17 @@ struct __IStream {
 };
 
 
-void                IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size);
-#define             IStream_deinit(STREAM)                                  memset(STREAM, 0, sizeof(IStream))
+void                IStream_init(StreamIn* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size);
+void                IStream_deinit(StreamIn* stream);
 
-/* Input Bytes of IStream */
-Stream_Result       IStream_handle(IStream* stream, Stream_LenType len);
-Stream_Result       IStream_receive(IStream* stream);
+/* Input Bytes of StreamIn */
+Stream_Result       IStream_handle(StreamIn* stream, Stream_LenType len);
+Stream_Result       IStream_receive(StreamIn* stream);
 #define             IStream_receiveByte(STREAM, VAL)                        Stream_writeUInt8(&((STREAM)->Buffer), VAL)
 #define             IStream_receiveBytes(STREAM, VAL, LEN)                  Stream_writeBytes(&((STREAM)->Buffer), VAL, LEN)
 
 #define             IStream_availableUncheck(STREAM)                        Stream_available(&(STREAM)->Buffer)
-Stream_LenType      IStream_available(IStream* stream);
+Stream_LenType      IStream_available(StreamIn* stream);
 
 #define             IStream_incomingBytes(STREAM)                           Stream_getPendingBytes(&(STREAM)->Buffer)
 
@@ -111,18 +117,40 @@ Stream_LenType      IStream_available(IStream* stream);
 #endif // OSTREAM_ARGS
 
 #if ISTREAM_CHECK_RECEIVE
-    void            IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn);
+    void            IStream_setCheckReceive(StreamIn* stream, IStream_CheckReceiveFn fn);
 #endif // ISTREAM_CHECK_RECEIVE
 #if ISTREAM_FULL_CALLBACK
-    void            IStream_onFull(IStream* stream, IStream_OnFullFn fn);
+    void            IStream_onFull(StreamIn* stream, IStream_OnFullFn fn);
 #endif
 
 #if STREAM_READ_LOCK_CUSTOM
-    #define         IStream_lock(STREAM, LOCK, LEN)                         Stream_lockReadCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, LEN, sizeof(IStream))
+    #define         IStream_lock(STREAM, LOCK, LEN)                         Stream_lockReadCustom(&(STREAM)->Buffer, &(LOCK)->Buffer, LEN, sizeof(StreamIn))
     #define         IStream_unlock(STREAM, LOCK)                            Stream_unlockRead(&(STREAM)->Buffer, &(LOCK)->Buffer);
     #define         IStream_unlockIgnore(STREAM)                            Stream_unlockReadIgnore(&(STREAM)->Buffer)
     #define         IStream_lockLen(STREAM, LOCK)                           Stream_lockReadLen(&(STREAM)->Buffer, &(LOCK)->Buffer)
 #endif // STREAM_READ_LOCK
+
+#if STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
+    #define         IStream_setMemIO(STREAM, COPY, COPYR, SET, REVERSE)     Stream_setMemIO(&(STREAM)->Buffer, (COPY), (COPYR), (SET), (REVERSE))
+#elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
+    #define         IStream_setMemIO(STREAM, MEM)                           Stream_setMemIO(&(STREAM)->Buffer, (MEM))
+#elif STREAM_MEM_IO == STREAM_MEM_IO_GLOBAL_DRIVER
+    #define         IStream_setMemIO(MEM)                                   Stream_setMemIO((MEM))
+#endif
+
+#if STREAM_MUTEX
+#if STREAM_MUTEX == STREAM_MUTEX_CUSTOM
+    #define         IStream_setMutex(STREAM, INIT, LOCK, UNLOCK, DEINIT)    Stream_setMutex(&(STREAM)->Buffer, (INIT), (LOCK), (UNLOCK), (DEINIT))
+#elif STREAM_MUTEX == STREAM_MUTEX_DRIVER
+    #define         IStream_setMutex(STREAM, DRIVER)                        Stream_setMutex(&(STREAM)->Buffer, (DRIVER))
+#elif STREAM_MUTEX == STREAM_MUTEX_GLOBAL_DRIVER
+    #define         IStream_setMutex(DRIVER)                                Stream_setMutex((DRIVER))
+#endif
+    #define         IStream_mutexInit(STREAM)                               Stream_mutexInit(&(STREAM)->Buffer)
+    #define         IStream_mutexLock(STREAM)                               Stream_mutexLock(&(STREAM)->Buffer)
+    #define         IStream_mutexUnlock(STREAM)                             Stream_mutexUnlock(&(STREAM)->Buffer)
+    #define         IStream_mutexDeInit(STREAM)                             Stream_mutexDeInit(&(STREAM)->Buffer)
+#endif
 
 #define             IStream_getDataPtr(STREAM)                              Stream_getWritePtr(&((STREAM)->Buffer))
 #define             IStream_getBufferSize(STREAM)                           Stream_getBufferSize(&((STREAM)->Buffer))

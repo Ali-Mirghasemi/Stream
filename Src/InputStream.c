@@ -12,14 +12,14 @@
 #endif
 
 /**
- * @brief Initialize InputStream
+ * @brief Initialize StreamIn
  *
- * @param stream InputStream to initialize
+ * @param stream StreamIn to initialize
  * @param receiveFn Function to receive data
  * @param buff Buffer to hold data
  * @param size Size of buffer
  */
-void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size) {
+void IStream_init(StreamIn* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, Stream_LenType size) {
     Stream_init(&stream->Buffer, buff, size);
     stream->receive = receiveFn;
 #if ISTREAM_CHECK_RECEIVE
@@ -30,13 +30,22 @@ void IStream_init(IStream* stream, IStream_ReceiveFn receiveFn, uint8_t* buff, S
 #endif
 }
 /**
+ * @brief De-Initialize input stream
+ * 
+ * @param stream 
+ */
+void IStream_deinit(StreamIn* stream) {
+    Stream_deinit(&stream->Buffer);
+    memset(stream, 0, sizeof(StreamIn));
+}
+/**
  * @brief call in interrupt or RxCplt callback for Async Receive
  *
  * @param stream
  * @param len
  * @return Stream_Result
  */
-Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
+Stream_Result IStream_handle(StreamIn* stream, Stream_LenType len) {
     Stream_Result res;
 
 	if (!stream->Buffer.InReceive) {
@@ -66,7 +75,7 @@ Stream_Result IStream_handle(IStream* stream, Stream_LenType len) {
  * @param stream
  * @return Stream_Result
  */
-Stream_Result IStream_receive(IStream* stream) {
+Stream_Result IStream_receive(StreamIn* stream) {
     if (!stream->Buffer.InReceive) {
         Stream_LenType len = Stream_directSpace(&stream->Buffer);
         stream->Buffer.PendingBytes = len;
@@ -93,7 +102,7 @@ Stream_Result IStream_receive(IStream* stream) {
  * @param stream
  * @return Stream_LenType
  */
-Stream_LenType IStream_available(IStream* stream) {
+Stream_LenType IStream_available(StreamIn* stream) {
 #if ISTREAM_CHECK_RECEIVE
     if (stream->checkReceive) {
         Stream_LenType len = stream->checkReceive(stream);
@@ -119,12 +128,12 @@ Stream_LenType IStream_available(IStream* stream) {
  * @param stream
  * @param fn
  */
-void IStream_setCheckReceive(IStream* stream, IStream_CheckReceiveFn fn) {
+void IStream_setCheckReceive(StreamIn* stream, IStream_CheckReceiveFn fn) {
     stream->checkReceive = fn;
 }
 #endif // ISTREAM_CHECK_RECEIVE
 #if ISTREAM_FULL_CALLBACK
-void IStream_onFull(IStream* stream, IStream_OnFullFn fn) {
+void IStream_onFull(StreamIn* stream, IStream_OnFullFn fn) {
     stream->onFull = fn;
 }
 #endif
