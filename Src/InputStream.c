@@ -11,6 +11,28 @@
     #error "For using InputStream Library you must enable STREAM_PENDING_BYTES in StreamBuffer.h"
 #endif
 
+#if STREAM_MUTEX
+#if STREAM_MUTEX_CHECK_RESULT
+    #define __mutexVarInit()                        Stream_MutexResult mutexError
+    #define __mutexInit(S)                          if ((mutexError = IStream_mutexInit((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexLock(S)                          if ((mutexError = IStream_mutexLock((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexUnlock(S)                        if ((mutexError = IStream_mutexUnlock((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexDeInit(S)                        if ((mutexError = IStream_mutexDeInit((S)))) { return Stream_MutexError | mutexError; }
+#else
+    #define __mutexVarInit()
+    #define __mutexInit(S)                          IStream_mutexInit((S))
+    #define __mutexLock(S)                          IStream_mutexLock((S))
+    #define __mutexUnlock(S)                        IStream_mutexUnlock((S))
+    #define __mutexDeInit(S)                        IStream_mutexDeInit((S))
+#endif
+#else
+    #define __mutexVarInit()
+    #define __mutexInit(S)
+    #define __mutexLock(S)
+    #define __mutexUnlock(S)
+    #define __mutexDeInit(S)
+#endif
+
 /**
  * @brief Initialize StreamIn
  *
@@ -47,8 +69,11 @@ void IStream_deinit(StreamIn* stream) {
  */
 Stream_Result IStream_handle(StreamIn* stream, Stream_LenType len) {
     Stream_Result res;
+    __mutexVarInit();
+    __mutexLock(stream);
 
 	if (!stream->Buffer.InReceive) {
+        __mutexUnlock(stream);
 		return Stream_NoReceive;
 	}
 
@@ -58,6 +83,7 @@ Stream_Result IStream_handle(StreamIn* stream, Stream_LenType len) {
 
     stream->Buffer.InReceive = 0;
     if ((res = Stream_moveWritePos(&stream->Buffer, len)) != Stream_Ok) {
+        __mutexUnlock(stream);
         return res;
     }
 
@@ -67,6 +93,7 @@ Stream_Result IStream_handle(StreamIn* stream, Stream_LenType len) {
     }
 #endif
 
+    __mutexUnlock(stream);
     return IStream_receive(stream);
 }
 /**
@@ -76,25 +103,32 @@ Stream_Result IStream_handle(StreamIn* stream, Stream_LenType len) {
  * @return Stream_Result
  */
 Stream_Result IStream_receive(StreamIn* stream) {
+    __mutexVarInit();
+    __mutexLock(stream);
+    Stream_Result res;
+
     if (!stream->Buffer.InReceive) {
         Stream_LenType len = Stream_directSpace(&stream->Buffer);
         stream->Buffer.PendingBytes = len;
         if (len > 0) {
             if (stream->receive) {
                 stream->Buffer.InReceive = 1;
-                return stream->receive(stream, IStream_getDataPtr(stream), len);
+                res = stream->receive(stream, IStream_getDataPtr(stream), len);
             }
             else {
-                return Stream_NoReceiveFn;
+                res = Stream_NoReceiveFn;
             }
         }
         else {
-            return Stream_NoSpace;
+            res = Stream_NoSpace;
         }
     }
     else {
-        return Stream_InReceive;
+        res = Stream_InReceive;
     }
+
+    __mutexUnlock(stream);
+    return res;
 }
 /**
  * @brief return available bytes in buffer to read
@@ -103,6 +137,8 @@ Stream_Result IStream_receive(StreamIn* stream) {
  * @return Stream_LenType
  */
 Stream_LenType IStream_available(StreamIn* stream) {
+    __mutexVarInit();
+    __mutexLock(stream);
 #if ISTREAM_CHECK_RECEIVE
     if (stream->checkReceive) {
         Stream_LenType len = stream->checkReceive(stream);
@@ -119,6 +155,7 @@ Stream_LenType IStream_available(StreamIn* stream) {
     }
 #endif // ISTREAM_CHECK_RECEIVE
     // now get available bytes len
+    __mutexUnlock(stream);
     return Stream_available(&stream->Buffer);
 }
 #if ISTREAM_CHECK_RECEIVE
@@ -129,12 +166,18 @@ Stream_LenType IStream_available(StreamIn* stream) {
  * @param fn
  */
 void IStream_setCheckReceive(StreamIn* stream, IStream_CheckReceiveFn fn) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->checkReceive = fn;
+    __mutexUnlock(stream);
 }
 #endif // ISTREAM_CHECK_RECEIVE
 #if ISTREAM_FULL_CALLBACK
 void IStream_onFull(StreamIn* stream, IStream_OnFullFn fn) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->onFull = fn;
+    __mutexUnlock(stream);
 }
 #endif
 

@@ -11,6 +11,28 @@
     #error "For using OutputStream Library you must enable STREAM_PENDING_BYTES in StreamBuffer.h"
 #endif
 
+#if STREAM_MUTEX
+#if STREAM_MUTEX_CHECK_RESULT
+    #define __mutexVarInit()                        Stream_MutexResult mutexError
+    #define __mutexInit(S)                          if ((mutexError = OStream_mutexInit((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexLock(S)                          if ((mutexError = OStream_mutexLock((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexUnlock(S)                        if ((mutexError = OStream_mutexUnlock((S)))) { return Stream_MutexError | mutexError; }
+    #define __mutexDeInit(S)                        if ((mutexError = OStream_mutexDeInit((S)))) { return Stream_MutexError | mutexError; }
+#else
+    #define __mutexVarInit()
+    #define __mutexInit(S)                          OStream_mutexInit((S))
+    #define __mutexLock(S)                          OStream_mutexLock((S))
+    #define __mutexUnlock(S)                        OStream_mutexUnlock((S))
+    #define __mutexDeInit(S)                        OStream_mutexDeInit((S))
+#endif
+#else
+    #define __mutexVarInit()
+    #define __mutexInit(S)
+    #define __mutexLock(S)
+    #define __mutexUnlock(S)
+    #define __mutexDeInit(S)
+#endif
+
 /**
  * @brief Initialize StreamOut
  *
@@ -48,7 +70,11 @@ void OStream_deinit(StreamOut* stream) {
  */
 Stream_Result OStream_handle(StreamOut* stream, Stream_LenType len) {
     Stream_Result res;
+    __mutexVarInit();
+    __mutexLock(stream);
+
 	if (!stream->Buffer.InTransmit) {
+        __mutexUnlock(stream);
 		return Stream_NoTransmit;
 	}
 
@@ -58,6 +84,7 @@ Stream_Result OStream_handle(StreamOut* stream, Stream_LenType len) {
 
     stream->Buffer.InTransmit = 0;
     if ((res = Stream_moveReadPos(&stream->Buffer, len)) != Stream_Ok) {
+        __mutexUnlock(stream);
         return res;
     }
 
@@ -67,9 +94,12 @@ Stream_Result OStream_handle(StreamOut* stream, Stream_LenType len) {
     }
 #endif
 
-    return stream->Buffer.FlushMode != Stream_FlushMode_Single ? 
+    res = stream->Buffer.FlushMode != Stream_FlushMode_Single ? 
                                     OStream_flush(stream) :
                                     Stream_Ok;
+
+    __mutexUnlock(stream);
+    return res;
 }
 /**
  * @brief start sending bytes and flush stream in Async Transmit
@@ -78,25 +108,31 @@ Stream_Result OStream_handle(StreamOut* stream, Stream_LenType len) {
  * @return Stream_Result
  */
 Stream_Result OStream_flush(StreamOut* stream) {
+    Stream_Result res;
+    __mutexVarInit();
+    __mutexLock(stream);
     if (!stream->Buffer.InTransmit) {
         Stream_LenType len = Stream_directAvailable(&stream->Buffer);
         stream->Buffer.PendingBytes = len;
         if (len > 0) {
             if (stream->transmit) {
                 stream->Buffer.InTransmit = 1;
-                return stream->transmit(stream, OStream_getDataPtr(stream), len);
+                res = stream->transmit(stream, OStream_getDataPtr(stream), len);
             }
             else {
-                return Stream_NoTransmitFn;
+                res = Stream_NoTransmitFn;
             }
         }
         else {
-            return Stream_NoAvailable;
+            res = Stream_NoAvailable;
         }
     }
     else {
-        return Stream_InTransmit;
+        res = Stream_InTransmit;
     }
+
+    __mutexUnlock(stream);
+    return res;
 }
 /**
  * @brief flush and wait for transmit all pending bytes
@@ -106,13 +142,15 @@ Stream_Result OStream_flush(StreamOut* stream) {
  */
 Stream_Result OStream_flushBlocking(StreamOut* stream) {
     Stream_Result res;
-
+    __mutexVarInit();
+    __mutexLock(stream);
     while (OStream_pendingBytes(stream) == 0) {
         if ((res = OStream_flush(stream)) != Stream_Ok) {
             break;
         }
     }
 
+    __mutexUnlock(stream);
     return res;
 }
 /**
@@ -122,19 +160,27 @@ Stream_Result OStream_flushBlocking(StreamOut* stream) {
  * @return Stream_Result
  */
 Stream_Result OStream_transmitByte(StreamOut* stream) {
+    __mutexVarInit();
+    __mutexLock(stream);
+    
     Stream_LenType len = Stream_directAvailable(&stream->Buffer);
+    Stream_Result res = Stream_Ok;
+
     if (len > 0) {
         if (stream->transmit) {
             stream->transmit(stream, OStream_getDataPtr(stream), 1);
-            return Stream_moveReadPos(&stream->Buffer, 1);
+            res = Stream_moveReadPos(&stream->Buffer, 1);
         }
         else {
-            return Stream_NoTransmitFn;
+            res = Stream_NoTransmitFn;
         }
     }
     else {
-        return Stream_NoAvailable;
+        res = Stream_NoAvailable;
     }
+
+    __mutexUnlock(stream);
+    return res;
 }
 /**
  * @brief blocking transmit n byte just call transmit function no need handle function
@@ -143,6 +189,9 @@ Stream_Result OStream_transmitByte(StreamOut* stream) {
  * @return Stream_Result
  */
 Stream_Result OStream_transmitBytes(StreamOut* stream, Stream_LenType len) {
+    __mutexVarInit();
+    __mutexLock(stream);
+
     Stream_LenType dirLen = OStream_pendingBytes(stream);
     Stream_Result res;
     if (dirLen < len) {
@@ -157,19 +206,23 @@ Stream_Result OStream_transmitBytes(StreamOut* stream, Stream_LenType len) {
                 }
                 stream->transmit(stream, OStream_getDataPtr(stream), dirLen);
                 if ((res = Stream_moveReadPos(&stream->Buffer, 1)) != Stream_Ok) {
-                    return res;
+                    break;
                 }
                 len -= dirLen;
             }
             else {
-                return Stream_NoTransmitFn;
+                res = Stream_NoTransmitFn;
+                break;
             }
         }
         else {
-            return Stream_NoAvailable;
+            res = Stream_NoAvailable;
+            break;
         }
     }
-    return Stream_Ok;
+
+    __mutexUnlock(stream);
+    return res;
 }
 #if OSTREAM_CHECK_TRANSMIT
 /**
@@ -179,7 +232,10 @@ Stream_Result OStream_transmitBytes(StreamOut* stream, Stream_LenType len) {
  * @param checkTransmit
  */
 void OStream_setCheckTransmit(StreamOut* stream, OStream_CheckTransmitFn fn) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->checkTransmit = fn;
+    __mutexUnlock(stream);
 }
 #endif // OSTREAM_CHECK_TRANSMIT
 #if OSTREAM_FLUSH_CALLBACK
@@ -190,7 +246,10 @@ void OStream_setCheckTransmit(StreamOut* stream, OStream_CheckTransmitFn fn) {
  * @param fn 
  */
 void OStream_setFlushCallback(StreamOut* stream, OStream_FlushCallbackFn fn) {
+    __mutexVarInit();
+    __mutexLock(stream);
     stream->flushCallback = fn;
+    __mutexUnlock(stream);
 }
 #endif
 /**
@@ -200,6 +259,8 @@ void OStream_setFlushCallback(StreamOut* stream, OStream_FlushCallbackFn fn) {
  * @return OStream_CheckTransmitFn
  */
 Stream_LenType OStream_space(StreamOut* stream) {
+    __mutexVarInit();
+    __mutexLock(stream);
 #if OSTREAM_CHECK_TRANSMIT
     if (stream->checkTransmit) {
         Stream_LenType len = stream->checkTransmit(stream);
@@ -215,6 +276,7 @@ Stream_LenType OStream_space(StreamOut* stream) {
         }
     }
 #endif // OSTREAM_CHECK_TRANSMIT
+    __mutexUnlock(stream);
     return Stream_space(&stream->Buffer);
 }
 
