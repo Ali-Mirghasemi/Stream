@@ -87,6 +87,12 @@ Stream_Result IStream_handle(StreamIn* stream, Stream_LenType len) {
         return res;
     }
 
+#if ISTREAM_RECEIVE_CALLBACK
+    if (stream->onReceive) {
+        stream->onReceive(stream, len);
+    }
+#endif
+
 #if ISTREAM_FULL_CALLBACK
     if (stream->onFull && Stream_isFull(&stream->Buffer)) {
         stream->onFull(stream);
@@ -172,6 +178,14 @@ void IStream_setCheckReceive(StreamIn* stream, IStream_CheckReceiveFn fn) {
     __mutexUnlock(stream);
 }
 #endif // ISTREAM_CHECK_RECEIVE
+#if ISTREAM_RECEIVE_CALLBACK
+void IStream_onReceive(StreamIn* stream, IStream_OnReceiveFn fn) {
+    __mutexVarInit();
+    __mutexLock(stream);
+    stream->onReceive = fn;
+    __mutexUnlock(stream);
+}
+#endif
 #if ISTREAM_FULL_CALLBACK
 void IStream_onFull(StreamIn* stream, IStream_OnFullFn fn) {
     __mutexVarInit();

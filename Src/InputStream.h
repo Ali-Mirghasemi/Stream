@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define ISTREAM_VER_MAJOR    0
-#define ISTREAM_VER_MINOR    9
+#define ISTREAM_VER_MINOR    10
 #define ISTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -33,9 +33,13 @@ extern "C" {
  */
 #define ISTREAM_CHECK_RECEIVE       1
 /**
+ * @brief Enable Receive Callback
+ */
+#define ISTREAM_RECEIVE_CALLBACK    1
+/**
  * @brief Enable Full Callback
  */
-#define ISTREAM_FULL_CALLBACK        1
+#define ISTREAM_FULL_CALLBACK       1
 
 
 /************************************************************************/
@@ -74,6 +78,13 @@ typedef Stream_Result (*IStream_ReceiveFn)(StreamIn* stream, uint8_t* buff, Stre
  */
 typedef Stream_LenType (*IStream_CheckReceiveFn)(StreamIn* stream);
 /**
+ * @brief when buffer got fill with new data, this function will call
+ * @param stream StreamIn
+ * @param len length of new data
+ * @return Stream_LenType
+ */
+typedef void (*IStream_OnReceiveFn)(StreamIn* stream, Stream_LenType len);
+/**
  * @brief when buffer got full, this function will call
  * @param stream StreamIn
  * @return Stream_LenType
@@ -89,8 +100,11 @@ struct __StreamIn {
 #if ISTREAM_CHECK_RECEIVE
     IStream_CheckReceiveFn  checkReceive;   /**< check receive function */
 #endif
+#if ISTREAM_RECEIVE_CALLBACK
+    IStream_OnReceiveFn     onReceive;      /**< receive callback */
+#endif
 #if ISTREAM_FULL_CALLBACK
-    IStream_OnFullFn        onFull;   /**< full callback */
+    IStream_OnFullFn        onFull;         /**< full callback */
 #endif
 };
 
@@ -114,11 +128,19 @@ Stream_LenType      IStream_available(StreamIn* stream);
 #if STREAM_ARGS
     #define         IStream_setArgs(STREAM, ARGS)                           Stream_setArgs(&(STREAM)->Buffer, (ARGS))
     #define         IStream_getArgs(STREAM)                                 Stream_getArgs(&(STREAM)->Buffer)
-#endif // OSTREAM_ARGS
+#endif // STREAM_ARGS
+
+#if STREAM_DRIVER_ARGS
+    #define         IStream_setDriverArgs(STREAM, ARGS)                     Stream_setDriverArgs(&(STREAM)->Buffer, (ARGS))
+    #define         IStream_getDriverArgs(STREAM)                           Stream_getDriverArgs(&(STREAM)->Buffer)
+#endif // STREAM_DRIVER_ARGS
 
 #if ISTREAM_CHECK_RECEIVE
     void            IStream_setCheckReceive(StreamIn* stream, IStream_CheckReceiveFn fn);
 #endif // ISTREAM_CHECK_RECEIVE
+#if ISTREAM_RECEIVE_CALLBACK
+    void            IStream_onReceive(StreamIn* stream, IStream_OnReceiveFn fn);
+#endif
 #if ISTREAM_FULL_CALLBACK
     void            IStream_onFull(StreamIn* stream, IStream_OnFullFn fn);
 #endif
@@ -154,6 +176,12 @@ Stream_LenType      IStream_available(StreamIn* stream);
 
 #define             IStream_getDataPtr(STREAM)                              Stream_getWritePtr(&((STREAM)->Buffer))
 #define             IStream_getBufferSize(STREAM)                           Stream_getBufferSize(&((STREAM)->Buffer))
+
+#define             IStream_directAvailable(STREAM)                         Stream_directAvailable(&((STREAM)->Buffer))
+#define             IStream_directSpace(STREAM)                             Stream_directSpace(&((STREAM)->Buffer))
+
+#define             IStream_directAvailableAt(STREAM, IDX)                  Stream_directAvailableAt(&((STREAM)->Buffer), (IDX))
+#define             IStream_directSpaceAt(STREAM, IDX)                      Stream_directSpaceAt(&((STREAM)->Buffer), (IDX))
 
 #define             IStream_clear(STREAM)                                   Stream_clear(&((STREAM)->Buffer))
 #define             IStream_reset(STREAM)                                   Stream_reset(&((STREAM)->Buffer))

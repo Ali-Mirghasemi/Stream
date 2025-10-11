@@ -18,7 +18,7 @@ extern "C" {
 #include <stdint.h>
 
 #define STREAM_VER_MAJOR    0
-#define STREAM_VER_MINOR    10
+#define STREAM_VER_MINOR    11
 #define STREAM_VER_FIX      0
 
 /************************************************************************/
@@ -72,6 +72,10 @@ extern "C" {
  * @brief enable user argument in StreamBuffer
  */
 #define STREAM_ARGS                         1
+/**
+ * @brief enable driver argument in StreamBuffer
+ */
+#define STREAM_DRIVER_ARGS                  1
 /**
  * @brief If you want to use IStream/OStream you must enable this feature
  */
@@ -540,6 +544,9 @@ struct __StreamBuffer {
 #if STREAM_ARGS
     void*                       Args;                   /**< user arguments for stream */
 #endif
+#if STREAM_DRIVER_ARGS
+    void*                       DriverArgs;             /**< driver arguments for stream */
+#endif
 #if   STREAM_MEM_IO == STREAM_MEM_IO_CUSTOM
     Stream_MemIO                Mem;                    /**< Custom io functions for interact with memory */
 #elif STREAM_MEM_IO == STREAM_MEM_IO_DRIVER
@@ -730,6 +737,11 @@ Stream_Result       Stream_moveReadPos(StreamBuffer* stream, Stream_LenType step
     void            Stream_setArgs(StreamBuffer* stream, void* args);
     void*           Stream_getArgs(StreamBuffer* stream);
 #endif // STREAM_ARGS
+
+#if STREAM_DRIVER_ARGS
+    void            Stream_setDriverArgs(StreamBuffer* stream, void* args);
+    void*           Stream_getDriverArgs(StreamBuffer* stream);
+#endif // STREAM_DRIVER_ARGS
 
 #if STREAM_PENDING_BYTES
     void            Stream_setPendingBytes(StreamBuffer* stream, Stream_LenType len);

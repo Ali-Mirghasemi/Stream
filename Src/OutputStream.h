@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define OSTREAM_VER_MAJOR    0
-#define OSTREAM_VER_MINOR    9
+#define OSTREAM_VER_MINOR    10
 #define OSTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
@@ -121,7 +121,12 @@ Stream_LenType      OStream_space(StreamOut* stream);
 #if STREAM_ARGS
     #define         OStream_setArgs(STREAM, ARGS)                           Stream_setArgs(&(STREAM)->Buffer, (ARGS))
     #define         OStream_getArgs(STREAM)                                 Stream_getArgs(&(STREAM)->Buffer)
-#endif // OSTREAM_ARGS
+#endif // STREAM_ARGS
+
+#if STREAM_DRIVER_ARGS
+    #define         OStream_setDriverArgs(STREAM, ARGS)                     Stream_setDriverArgs(&(STREAM)->Buffer, (ARGS))
+    #define         OStream_getDriverArgs(STREAM)                           Stream_getDriverArgs(&(STREAM)->Buffer)
+#endif // STREAM_DRIVER_ARGS
 
 #if OSTREAM_CHECK_TRANSMIT
     void            OStream_setCheckTransmit(StreamOut* stream, OStream_CheckTransmitFn fn);
@@ -167,6 +172,12 @@ Stream_LenType      OStream_space(StreamOut* stream);
 
 #define             OStream_getDataPtr(STREAM)                              Stream_getReadPtr(&((STREAM)->Buffer))
 #define             OStream_getBufferSize(STREAM)                           Stream_getBufferSize(&((STREAM)->Buffer))
+
+#define             OStream_directAvailable(STREAM)                         Stream_directAvailable(&((STREAM)->Buffer))
+#define             OStream_directSpace(STREAM)                             Stream_directSpace(&((STREAM)->Buffer))
+
+#define             OStream_directAvailableAt(STREAM, IDX)                  Stream_directAvailableAt(&((STREAM)->Buffer), (IDX))
+#define             OStream_directSpaceAt(STREAM, IDX)                      Stream_directSpaceAt(&((STREAM)->Buffer), (IDX))
 
 #define             OStream_clear(STREAM)                                   Stream_clear(&((STREAM)->Buffer))
 #define             OStream_reset(STREAM)                                   Stream_reset(&((STREAM)->Buffer))

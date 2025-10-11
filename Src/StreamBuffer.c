@@ -1638,6 +1638,29 @@ void* Stream_getArgs(StreamBuffer* stream) {
     return stream->Args;
 }
 #endif // STREAM_ARGS
+#if STREAM_DRIVER_ARGS
+/**
+ * @brief set buffer driver arguments
+ * 
+ * @param stream 
+ * @param args 
+ */
+void Stream_setDriverArgs(StreamBuffer* stream, void* args) {
+    __mutexVarInit();
+    __mutexLock(stream);
+    stream->DriverArgs = args;
+    __mutexUnlock(stream);
+}
+/**
+ * @brief get buffer driver arguments
+ * 
+ * @param stream 
+ * @return void* 
+ */
+void* Stream_getDriverArgs(StreamBuffer* stream) {
+    return stream->DriverArgs;
+}
+#endif // STREAM_ARGS
 #if STREAM_PENDING_BYTES
 /**
  * @brief Set pending bytes
