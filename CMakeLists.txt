@@ -77,6 +77,14 @@ endif()
 
 math(EXPR LIB_COUNT "${BUILD_STATIC_LIB_NUM} + ${BUILD_SHARED_LIB_NUM}")
 
+# === Default behavior ===
+if(LIB_COUNT EQUAL 0)
+    message(STATUS "No build type selected — defaulting to STATIC library")
+    set(${LIB_NAME_UPPER}_BUILD_STATIC_LIB ON)
+    set(BUILD_STATIC_LIB_NUM 1)
+    set(LIB_COUNT 1)
+endif()
+
 # --- Shared Library ---
 if (${LIB_NAME_UPPER}_BUILD_SHARED_LIB)
     if (LIB_COUNT EQUAL 1)
