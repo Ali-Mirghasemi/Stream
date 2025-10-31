@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 set(LIB_NAME "Stream")
 string(TOUPPER "${LIB_NAME}" LIB_NAME_UPPER)
 
-project(${LIB_NAME} VERSION 0.10.0 LANGUAGES C)
+project(${LIB_NAME} VERSION 0.11.0 LANGUAGES C)
 
 # Check if this project is the top-level build
 if(PROJECT_IS_TOP_LEVEL)
