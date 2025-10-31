@@ -17,7 +17,7 @@ extern "C" {
 
 #define OSTREAM_VER_MAJOR    0
 #define OSTREAM_VER_MINOR    10
-#define OSTREAM_VER_FIX      0
+#define OSTREAM_VER_FIX      1
 
 #include "StreamBuffer.h"
 
@@ -213,7 +213,8 @@ Stream_LenType      OStream_space(StreamOut* stream);
     #define         OStream_write(STREAM, VAL, LEN)                         Stream_write(&((STREAM)->Buffer), (VAL), (LEN))
 #endif
 #if STREAM_WRITE_STREAM
-    #define         OStream_writeStream(STREAM, VAL, LEN)                   Stream_writeStream(&((STREAM)->Buffer), (VAL), (LEN))
+    #define         OStream_writeStream(STREAM, VAL, LEN)                   Stream_writeStream(&((STREAM)->Buffer), &((VAL)->Buffer), (LEN))
+    #define         OStream_writeStreamBuffer(STREAM, VAL, LEN)             Stream_writeStream(&((STREAM)->Buffer), (VAL), (LEN))
 #endif
 #if STREAM_WRITE_PADDING
     #define         OStream_writePadding(STREAM, VAL, LEN)                  Stream_writePadding(&((STREAM)->Buffer), (VAL), (LEN))
