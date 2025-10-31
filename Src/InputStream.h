@@ -17,7 +17,7 @@ extern "C" {
 
 #define ISTREAM_VER_MAJOR    0
 #define ISTREAM_VER_MINOR    10
-#define ISTREAM_VER_FIX      0
+#define ISTREAM_VER_FIX      1
 
 #include "StreamBuffer.h"
 
@@ -216,7 +216,8 @@ Stream_LenType      IStream_available(StreamIn* stream);
     #define         IStream_read(STREAM, VAL, LEN)                          Stream_read(&((STREAM)->Buffer), VAL, LEN)
 #endif
 #if STREAM_READ_STREAM
-    #define        IStream_readStream(IN, OUT, LEN)                         Stream_readStream(&((IN)->Buffer), &((OUT)->Buffer), LEN)
+    #define        IStream_readStream(STREAM, VAL, LEN)                     Stream_readStream(&((STREAM)->Buffer), &((VAL)->Buffer), LEN)
+    #define        IStream_readStreamBuffer(STREAM, VAL, LEN)               Stream_readStream(&((STREAM)->Buffer), (VAL), LEN)
 #endif
 #endif // STREAM_READ
 /* ------------------------------------ Read Value APIs ---------------------------------- */
