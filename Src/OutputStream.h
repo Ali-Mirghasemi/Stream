@@ -16,34 +16,10 @@ extern "C" {
 #endif
 
 #define OSTREAM_VER_MAJOR    0
-#define OSTREAM_VER_MINOR    10
-#define OSTREAM_VER_FIX      1
+#define OSTREAM_VER_MINOR    11
+#define OSTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
-
-/************************************************************************/
-/*                            Configuration                             */
-/************************************************************************/
-/**
- * @brief This lable shows StreamOut Library is enabled or not
- */
-#define OSTREAM                     (1 && STREAM_WRITE && STREAM_PENDING_BYTES)
-/**
- * @brief enable checkTransmit function
- */
-#define OSTREAM_CHECK_TRANSMIT      1
-/**
- * @brief set default flush mode
- * Stream_FlushMode_Single:     flush only pending bytes before call flush function
- * Stream_FlushMode_Continue:   after flush complete if there is any pending bytes transmit pending bytes again
- */
-#define OSTREAM_FLUSH_MODE          Stream_FlushMode_Continue
-/**
- * @brief enable flush complete callback
- */
-#define OSTREAM_FLUSH_CALLBACK      1
-
-/************************************************************************/
 
 /**
  * @brief show stream version in string format

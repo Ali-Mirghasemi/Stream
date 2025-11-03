@@ -16,33 +16,10 @@ extern "C" {
 #endif
 
 #define ISTREAM_VER_MAJOR    0
-#define ISTREAM_VER_MINOR    10
-#define ISTREAM_VER_FIX      1
+#define ISTREAM_VER_MINOR    11
+#define ISTREAM_VER_FIX      0
 
 #include "StreamBuffer.h"
-
-/************************************************************************/
-/*                            Configuration                             */
-/************************************************************************/
-/**
- * @brief This lable shows OStream Libraty is enabled or not
- */
-#define ISTREAM                     (1 && STREAM_READ && STREAM_PENDING_BYTES)
-/**
- * @brief enable checkTransmit function
- */
-#define ISTREAM_CHECK_RECEIVE       1
-/**
- * @brief Enable Receive Callback
- */
-#define ISTREAM_RECEIVE_CALLBACK    1
-/**
- * @brief Enable Full Callback
- */
-#define ISTREAM_FULL_CALLBACK       1
-
-
-/************************************************************************/
 
 /**
  * @brief show stream version in string format
