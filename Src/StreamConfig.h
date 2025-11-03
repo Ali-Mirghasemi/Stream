@@ -14,7 +14,11 @@
 #include <stdint.h>
 
 /* Check User Config file exists to include it or not */
-#if STREAM_USER_CONFIG || __has_include("StreamConfigUser.h")
+#ifndef __has_include
+    #define __has_include(X)    0
+#endif
+
+#if defined(STREAM_USER_CONFIG) || __has_include("StreamConfigUser.h")
     #include "StreamConfigUser.h"
 #endif
 
