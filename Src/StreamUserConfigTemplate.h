@@ -1,5 +1,5 @@
 /**
- * @file StreamConfigUser.h
+ * @file StreamUserConfig.h
  * @author Ali Mirghasemi (ali.mirghasemi1376@gamil.com)
  * @brief This is configuration template for users to use
  * @version 0.1
@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2025
  * 
  */
-#ifndef _STREAM_CONFIG_USER_H_
-#define _STREAM_CONFIG_USER_H_
+#ifndef _STREAM_USER_CONFIG_H_
+#define _STREAM_USER_CONFIG_H_
 
 
 /************************************************************************/
@@ -379,4 +379,4 @@
  */
 //#define ISTREAM_FULL_CALLBACK       1
 
-#endif // _STREAM_CONFIG_USER_H_
+#endif // _STREAM_USER_CONFIG_H_

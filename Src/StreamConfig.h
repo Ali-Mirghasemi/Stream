@@ -18,8 +18,8 @@
     #define __has_include(X)    0
 #endif
 
-#if defined(STREAM_USER_CONFIG) || __has_include("StreamConfigUser.h")
-    #include "StreamConfigUser.h"
+#if defined(STREAM_USER_CONFIG) || __has_include("StreamUserConfig.h")
+    #include "StreamUserConfig.h"
 #endif
 
 /************************************************************************/
