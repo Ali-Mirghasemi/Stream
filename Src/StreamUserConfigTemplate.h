@@ -69,7 +69,7 @@
  */
 //#define STREAM_DRIVER_ARGS                  1
 /**
- * @brief If you want to use IStream/OStream you must enable this feature
+ * @brief If you want to use StreamIn/StreamOut you must enable this feature
  */
 //#define STREAM_PENDING_BYTES                1
 /**
@@ -363,7 +363,7 @@
 /************************************************************************/
 
 /**
- * @brief This lable shows OStream Libraty is enabled or not
+ * @brief This lable shows StreamOut Libraty is enabled or not
  */
 //#define ISTREAM                     (1 && STREAM_READ && STREAM_PENDING_BYTES)
 /**

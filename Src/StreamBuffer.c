@@ -511,7 +511,7 @@ Stream_LenType Stream_getReadPos(StreamBuffer* stream) {
 }
 /**
  * @brief return number of bytes that it's in row in the ram
- * use for transmit function in OStream
+ * use for transmit function in StreamOut
  *
  * @param stream
  * @return Stream_LenType
@@ -526,7 +526,7 @@ Stream_LenType Stream_directAvailable(StreamBuffer* stream) {
 }
 /**
  * @brief return number of bytes it's in row in the ram
- * use for receive function in IStream
+ * use for receive function in StreamIn
  *
  * @param stream
  * @return Stream_LenType
@@ -541,7 +541,7 @@ Stream_LenType Stream_directSpace(StreamBuffer* stream) {
 }
 /**
  * @brief return number of bytes that it's in row in the ram
- * use for transmit function in OStream
+ * use for transmit function in StreamOut
  * offset is RPos
  *
  * @param stream
@@ -564,7 +564,7 @@ Stream_LenType Stream_directAvailableAt(StreamBuffer* stream, Stream_LenType ind
 }
 /**
  * @brief return number of bytes it's in row in the ram
- * use for receive function in IStream
+ * use for receive function in StreamIn
  * offset is WPos
  *
  * @param stream

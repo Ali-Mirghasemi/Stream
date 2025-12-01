@@ -63,8 +63,8 @@ typedef enum {
     Stream_NoSpace          = 1,        /**< there is no space for write operation */
     Stream_NoAvailable      = 2,        /**< there no available bytes for read operation */
     Stream_BufferFull       = 3,        /**< buffer full*/
-    Stream_NoReceiveFn      = 4,        /**< no receive function set for IStream */
-    Stream_NoTransmitFn     = 5,        /**< no transmit function set for OStream */
+    Stream_NoReceiveFn      = 4,        /**< no receive function set for StreamIn */
+    Stream_NoTransmitFn     = 5,        /**< no transmit function set for StreamOut */
     Stream_NoReceive        = 6,        /**< stream is not in receive mode */
     Stream_NoTransmit       = 7,        /**< stream is not in transmit mode */
     Stream_InReceive        = 8,        /**< stream is in receive mode */
@@ -76,7 +76,7 @@ typedef enum {
     Stream_CustomError      = 0x80,     /**< can be used for custom errors */
 } Stream_Result;
 /**
- * @brief describe flush mode, use in OStream
+ * @brief describe flush mode, use in StreamOut
  */
 typedef enum {
     Stream_FlushMode_Single     = 0,    /**< flush only pending bytes before call flush function */

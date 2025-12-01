@@ -76,42 +76,42 @@ The library comes with some configurable options that you can modify by defining
 - `STREAM_UINT64`: Enable or disable support for 64-bit unsigned integers.
 - `STREAM_DOUBLE`: Enable or disable support for double-precision floating-point numbers.
 
-## IStream Example
+## StreamIn Example
 
 ```c
 #include "StreamBuffer.h"
 #include <stdio.h>
 
-void myReceiveCallback(IStream* stream, uint8_t* data, Stream_LenType len) {
+void myReceiveCallback(StreamIn* stream, uint8_t* data, Stream_LenType len) {
     // Process the received data
 }
 
 int main() {
     uint8_t rxBuffer[128];
-    IStream iStream;
+    StreamIn iStream;
 
     IStream_init(&iStream, myReceiveCallback, rxBuffer, sizeof(rxBuffer));
-    // Now you can receive data using the IStream functions.
+    // Now you can receive data using the StreamIn functions.
     return 0;
 }
 ```
 
-## OStream Example
+## StreamOut Example
 
 ```c
 #include "StreamBuffer.h"
 #include <stdio.h>
 
-void myTransmitFunction(OStream* stream, uint8_t* data, Stream_LenType len) {
+void myTransmitFunction(StreamOut* stream, uint8_t* data, Stream_LenType len) {
     // Transmit the data
 }
 
 int main() {
     uint8_t txBuffer[128];
-    OStream oStream;
+    StreamOut oStream;
 
     OStream_init(&oStream, myTransmitFunction, txBuffer, sizeof(txBuffer));
-    // Now you can write data to be transmitted using the OStream functions.
+    // Now you can write data to be transmitted using the StreamOut functions.
     return 0;
 }
 ```
