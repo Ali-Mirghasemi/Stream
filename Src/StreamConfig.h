@@ -112,7 +112,7 @@
  * must be signed type
  */
 #ifndef STREAM_LEN_TYPE
-    typedef int16_t Stream_LenType;
+    typedef int32_t Stream_LenType;
 #endif
 // ---------------------------- Write APIs ------------------------------
 /**
